@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Registro de Labores</title>
+  <meta name="description" content="Formulario para registrar labores y enviarlas a Google Sheets vía Apps Script." />
+
+  <link rel="preload" href="assets/styles.css" as="style" />
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+
+<body>
+  <main class="container">
+    <header class="header">
+      <h1>Registro de Labores</h1>
+      <p class="subtitle">Llena el formulario. La data se guarda en Google Sheets automáticamente.</p>
+    </header>
+
+    <section class="card">
+      <form id="taskForm" novalidate>
+        <div class="grid">
+          <div class="field">
+            <label for="area">Área</label>
+            <select id="area" name="area" required>
+              <option value="" selected disabled>Cargando áreas...</option>
+            </select>
+            <small class="help">El área controla la lista de “Apoyo”.</small>
+          </div>
+
+          <div class="field">
+            <label for="apoyo">Apoyo</label>
+            <select id="apoyo" name="apoyo" required disabled>
+              <option value="" selected disabled>Selecciona primero un área</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="prioridad">Prioridad</label>
+            <select id="prioridad" name="prioridad" required>
+              <option value="" selected disabled>Cargando...</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="estado">Estado</label>
+            <select id="estado" name="estado" required>
+              <option value="" selected disabled>Cargando...</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="labores">Lista de labores</label>
+          <textarea id="labores" name="labores" rows="4" placeholder="Describe la labor..." required></textarea>
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="proyectado">Proyectado</label>
+            <input id="proyectado" name="proyectado" type="date" required />
+          </div>
+
+          <div class="field">
+            <label for="ejecutado">Ejecutado</label>
+            <input id="ejecutado" name="ejecutado" type="date" />
+            <small class="help">Opcional.</small>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="submit" id="submitBtn">Guardar</button>
+          <button type="button" id="resetBtn" class="secondary">Limpiar</button>
+        </div>
+
+        <div id="msg" class="msg" role="status" aria-live="polite"></div>
+      </form>
+    </section>
+
+    <footer class="footer">
+      <small>Front: GitHub Pages · Back: Google Apps Script</small>
+    </footer>
+  </main>
+
+  <script defer src="assets/app.js"></script>
+</body>
+</html>
