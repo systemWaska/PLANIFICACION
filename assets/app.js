@@ -9,8 +9,8 @@
  * 2) Reemplaza API_TOKEN por el mismo token que pongas en Apps Script
  */
 
-const APPS_SCRIPT_WEBAPP_URL = "PEGA_TU_URL_EXEC_AQUI";
-const API_TOKEN = "CAMBIA_ESTE_TOKEN_LARGO_Y_RANDOM";
+const APPS_SCRIPT_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw2TYdikRhGWefhv6ijzG_pz_vlULRWMihjlMrgtlVzvq6nhYot1101G3Ict_XToPWrLQ/exec";
+const API_TOKEN = "planificacion-2025-segura";
 
 const $ = (sel) => document.querySelector(sel);
 
