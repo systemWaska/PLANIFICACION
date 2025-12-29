@@ -3,12 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Registro de Labores</title>
-  <meta name="description" content="Registro de labores conectado a Google Sheets vía Apps Script." />
-  <link rel="preload" href="assets/styles.css" as="style" />
-  <link rel="stylesheet" href="assets/styles.css" />
+  <title>Planificación • Inicio</title>
+  <link rel="stylesheet" href="./assets/styles.css" />
 </head>
-
 <body>
   <div class="bg-glow"></div>
 
@@ -16,116 +13,46 @@
     <div class="brand">
       <div class="logo">✓</div>
       <div>
-        <div class="title">Registro de Labores</div>
-        <div class="sub">Planificación interna • Google Sheets</div>
+        <div class="title">Planificación</div>
+        <div class="sub">Sistema interno • Google Sheets</div>
       </div>
     </div>
 
-    <div class="status" id="statusPill">
-      <span class="dot" id="statusDot"></span>
-      <span id="statusText">Conectando...</span>
+    <div class="right">
+      <div class="pill">
+        <span class="dot" style="background: rgba(34,197,94,.9)"></span>
+        <span>Listo</span>
+      </div>
     </div>
   </header>
 
   <main class="container">
-    <section class="hero">
-      <h1>Planifica. Ejecuta. Controla.</h1>
-      <p>Completa los campos. El sistema valida el Área/Apoyo y guarda todo en la base con fecha de registro automática.</p>
-    </section>
-
     <section class="card">
-      <form id="taskForm" novalidate>
+      <div class="cardHead">
+        <h1 class="h1">¿Qué deseas hacer?</h1>
+        <p class="p">Elige una opción. Crear registra en Sheets. Ver muestra todo el historial (incluye Ejecutado).</p>
+      </div>
 
-        <div class="section-head">
-          <h2>Responsable</h2>
-          <div class="badges">
-            <span class="badge" id="prioBadge">Prioridad: —</span>
-            <span class="badge" id="stateBadge">Estado: —</span>
+      <div class="menu-grid">
+        <a class="menu-card" href="./crear.html">
+          <div class="menu-icon">＋</div>
+          <div class="menu-content">
+            <div class="menu-title">Crear planificación</div>
+            <div class="menu-sub">Registrar nueva labor (sin “Ejecutado”).</div>
           </div>
-        </div>
+          <div class="menu-cta">Entrar →</div>
+        </a>
 
-        <div class="grid">
-          <div class="field">
-            <label for="area">Área</label>
-            <select id="area" name="area" required>
-              <option value="" selected disabled>Cargando áreas...</option>
-            </select>
-            <small class="help">Al cambiar el Área, se actualiza Apoyo automáticamente.</small>
+        <a class="menu-card" href="./ver.html">
+          <div class="menu-icon">≣</div>
+          <div class="menu-content">
+            <div class="menu-title">Ver planificaciones</div>
+            <div class="menu-sub">Tabla completa con filtros, búsqueda y “Ejecutado”.</div>
           </div>
-
-          <div class="field">
-            <label for="apoyo">Apoyo</label>
-            <select id="apoyo" name="apoyo" required disabled>
-              <option value="" selected disabled>Selecciona primero un área</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="section-head mt">
-          <h2>Planificación</h2>
-          <small class="muted">Campos obligatorios marcados por validación automática.</small>
-        </div>
-
-        <div class="grid">
-          <div class="field">
-            <label for="prioridad">Prioridad</label>
-            <select id="prioridad" name="prioridad" required>
-              <option value="" selected disabled>Cargando...</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label for="estado">Estado</label>
-            <select id="estado" name="estado" required>
-              <option value="" selected disabled>Cargando...</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="labores">Lista de labores</label>
-          <textarea id="labores" name="labores" rows="4" placeholder="Describe la labor..." required></textarea>
-          <div class="hint-row">
-            <small class="help" id="chars">0 caracteres</small>
-            <small class="help">Tip: escribe en bullets para claridad.</small>
-          </div>
-        </div>
-
-        <div class="grid">
-          <div class="field">
-            <label for="proyectado">Proyectado</label>
-            <input id="proyectado" name="proyectado" type="date" required />
-          </div>
-
-          <div class="field">
-            <label for="ejecutado">Ejecutado</label>
-            <input id="ejecutado" name="ejecutado" type="date" />
-            <small class="help">Se autocompleta si Estado = Concluido.</small>
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="observacion">Observación</label>
-          <textarea id="observacion" name="observacion" rows="3" placeholder="Opcional: notas, bloqueos, contexto..."></textarea>
-        </div>
-
-        <div class="actions">
-          <button type="submit" id="submitBtn">
-            <span class="btnText" id="btnText">Guardar</span>
-            <span class="spinner" id="spinner" aria-hidden="true"></span>
-          </button>
-          <button type="button" id="resetBtn" class="secondary">Limpiar</button>
-        </div>
-
-        <div id="msg" class="msg" role="status" aria-live="polite"></div>
-      </form>
+          <div class="menu-cta">Entrar →</div>
+        </a>
+      </div>
     </section>
-
-    <footer class="footer">
-      <small>Front: GitHub Pages · Back: Google Apps Script · Validación + Fecha de registro automática</small>
-    </footer>
   </main>
-
-  <script defer src="assets/app.js"></script>
 </body>
 </html>
