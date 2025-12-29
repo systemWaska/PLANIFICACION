@@ -1,4 +1,4 @@
-const APPS_SCRIPT_LIST_URL = "PEGA_AQUI_TU_URL_DE_VER/exec";
+const APPS_SCRIPT_LIST_URL = "https://script.google.com/macros/s/AKfycbxRYj6GaB8O7q-reEmLTPuZsoDDNQo9Gp_MDlJaFTJ-MiCF5vZ5DRk7gptwDYjA85G4UQ/exec";
 
 const $ = (sel) => document.querySelector(sel);
 
