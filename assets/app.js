@@ -186,16 +186,16 @@ function onPrioridadChange() {
 
 function getFormData() {
   return {
-    token: API_TOKEN,
-    area: areaSelect.value.trim(),
-    apoyo: apoyoSelect.value.trim(),
-    prioridad: prioridadSelect.value.trim(),
-    labores: labores.value.trim(),
-    proyectado: proyectado.value,
-    ejecutado: ejecutado.value || "",
-    estado: estadoSelect.value.trim(),
-    observacion: (observacion.value || "").trim()
-  };
+   area: areaSelect.value.trim(),
+   apoyo: apoyoSelect.value.trim(),
+   prioridad: prioridadSelect.value.trim(),
+   labores: labores.value.trim(),
+   proyectado: proyectado.value,
+   ejecutado: ejecutado.value || "",
+   estado: estadoSelect.value.trim(),
+   observacion: (observacion.value || "").trim()
+ } ;
+
 }
 
 function validate(data) {
