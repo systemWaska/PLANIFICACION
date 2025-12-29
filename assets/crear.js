@@ -9,7 +9,6 @@ const prioridadSelect = $("#prioridad");
 const estadoSelect = $("#estado");
 const labores = $("#labores");
 const observacion = $("#observacion");
-const proyectado = $("#proyectado");
 
 const msg = $("#msg");
 const submitBtn = $("#submitBtn");
@@ -129,7 +128,6 @@ function getFormData() {
     apoyo: apoyoSelect.value.trim(),
     prioridad: prioridadSelect.value.trim(),
     labores: labores.value.trim(),
-    proyectado: proyectado.value,
     estado: estadoSelect.value.trim(),
     observacion: (observacion.value || "").trim()
   };
@@ -143,7 +141,6 @@ function validate(data) {
   if (!data.prioridad) { markInvalid(prioridadSelect); return "Selecciona una Prioridad."; }
   if (!data.estado) { markInvalid(estadoSelect); return "Selecciona un Estado."; }
   if (!data.labores || data.labores.length < 3) { markInvalid(labores); return "Describe la labor (mín. 3 caracteres)."; }
-  if (!data.proyectado) { markInvalid(proyectado); return "Selecciona la fecha Proyectado."; }
 
   return "";
 }
