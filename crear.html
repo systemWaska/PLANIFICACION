@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Crear planificación</title>
+  <link rel="stylesheet" href="./assets/styles.css" />
+</head>
+<body>
+  <div class="bg-glow"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">✓</div>
+      <div>
+        <div class="title">Registro de Labores</div>
+        <div class="sub">Crear planificación • Google Sheets</div>
+      </div>
+    </div>
+
+    <div class="right">
+      <a class="navlink" href="./index.html">← Inicio</a>
+      <a class="navlink" href="./ver.html">Ver planificaciones →</a>
+      <div class="pill" id="statusPill">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusText">Conectando...</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <div class="cardHead">
+        <h1 class="h1">Planifica. Ejecuta. Controla.</h1>
+        <p class="p">Completa los campos. Se guardará en Google Sheets con fecha de registro automática.</p>
+        <div class="badges">
+          <span class="badge" id="prioBadge">Prioridad: —</span>
+          <span class="badge" id="stateBadge">Estado: —</span>
+        </div>
+      </div>
+
+      <form id="taskForm" class="form">
+        <div class="grid2">
+          <div class="field">
+            <label>Área</label>
+            <select id="area" required>
+              <option>Cargando áreas...</option>
+            </select>
+            <small>El área controla la lista de “Apoyo”.</small>
+          </div>
+
+          <div class="field">
+            <label>Apoyo</label>
+            <select id="apoyo" disabled required>
+              <option>Selecciona primero un área</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="field">
+            <label>Prioridad</label>
+            <select id="prioridad" required>
+              <option>Cargando...</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Estado</label>
+            <select id="estado" required>
+              <option>Cargando...</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Lista de labores</label>
+          <textarea id="labores" rows="4" placeholder="Describe la labor..." required></textarea>
+          <div class="meta">
+            <span id="chars">0 caracteres</span>
+            <span class="muted">Tip: escribe en bullets para claridad.</span>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="field">
+            <label>Proyectado</label>
+            <input id="proyectado" type="date" required />
+          </div>
+
+          <div class="field">
+            <label>Observación</label>
+            <input id="observacion" type="text" placeholder="Opcional: notas, contexto..." />
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="submitBtn" class="btn primary" type="submit">
+            <span id="spinner" class="spinner" style="display:none;"></span>
+            <span id="btnText">Guardar</span>
+          </button>
+          <button id="resetBtn" class="btn" type="button">Limpiar</button>
+        </div>
+
+        <div class="msg" id="msg"></div>
+      </form>
+    </section>
+  </main>
+
+  <script src="./assets/crear.js"></script>
+</body>
+</html>
