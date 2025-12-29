@@ -4,28 +4,53 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Registro de Labores</title>
-  <meta name="description" content="Formulario para registrar labores y enviarlas a Google Sheets vía Apps Script." />
-
+  <meta name="description" content="Registro de labores conectado a Google Sheets vía Apps Script." />
   <link rel="preload" href="assets/styles.css" as="style" />
   <link rel="stylesheet" href="assets/styles.css" />
 </head>
 
 <body>
+  <div class="bg-glow"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">✓</div>
+      <div>
+        <div class="title">Registro de Labores</div>
+        <div class="sub">Planificación interna • Google Sheets</div>
+      </div>
+    </div>
+
+    <div class="status" id="statusPill">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">Conectando...</span>
+    </div>
+  </header>
+
   <main class="container">
-    <header class="header">
-      <h1>Registro de Labores</h1>
-      <p class="subtitle">Llena el formulario. La data se guarda en Google Sheets automáticamente.</p>
-    </header>
+    <section class="hero">
+      <h1>Planifica. Ejecuta. Controla.</h1>
+      <p>Completa los campos. El sistema valida el Área/Apoyo y guarda todo en la base con fecha de registro automática.</p>
+    </section>
 
     <section class="card">
       <form id="taskForm" novalidate>
+
+        <div class="section-head">
+          <h2>Responsable</h2>
+          <div class="badges">
+            <span class="badge" id="prioBadge">Prioridad: —</span>
+            <span class="badge" id="stateBadge">Estado: —</span>
+          </div>
+        </div>
+
         <div class="grid">
           <div class="field">
             <label for="area">Área</label>
             <select id="area" name="area" required>
               <option value="" selected disabled>Cargando áreas...</option>
             </select>
-            <small class="help">El área controla la lista de “Apoyo”.</small>
+            <small class="help">Al cambiar el Área, se actualiza Apoyo automáticamente.</small>
           </div>
 
           <div class="field">
@@ -34,7 +59,14 @@
               <option value="" selected disabled>Selecciona primero un área</option>
             </select>
           </div>
+        </div>
 
+        <div class="section-head mt">
+          <h2>Planificación</h2>
+          <small class="muted">Campos obligatorios marcados por validación automática.</small>
+        </div>
+
+        <div class="grid">
           <div class="field">
             <label for="prioridad">Prioridad</label>
             <select id="prioridad" name="prioridad" required>
@@ -53,6 +85,10 @@
         <div class="field">
           <label for="labores">Lista de labores</label>
           <textarea id="labores" name="labores" rows="4" placeholder="Describe la labor..." required></textarea>
+          <div class="hint-row">
+            <small class="help" id="chars">0 caracteres</small>
+            <small class="help">Tip: escribe en bullets para claridad.</small>
+          </div>
         </div>
 
         <div class="grid">
@@ -64,12 +100,20 @@
           <div class="field">
             <label for="ejecutado">Ejecutado</label>
             <input id="ejecutado" name="ejecutado" type="date" />
-            <small class="help">Opcional.</small>
+            <small class="help">Se autocompleta si Estado = Concluido.</small>
           </div>
         </div>
 
+        <div class="field">
+          <label for="observacion">Observación</label>
+          <textarea id="observacion" name="observacion" rows="3" placeholder="Opcional: notas, bloqueos, contexto..."></textarea>
+        </div>
+
         <div class="actions">
-          <button type="submit" id="submitBtn">Guardar</button>
+          <button type="submit" id="submitBtn">
+            <span class="btnText" id="btnText">Guardar</span>
+            <span class="spinner" id="spinner" aria-hidden="true"></span>
+          </button>
           <button type="button" id="resetBtn" class="secondary">Limpiar</button>
         </div>
 
@@ -78,7 +122,7 @@
     </section>
 
     <footer class="footer">
-      <small>Front: GitHub Pages · Back: Google Apps Script</small>
+      <small>Front: GitHub Pages · Back: Google Apps Script · Validación + Fecha de registro automática</small>
     </footer>
   </main>
 
