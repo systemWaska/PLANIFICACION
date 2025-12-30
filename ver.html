@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Ver planificaciones</title>
   <link rel="stylesheet" href="./assets/styles.css" />
 </head>
@@ -18,67 +18,66 @@
       </div>
     </div>
 
-    <div class="actions">
-      <a class="link-pill" href="./index.html">← Inicio</a>
-      <a class="link-pill" href="./crear.html">Crear →</a>
-      <div id="statusPill" class="pill idle">
+    <div class="top-actions">
+      <a class="chip" href="./index.html">← Inicio</a>
+      <a class="chip" href="./crear.html">Crear →</a>
+      <div id="statusPill" class="status-pill idle">
         <span id="statusDot" class="dot"></span>
-        <span id="statusText">Conectando...</span>
+        <span id="statusText">Conectando…</span>
       </div>
     </div>
   </header>
 
   <main class="container">
     <section class="card">
-      <div class="card-head">
-        <h1>Todas las planificaciones</h1>
-        <p class="muted">Incluye “Ejecutado”, “Fecha registro” y filtros para control rápido.</p>
+      <div class="row-between">
+        <div>
+          <h1>Todas las planificaciones</h1>
+          <p class="muted">Búsqueda + filtros. Incluye ejecutado y fecha registro.</p>
+        </div>
+        <div class="muted" id="countLabel"></div>
       </div>
 
       <div class="filters">
-        <input id="search" class="input" type="search" placeholder="Buscar por área, apoyo, labor, prioridad, estado..." />
-
+        <input id="searchText" class="input" placeholder="Buscar por área, solicitante, labor, prioridad, estado…" />
         <select id="filterArea" class="input">
           <option value="Todas">Área: Todas</option>
         </select>
-
         <select id="filterEstado" class="input">
           <option value="Todos">Estado: Todos</option>
-          <option value="Pendiente">Pendiente</option>
+          <option value="Pendiente" selected>Pendiente</option>
           <option value="Concluido">Concluido</option>
           <option value="Pausado">Pausado</option>
           <option value="Anulado">Anulado</option>
         </select>
-
-        <button id="refreshBtn" class="btn ghost" type="button">Actualizar</button>
+        <button id="refreshBtn" class="btn">Actualizar</button>
       </div>
 
       <div class="table-wrap">
-        <table class="table">
+        <table class="table" id="table">
           <thead>
             <tr>
               <th>Área</th>
-              <th>Apoyo</th>
+              <th>Solicitante</th>
               <th>Prioridad</th>
               <th>Lista de labores</th>
-              <th>Proyectado</th>
-              <th>Ejecutado</th>
               <th>Estado</th>
-              <th>Tiempo estimado</th>
+              <th>Tiempo (h)</th>
+              <th>Ejecutado</th>
               <th>Fecha registro</th>
             </tr>
           </thead>
           <tbody id="tbody">
-            <tr><td colspan="9" class="muted">Cargando...</td></tr>
+            <tr><td colspan="8" class="muted">Cargando…</td></tr>
           </tbody>
         </table>
       </div>
 
-      <div class="footer-note">
-        Front: GitHub Pages • Back: Google Apps Script
-      </div>
+      <div id="msg" class="msg"></div>
     </section>
   </main>
+
+  <footer class="footer">Front: GitHub Pages • Back: Google Apps Script</footer>
 
   <script src="./assets/ver.js"></script>
 </body>
