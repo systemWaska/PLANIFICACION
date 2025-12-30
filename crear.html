@@ -14,15 +14,15 @@
       <div class="logo">✓</div>
       <div>
         <div class="title">Registro de Labores</div>
-        <div class="sub">Crear planificación </div>
+        <div class="sub">Crear planificación • Google Sheets</div>
       </div>
     </div>
 
-    <div class="right">
-      <a class="navlink" href="./index.html">← Inicio</a>
-      <a class="navlink" href="./ver.html">Ver planificaciones →</a>
-      <div class="pill" id="statusPill">
-        <span class="dot" id="statusDot"></span>
+    <div class="actions">
+      <a class="link-pill" href="./index.html">← Inicio</a>
+      <a class="link-pill" href="./ver.html">Ver →</a>
+      <div id="statusPill" class="pill idle">
+        <span id="statusDot" class="dot"></span>
         <span id="statusText">Conectando...</span>
       </div>
     </div>
@@ -30,73 +30,72 @@
 
   <main class="container">
     <section class="card">
-      <div class="cardHead">
-        <h1 class="h1">Planifica. Ejecuta. Controla.</h1>
-        <p class="p">Completa los campos.</p>
-        <div class="badges">
-          <span class="badge" id="prioBadge">Prioridad: —</span>
-          <span class="badge" id="stateBadge">Estado: —</span>
-        </div>
+      <div class="card-head">
+        <h1>Planifica. Ejecuta. Controla.</h1>
+        <p class="muted">
+          Completa los campos. El sistema valida Área/Apoyo y guarda automáticamente en Sheets.
+          <span class="chip">Estado fijo: Pendiente</span>
+        </p>
       </div>
 
-      <form id="taskForm" class="form">
-        <div class="grid2">
-          <div class="field">
-            <label>Área</label>
-            <select id="area" required>
-              <option>Cargando áreas...</option>
-            </select>
-            <small>El área controla la lista de “Apoyo”.</small>
-          </div>
-
-          <div class="field">
-            <label>Solicitante</label>
-            <select id="apoyo" disabled required>
-              <option>Selecciona primero un área</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="grid2">
-          <div class="field">
-            <label>Prioridad</label>
-            <select id="prioridad" required>
-              <option>Cargando...</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label>Estado</label>
-            <select id="estado" required>
-              <option>Cargando...</option>
-            </select>
-          </div>
+      <form id="taskForm" class="form-grid" autocomplete="off">
+        <div class="field">
+          <label for="area">Área</label>
+          <select id="area" required>
+            <option selected disabled>Cargando áreas...</option>
+          </select>
+          <small class="hint">El Área controla la lista de “Apoyo”.</small>
         </div>
 
         <div class="field">
-          <label>Lista de labores</label>
-          <textarea id="labores" rows="4" placeholder="Describe la labor..." required></textarea>
+          <label for="apoyo">Apoyo</label>
+          <select id="apoyo" disabled required>
+            <option selected disabled>Selecciona primero un área</option>
+          </select>
+          <small class="hint">Se actualiza automáticamente al elegir Área.</small>
+        </div>
+
+        <div class="field">
+          <label for="prioridad">Prioridad</label>
+          <select id="prioridad" required>
+            <option selected disabled>Cargando...</option>
+          </select>
+        </div>
+
+        <div class="field badges">
+          <div id="prioBadge" class="badge">Prioridad: —</div>
+          <div id="stateBadge" class="badge">Estado: Pendiente</div>
+        </div>
+
+        <div class="field full">
+          <label for="labores">Lista de labores</label>
+          <textarea id="labores" rows="5" placeholder="Describe la labor..." required></textarea>
           <div class="meta">
             <span id="chars">0 caracteres</span>
-            <span class="muted">Tip: escribe en bullets para claridad.</span>
-          </div>
-        </div>
-          <div class="field">
-            <label>Observación</label>
-            <input id="observacion" type="text" placeholder="Pon tu fecha estimada que crees que se tomara la planificacion" />
+            <span class="hint">Tip: escribe en bullets para claridad.</span>
           </div>
         </div>
 
-        <div class="actions">
+        <div class="field full">
+          <label for="observacion">Tiempo estimado (obligatorio)</label>
+          <input id="observacion" type="text" placeholder="Ej: 2h, 1 día, 3 días, 1 semana" required />
+          <small class="hint">Indica el tiempo aproximado para completar esta planificación.</small>
+        </div>
+
+        <div class="field full actions-row">
           <button id="submitBtn" class="btn primary" type="submit">
             <span id="spinner" class="spinner" style="display:none;"></span>
             <span id="btnText">Guardar</span>
           </button>
-          <button id="resetBtn" class="btn" type="button">Limpiar</button>
+          <button id="resetBtn" class="btn ghost" type="button">Limpiar</button>
         </div>
 
-        <div class="msg" id="msg"></div>
+        <div id="msg" class="msg"></div>
       </form>
+
+      <div class="footer-note">
+        Front: GitHub Pages • Back: Google Apps Script • Validación + Fecha registro automática
+      </div>
     </section>
   </main>
 
