@@ -1,26 +1,31 @@
-// Ver planificaciones (tabla + filtros)
-const $ = (s) => document.querySelector(s);
-
-const statusDot = $("#statusDot");
-const statusText = $("#statusText");
+const { $, toast, escapeHtml, debounce } = UI;
 
 const q = $("#q");
 const fArea = $("#fArea");
 const fEstado = $("#fEstado");
 const refreshBtn = $("#refreshBtn");
-const tbody = $("#tbody");
-const countEl = $("#count");
+const msg = $("#msg");
+const rows = $("#rows");
 
 let CONFIG = null;
-let ROWS = [];
+let DATA = [];
 
 function setTopStatus(state, text) {
-  statusText.textContent = text;
-  const colors = { ok:"rgba(34,197,94,.9)", warn:"rgba(250,204,21,.9)", err:"rgba(239,68,68,.9)", idle:"rgba(148,163,184,.7)" };
-  statusDot.style.background = colors[state] || colors.idle;
+  const dot = $("#statusDot");
+  const label = $("#statusText");
+  const colors = {
+    ok: "rgba(34,197,94,.9)",
+    warn: "rgba(250,204,21,.9)",
+    err: "rgba(239,68,68,.9)",
+    idle: "rgba(148,163,184,.7)"
+  };
+  dot.style.background = colors[state] || colors.idle;
+  label.textContent = text;
 }
 
-function buildOptions(select, items, placeholder){
+function setMsg(t) { msg.textContent = t || ""; }
+
+function buildSelect(select, items, placeholder) {
   select.innerHTML = "";
   const opt0 = document.createElement("option");
   opt0.value = "";
@@ -29,96 +34,87 @@ function buildOptions(select, items, placeholder){
   select.appendChild(opt0);
 
   (items || []).forEach((v) => {
-    const opt = document.createElement("option");
-    opt.value = v;
-    opt.textContent = v;
-    select.appendChild(opt);
+    const o = document.createElement("option");
+    o.value = v;
+    o.textContent = v;
+    select.appendChild(o);
+  });
+  select.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+function normalize(s) {
+  return String(s || "").toLowerCase();
+}
+
+function applyFilters() {
+  const text = normalize(q.value);
+  const area = fArea.value;
+  const estado = fEstado.value;
+
+  const filtered = DATA.filter((r) => {
+    if (area && r.area !== area) return false;
+    if (estado && r.estado !== estado) return false;
+    if (!text) return true;
+
+    const hay = [
+      r.area, r.solicitante, r.prioridad, r.labores, r.estado, r.tiempo, r.ejecutado, r.fechaRegistro
+    ].map(normalize).join(" | ");
+
+    return hay.includes(text);
   });
 
-  if (window.EnhancedSelect) window.EnhancedSelect.enhanceSelect(select);
+  render(filtered);
 }
 
-function escapeHtml(str){
-  return (str || "").toString()
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-
-function rowToText(r){
-  return [
-    r.area, r.solicitante, r.prioridad, r.labores, r.estado, r.tiempo, r.ejecutado, r.registro
-  ].join(" ").toLowerCase();
-}
-
-function render(rows){
-  if (!rows.length){
-    tbody.innerHTML = `<tr><td colspan="8">No hay registros.</td></tr>`;
-    countEl.textContent = "";
+function render(list) {
+  if (!list.length) {
+    rows.innerHTML = `<tr><td colspan="8">No hay registros.</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = rows.map(r => `
+  rows.innerHTML = list.map((r) => `
     <tr>
       <td>${escapeHtml(r.area)}</td>
       <td>${escapeHtml(r.solicitante)}</td>
       <td><span class="badge">${escapeHtml(r.prioridad)}</span></td>
       <td>${escapeHtml(r.labores)}</td>
-      <td>${escapeHtml(r.estado)}</td>
+      <td><span class="badge">${escapeHtml(r.estado)}</span></td>
       <td>${escapeHtml(r.tiempo)}</td>
-      <td>${escapeHtml(r.ejecutado || "")}</td>
-      <td>${escapeHtml(r.registro || "")}</td>
+      <td>${escapeHtml(r.ejecutado)}</td>
+      <td>${escapeHtml(r.fechaRegistro)}</td>
     </tr>
   `).join("");
-
-  countEl.textContent = `${rows.length} registro(s)`;
 }
 
-function applyFilters(){
-  const qq = (q.value || "").trim().toLowerCase();
-  const a = (fArea.value || "").trim();
-  const st = (fEstado.value || "").trim();
+async function load() {
+  setTopStatus("idle", "Cargando...");
+  setMsg("Cargando registros...");
+  rows.innerHTML = `<tr><td colspan="8">Cargando...</td></tr>`;
 
-  let rows = ROWS.slice();
-  if (a) rows = rows.filter(r => r.area === a);
-  if (st) rows = rows.filter(r => r.estado === st);
-  if (qq) rows = rows.filter(r => rowToText(r).includes(qq));
+  const cfgRes = await API.get("config");
+  CONFIG = cfgRes.config;
 
-  render(rows);
-}
+  buildSelect(fArea, CONFIG.areas, "Área: Todas");
+  buildSelect(fEstado, ["Pendiente", "Concluido", "Pausado", "Anulado"], "Estado: Todos");
+  EnhancedSelect.enhanceAll(document);
 
-async function loadConfig(){
-  const json = await apiGet("config");
-  CONFIG = json.config;
-
-  buildOptions(fArea, ["Todas", ...CONFIG.areas], "Área: Todas");
-  buildOptions(fEstado, ["Todos", ...CONFIG.estados], "Estado: Todos");
-
-  fArea.addEventListener("change", () => {
-    if (fArea.value === "Todas") fArea.value = "";
-    applyFilters();
-  });
-  fEstado.addEventListener("change", () => {
-    if (fEstado.value === "Todos") fEstado.value = "";
-    applyFilters();
-  });
-}
-
-async function loadRows(){
-  setTopStatus("idle","Cargando…");
-  const json = await apiGet("list");
-  ROWS = json.rows || [];
-  setTopStatus("ok","Conectado");
+  const res = await API.get("list");
+  DATA = res.rows || [];
+  setMsg("");
+  setTopStatus("ok", "Conectado");
   applyFilters();
 }
 
-q.addEventListener("input", applyFilters);
-refreshBtn.addEventListener("click", () => loadRows().catch(e => UI.toast(e.message, "err")));
+const applyFiltersDebounced = debounce(applyFilters, 200);
 
-Promise.all([loadConfig(), loadRows()]).catch((e)=>{
-  setTopStatus("err","Error");
-  UI.toast(e.message || "Error cargando.", "err");
-  tbody.innerHTML = `<tr><td colspan="8">${escapeHtml(e.message || "Error")}</td></tr>`;
+q.addEventListener("input", applyFiltersDebounced);
+fArea.addEventListener("change", applyFilters);
+fEstado.addEventListener("change", applyFilters);
+refreshBtn.addEventListener("click", load);
+
+load().catch((e) => {
+  setTopStatus("err", "Error");
+  toast(e.message || "Error", "err");
+  setMsg(e.message || "Error");
+  rows.innerHTML = `<tr><td colspan="8">Error cargando.</td></tr>`;
 });

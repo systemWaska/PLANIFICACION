@@ -1,16 +1,13 @@
-// Crear planificación (front)
-const $ = (s) => document.querySelector(s);
-
-const statusDot = $("#statusDot");
-const statusText = $("#statusText");
+const { $, toast } = UI;
 
 const form = $("#taskForm");
-const areaSelect = $("#area");
-const solicitanteSelect = $("#solicitante");
-const prioridadSelect = $("#prioridad");
-const tiempoInput = $("#tiempo");
+const area = $("#area");
+const solicitante = $("#solicitante");
+const prioridad = $("#prioridad");
+const tiempo = $("#tiempo");
 const labores = $("#labores");
 const observacion = $("#observacion");
+const msg = $("#msg");
 const chars = $("#chars");
 const submitBtn = $("#submitBtn");
 const resetBtn = $("#resetBtn");
@@ -18,12 +15,27 @@ const resetBtn = $("#resetBtn");
 let CONFIG = null;
 
 function setTopStatus(state, text) {
-  statusText.textContent = text;
-  const colors = { ok:"rgba(34,197,94,.9)", warn:"rgba(250,204,21,.9)", err:"rgba(239,68,68,.9)", idle:"rgba(148,163,184,.7)" };
-  statusDot.style.background = colors[state] || colors.idle;
+  const dot = $("#statusDot");
+  const label = $("#statusText");
+  const colors = {
+    ok: "rgba(34,197,94,.9)",
+    warn: "rgba(250,204,21,.9)",
+    err: "rgba(239,68,68,.9)",
+    idle: "rgba(148,163,184,.7)"
+  };
+  dot.style.background = colors[state] || colors.idle;
+  label.textContent = text;
 }
 
-function buildOptions(select, items, placeholder) {
+function setMsg(t) {
+  msg.textContent = t || "";
+}
+
+function updateChars() {
+  chars.textContent = `${(labores.value || "").length} caracteres`;
+}
+
+function buildSelect(select, items, placeholder) {
   select.innerHTML = "";
   const opt0 = document.createElement("option");
   opt0.value = "";
@@ -33,128 +45,118 @@ function buildOptions(select, items, placeholder) {
   select.appendChild(opt0);
 
   (items || []).forEach((v) => {
-    const opt = document.createElement("option");
-    opt.value = v;
-    opt.textContent = v;
-    select.appendChild(opt);
+    const o = document.createElement("option");
+    o.value = v;
+    o.textContent = v;
+    select.appendChild(o);
   });
-
-  if (window.EnhancedSelect) window.EnhancedSelect.enhanceSelect(select);
+  select.dispatchEvent(new Event("change", { bubbles: true }));
 }
 
-function setLoading(isLoading){
-  submitBtn.disabled = isLoading;
-  submitBtn.textContent = isLoading ? "Guardando…" : "Guardar";
+function resetSolicitante() {
+  solicitante.disabled = true;
+  buildSelect(solicitante, [], "Selecciona primero un área");
 }
 
-function updateCharCount(){
-  chars.textContent = `${(labores.value || "").length} caracteres`;
+function onAreaChange() {
+  const a = area.value;
+  const list = (CONFIG && CONFIG.solicitanteByArea && CONFIG.solicitanteByArea[a]) || [];
+  if (!a || !list.length) return resetSolicitante();
+
+  solicitante.disabled = false;
+  buildSelect(solicitante, list, "Selecciona solicitante");
+
+  EnhancedSelect.enhanceAll(document); // mantiene el select custom sincronizado
 }
 
-function clearInvalid(){
-  [...form.querySelectorAll(".invalid")].forEach(el => el.classList.remove("invalid"));
-}
-
-function markInvalid(el){
-  if (!el) return;
-  el.classList.add("invalid");
-}
-
-function validate(data){
-  clearInvalid();
-  if (!data.area){ markInvalid(areaSelect); return "Selecciona un Área."; }
-  if (!data.solicitante){ markInvalid(solicitanteSelect); return "Selecciona un Solicitante."; }
-  if (!data.prioridad){ markInvalid(prioridadSelect); return "Selecciona una Prioridad."; }
-  if (!data.tiempo || data.tiempo.trim().length < 1){ markInvalid(tiempoInput); return "Ingresa el Tiempo estimado."; }
-  if (!data.labores || data.labores.trim().length < 3){ markInvalid(labores); return "Describe la labor (mín. 3 caracteres)."; }
+function validate() {
+  if (!area.value) return "Selecciona un Área.";
+  if (!solicitante.value) return "Selecciona un Solicitante.";
+  if (!prioridad.value) return "Selecciona una Prioridad.";
+  if (!tiempo.value.trim()) return "Completa el Tiempo estimado.";
+  if (!labores.value.trim() || labores.value.trim().length < 3) return "Describe la labor (mín. 3 caracteres).";
   return "";
 }
 
-function onAreaChange(){
-  const area = areaSelect.value;
-  const solicitantes = CONFIG?.solicitanteByArea?.[area] || [];
-
-  solicitanteSelect.disabled = !solicitantes.length;
-  if (!solicitantes.length){
-    buildOptions(solicitanteSelect, [], "Selecciona un área primero");
-    return;
-  }
-  buildOptions(solicitanteSelect, solicitantes, "Selecciona solicitante");
-}
-
-async function loadConfig(){
-  setTopStatus("idle","Conectando…");
-  const json = await apiGet("config");
-
-  CONFIG = json.config;
-
-  buildOptions(areaSelect, CONFIG.areas, "Selecciona un área");
-  buildOptions(prioridadSelect, CONFIG.prioridades, "Selecciona prioridad");
-
-  solicitanteSelect.disabled = true;
-  buildOptions(solicitanteSelect, [], "Selecciona un área primero");
-
-  setTopStatus("ok","Conectado");
-}
-
-function getFormData(){
+function getPayload() {
   return {
-    area: areaSelect.value.trim(),
-    solicitante: solicitanteSelect.value.trim(),
-    prioridad: prioridadSelect.value.trim(),
+    area: area.value.trim(),
+    solicitante: solicitante.value.trim(),
+    prioridad: prioridad.value.trim(),
     labores: labores.value.trim(),
     estado: "Pendiente",
-    tiempo: (tiempoInput.value || "").trim(),
+    tiempo: tiempo.value.trim(),
+    ejecutado: "",
     observacion: (observacion.value || "").trim()
   };
 }
 
+async function loadConfig() {
+  setTopStatus("idle", "Conectando...");
+  const { config } = await API.get("config");
+  CONFIG = config;
+
+  buildSelect(area, config.areas, "Selecciona un área");
+  buildSelect(prioridad, config.prioridades, "Selecciona prioridad");
+  resetSolicitante();
+
+  EnhancedSelect.enhanceAll(document);
+
+  setTopStatus("ok", "Conectado");
+}
+
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
-  try{
-    if (!CONFIG) throw new Error("No hay configuración cargada.");
-    const data = getFormData();
-    const err = validate(data);
-    if (err){
-      setTopStatus("warn","Revisa campos");
-      UI.toast(err, "warn");
-      return;
-    }
+  setMsg("");
 
-    setLoading(true);
-    setTopStatus("idle","Guardando…");
+  const err = validate();
+  if (err) {
+    setTopStatus("warn", "Revisa campos");
+    toast(err, "warn");
+    setMsg(err);
+    return;
+  }
 
-    await apiPost(data);
+  try {
+    submitBtn.disabled = true;
+    setTopStatus("idle", "Guardando...");
 
-    setTopStatus("ok","Guardado");
-    UI.toast(`${data.solicitante}, tu planificación se guardó con éxito.`, "ok");
+    const payload = getPayload();
+    const res = await API.post(payload);
+
+    const name = payload.solicitante || "Tu";
+    toast(`${name}, tu planificación se guardó con éxito.`, "ok");
+    setMsg(`Guardado ✅ (Fila: ${res.row})`);
 
     form.reset();
-    solicitanteSelect.disabled = true;
-    buildOptions(solicitanteSelect, [], "Selecciona un área primero");
-    updateCharCount();
-    clearInvalid();
-  }catch(err){
-    setTopStatus("err","Error");
-    UI.toast(err.message || "Error guardando.", "err");
-  }finally{
-    setLoading(false);
+    resetSolicitante();
+    EnhancedSelect.enhanceAll(document);
+    updateChars();
+    setTopStatus("ok", "Guardado");
+  } catch (e2) {
+    setTopStatus("err", "Error");
+    toast(e2.message || "Error guardando", "err");
+    setMsg(e2.message || "Error guardando");
+  } finally {
+    submitBtn.disabled = false;
   }
 });
 
 resetBtn.addEventListener("click", () => {
   form.reset();
-  solicitanteSelect.disabled = true;
-  buildOptions(solicitanteSelect, [], "Selecciona un área primero");
-  updateCharCount();
-  clearInvalid();
+  resetSolicitante();
+  EnhancedSelect.enhanceAll(document);
+  updateChars();
+  setMsg("");
+  setTopStatus("ok", "Conectado");
 });
 
-areaSelect.addEventListener("change", onAreaChange);
-labores.addEventListener("input", updateCharCount);
+area.addEventListener("change", onAreaChange);
+labores.addEventListener("input", updateChars);
 
-updateCharCount();
-loadConfig().catch((e)=>{
-  setTopStatus("err","Sin conexión");
-  UI.toast(e.message || "Sin conexión.", "err");
+updateChars();
+loadConfig().catch((e) => {
+  setTopStatus("err", "Sin conexión");
+  UI.toast(e.message || "Error", "err");
+  setMsg(e.message || "Error");
 });

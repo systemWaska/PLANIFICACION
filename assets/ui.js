@@ -1,36 +1,47 @@
-// Alertas tipo "toast" (éxito / error / info)
-(function(){
-  const rootId = "toastRoot";
+// UI helpers: toast, safe text, debounce
+const UI = (() => {
+  const $ = (s, root = document) => root.querySelector(s);
+  const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
 
-  function ensureRoot(){
-    let root = document.getElementById(rootId);
-    if (root) return root;
-    root = document.createElement("div");
-    root.id = rootId;
-    root.className = "toast-root";
-    document.body.appendChild(root);
-    return root;
+  function escapeHtml(str) {
+    return String(str ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
   }
 
-  function toast(message, type="info", ms=3800){
-    const root = ensureRoot();
-    const el = document.createElement("div");
-    el.className = `toast ${type}`;
-    el.innerHTML = `<div class="toast-dot"></div><div class="toast-msg">${message}</div>`;
-    root.appendChild(el);
-
-    requestAnimationFrame(()=> el.classList.add("show"));
-    const t = setTimeout(()=>{
-      el.classList.remove("show");
-      setTimeout(()=> el.remove(), 260);
-    }, ms);
-
-    el.addEventListener("click", ()=>{
+  function debounce(fn, wait = 250) {
+    let t = null;
+    return (...args) => {
       clearTimeout(t);
-      el.classList.remove("show");
-      setTimeout(()=> el.remove(), 260);
-    });
+      t = setTimeout(() => fn(...args), wait);
+    };
   }
 
-  window.UI = { toast };
+  function toast(message, type = "ok") {
+    const host = $("#toastHost") || (() => {
+      const h = document.createElement("div");
+      h.id = "toastHost";
+      h.className = "toast-host";
+      document.body.appendChild(h);
+      return h;
+    })();
+
+    const el = document.createElement("div");
+    el.className = `toast toast-${type}`;
+    el.innerHTML = `<div class="toast-dot"></div><div class="toast-msg">${escapeHtml(message)}</div>`;
+    host.appendChild(el);
+
+    requestAnimationFrame(() => el.classList.add("show"));
+    const remove = () => {
+      el.classList.remove("show");
+      setTimeout(() => el.remove(), 250);
+    };
+    setTimeout(remove, 3500);
+    el.addEventListener("click", remove);
+  }
+
+  return { $, $$, toast, escapeHtml, debounce };
 })();
