@@ -1,65 +1,86 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dashboard</title>
-  <link rel="stylesheet" href="./assets/styles.css" />
-</head>
-<body>
-  <div class="bg-glow"></div>
+    <!doctype html>
+    <html lang="es">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Dashboard</title>
+      <link rel="stylesheet" href="./assets/styles.css" />
+    </head>
+    <body>
+      <div class="bg-glow"></div>
 
-  <header class="topbar">
-    <div class="topbar-inner">
-      <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
-        <div>
-          <div class="title">Dashboard</div>
-          <div class="sub">Resumen • Google Sheets</div>
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <div class="title">Dashboard</div>
+            <div class="sub">Resumen • Google Sheets</div>
+          </div>
         </div>
-      </div>
+        <nav class="nav">
+          <a class="btn" href="./index.html">← Inicio</a>
+          <a class="btn" href="./crear.html">Crear →</a>
+          <a class="btn" href="./ver.html">Ver →</a>
+          <a class="btn" href="./dashboard.html">Dashboard →</a>
+          <span class="pill"><span class="dot" id="statusDot"></span><span id="statusText">Listo</span></span>
+        </nav>
+      </header>
 
-      <div class="row">
-        <a class="btn ghost" href="./index.html">← Inicio</a>
-        <a class="btn ghost" href="./crear.html">Crear</a>
-        <a class="btn ghost" href="./ver.html">Ver</a>
-        <div class="pill" aria-live="polite">
-          <span class="dot" id="statusDot"></span>
-          <span id="statusText">Conectando…</span>
-        </div>
-      </div>
+      <main class="container">
+        <div class="card">
+          <div class="card-pad">
+
+<h1>Dashboard</h1>
+<p class="lead">Resumen por estado y tiempos estimados (texto).</p>
+
+<div class="grid3">
+  <div class="pill"><span class="dot" id="kpiDot1"></span><span id="kpi1">Pendientes: —</span></div>
+  <div class="pill"><span class="dot" id="kpiDot2"></span><span id="kpi2">Concluidos: —</span></div>
+  <div class="pill"><span class="dot" id="kpiDot3"></span><span id="kpi3">Total: —</span></div>
+</div>
+
+<div class="grid2" style="margin-top:14px">
+  <div class="card" style="background: rgba(255,255,255,.03);">
+    <div class="card-pad">
+      <div style="font-weight:760; margin-bottom:10px">Top solicitantes</div>
+      <div id="topSolicitantes" class="msg">Cargando...</div>
     </div>
-  </header>
-
-  <main class="container">
-    <div class="card">
-      <div class="hero">
-        <h1>Resumen</h1>
-        <p>Retrasados se calcula con Fecha registro + Tiempo estimado (H/D/S/M).</p>
-      </div>
-
-      <div class="section">
-        <div class="kpi" id="kpi">
-          <div class="box"><div class="num" id="kTotal">—</div><div class="lbl">Total</div></div>
-          <div class="box"><div class="num" id="kPend">—</div><div class="lbl">Pendientes</div></div>
-          <div class="box"><div class="num" id="kConc">—</div><div class="lbl">Concluidos</div></div>
-          <div class="box"><div class="num" id="kRetr">—</div><div class="lbl">Retrasados</div></div>
-        </div>
-
-        <div class="row" style="margin-top:16px;">
-          <button class="btn" id="refreshBtn" type="button">Actualizar</button>
-          <span class="badge" id="asOf">—</span>
-        </div>
-
-        <div id="msg" class="msg" style="display:none; margin-top:14px;"></div>
-      </div>
-
-      <div class="footer-note">Front: GitHub Pages • Back: Google Apps Script</div>
+  </div>
+  <div class="card" style="background: rgba(255,255,255,.03);">
+    <div class="card-pad">
+      <div style="font-weight:760; margin-bottom:10px">Tiempos más frecuentes</div>
+      <div id="topTiempos" class="msg">Cargando...</div>
     </div>
-  </main>
+  </div>
+</div>
 
-  <script src="./assets/config.js"></script>
-  <script src="./assets/ui.js"></script>
-  <script src="./assets/dashboard.js"></script>
-</body>
-</html>
+<div class="table-wrap scroll-x" style="margin-top:14px">
+  <table>
+    <thead>
+      <tr>
+        <th>Área</th>
+        <th>Solicitante</th>
+        <th>Prioridad</th>
+        <th>Estado</th>
+        <th>Tiempo</th>
+        <th>Fecha registro</th>
+      </tr>
+    </thead>
+    <tbody id="dashRows">
+      <tr><td colspan="6">Cargando...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+          </div>
+          <div class="footer-note">Front: GitHub Pages • Back: Google Apps Script</div>
+        </div>
+      </main>
+
+      <script src="./assets/config.js"></script>
+      <script src="./assets/ui.js"></script>
+      <script src="./assets/api.js"></script>
+      <script src="./assets/enhanced-select.js"></script>
+      <script src="./assets/dashboard.js"></script>
+    </body>
+    </html>

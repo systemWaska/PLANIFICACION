@@ -1,56 +1,82 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Planificación</title>
-  <link rel="stylesheet" href="./assets/styles.css" />
-</head>
-<body>
-  <header class="topbar">
-    <div class="topbar-inner">
-      <div class="brand">
-        <div class="logo">✓</div>
-        <div>
-          <div class="title">Planificación</div>
-          <div class="sub">Sistema interno • Google Sheets</div>
+    <!doctype html>
+    <html lang="es">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Planificación</title>
+      <link rel="stylesheet" href="./assets/styles.css" />
+    </head>
+    <body>
+      <div class="bg-glow"></div>
+
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <div class="title">Planificación</div>
+            <div class="sub">Sistema interno • Google Sheets</div>
+          </div>
         </div>
-      </div>
-      <div class="actions">
-        <div class="pill"><span class="dot"></span><span id="statusText">Listo</span></div>
+        <nav class="nav">
+          <a class="btn" href="./index.html">← Inicio</a>
+          <a class="btn" href="./crear.html">Crear →</a>
+          <a class="btn" href="./ver.html">Ver →</a>
+          <a class="btn" href="./dashboard.html">Dashboard →</a>
+          <span class="pill"><span class="dot" id="statusDot"></span><span id="statusText">Listo</span></span>
+        </nav>
+      </header>
+
+      <main class="container">
+        <div class="card">
+          <div class="card-pad">
+
+<h1>¿Qué deseas hacer?</h1>
+<p class="lead">Crea una planificación o revisa el historial. El dashboard resume pendientes, concluidos y tiempos estimados.</p>
+
+<div class="cards-list">
+  <a class="menu-card" href="./crear.html">
+    <div class="menu-left">
+      <div class="iconbox">＋</div>
+      <div>
+        <div class="menu-title">Crear planificación</div>
+        <div class="menu-sub">Registro rápido (Estado = Pendiente por defecto).</div>
       </div>
     </div>
-  </header>
+    <div>Entrar →</div>
+  </a>
 
-  <main class="container">
-    <section class="card">
-      <h1 class="h1">¿Qué deseas hacer?</h1>
-      <p class="p">Elige una opción. Crear registra en Sheets. Ver muestra el historial (incluye Ejecutado y Fecha registro).</p>
-
-      <div class="tiles">
-        <a class="tile" href="./crear.html" aria-label="Crear planificación">
-          <div class="tile-left">
-            <div class="icon">＋</div>
-            <div>
-              <h3>Crear planificación</h3>
-              <small>Registro nueva labor (Estado = Pendiente)</small>
-            </div>
-          </div>
-          <div class="arrow">→</div>
-        </a>
-
-        <a class="tile" href="./ver.html" aria-label="Ver planificaciones">
-          <div class="tile-left">
-            <div class="icon">≡</div>
-            <div>
-              <h3>Ver planificaciones</h3>
-              <small>Tabla con filtros, búsqueda y Ejecutado</small>
-            </div>
-          </div>
-          <div class="arrow">→</div>
-        </a>
+  <a class="menu-card" href="./ver.html">
+    <div class="menu-left">
+      <div class="iconbox">≡</div>
+      <div>
+        <div class="menu-title">Ver planificaciones</div>
+        <div class="menu-sub">Tabla con búsqueda y filtros (incluye Ejecutado y Fecha registro).</div>
       </div>
-    </section>
-  </main>
-</body>
-</html>
+    </div>
+    <div>Entrar →</div>
+  </a>
+
+  <a class="menu-card" href="./dashboard.html">
+    <div class="menu-left">
+      <div class="iconbox">▦</div>
+      <div>
+        <div class="menu-title">Dashboard</div>
+        <div class="menu-sub">Resumen por estado y tiempos (texto: 1S, 1D, 1M, etc.).</div>
+      </div>
+    </div>
+    <div>Entrar →</div>
+  </a>
+</div>
+
+          </div>
+          <div class="footer-note">Front: GitHub Pages • Back: Google Apps Script</div>
+        </div>
+      </main>
+
+      <script src="./assets/config.js"></script>
+      <script src="./assets/ui.js"></script>
+      <script src="./assets/api.js"></script>
+      <script src="./assets/enhanced-select.js"></script>
+      <script src="./assets/index.js"></script>
+    </body>
+    </html>

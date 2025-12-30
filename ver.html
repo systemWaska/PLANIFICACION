@@ -1,84 +1,79 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Ver planificaciones</title>
-  <link rel="stylesheet" href="./assets/styles.css" />
-</head>
-<body>
-  <header class="topbar">
-    <div class="topbar-inner">
-      <div class="brand">
-        <div class="logo">✓</div>
-        <div>
-          <div class="title">Planificaciones</div>
-          <div class="sub">Visualización • Google Sheets</div>
+    <!doctype html>
+    <html lang="es">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Planificaciones</title>
+      <link rel="stylesheet" href="./assets/styles.css" />
+    </head>
+    <body>
+      <div class="bg-glow"></div>
+
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <div class="title">Planificaciones</div>
+            <div class="sub">Visualización • Google Sheets</div>
+          </div>
         </div>
-      </div>
-      <div class="actions">
-        <a class="btn" href="./index.html">← Inicio</a>
-        <a class="btn" href="./crear.html">Crear →</a>
-        <div class="pill"><span class="dot" id="statusDot"></span><span id="statusText">Cargando…</span></div>
-      </div>
-    </div>
-  </header>
+        <nav class="nav">
+          <a class="btn" href="./index.html">← Inicio</a>
+          <a class="btn" href="./crear.html">Crear →</a>
+          <a class="btn" href="./ver.html">Ver →</a>
+          <a class="btn" href="./dashboard.html">Dashboard →</a>
+          <span class="pill"><span class="dot" id="statusDot"></span><span id="statusText">Listo</span></span>
+        </nav>
+      </header>
 
-  <main class="container">
-    <section class="card">
-      <h1 class="h1" style="font-size:52px">Todas las planificaciones</h1>
-      <p class="p">Búsqueda + filtros. Incluye ejecutado y fecha registro.</p>
+      <main class="container">
+        <div class="card">
+          <div class="card-pad">
 
-      <div class="grid" style="margin-top:18px">
-        <div class="field">
-          <label for="q">Buscar</label>
-          <input id="q" class="input" type="text" placeholder="Buscar por área, solicitante, labor, prioridad, estado…" />
+<h1>Todas las planificaciones</h1>
+<p class="lead">Búsqueda + filtros. Incluye ejecutado y fecha registro.</p>
+
+<div class="grid3">
+  <input id="q" type="text" placeholder="Buscar por área, solicitante, labor, prioridad, estado..." />
+  <select id="fArea" data-enhanced="1" data-placeholder="Área: Todas"></select>
+  <select id="fEstado" data-enhanced="1" data-placeholder="Estado: Todos"></select>
+</div>
+
+<div class="row-actions">
+  <button class="btn btn-block primary" id="refreshBtn" type="button">Actualizar</button>
+</div>
+
+<div class="msg" id="msg"></div>
+
+<div class="table-wrap scroll-x" style="margin-top:14px">
+  <table>
+    <thead>
+      <tr>
+        <th>Área</th>
+        <th>Solicitante</th>
+        <th>Prioridad</th>
+        <th>Lista de labores</th>
+        <th>Estado</th>
+        <th>Tiempo</th>
+        <th>Ejecutado</th>
+        <th>Fecha registro</th>
+      </tr>
+    </thead>
+    <tbody id="rows">
+      <tr><td colspan="8">Cargando...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+          </div>
+          <div class="footer-note">Front: GitHub Pages • Back: Google Apps Script</div>
         </div>
+      </main>
 
-        <div class="field">
-          <label for="fArea">Área</label>
-          <select id="fArea" data-enhanced="1" data-search="1" data-placeholder="Área: Todas"></select>
-        </div>
-
-        <div class="field">
-          <label for="fEstado">Estado</label>
-          <select id="fEstado" data-enhanced="1" data-search="0" data-placeholder="Estado: Todos"></select>
-        </div>
-
-        <div class="field">
-          <label>&nbsp;</label>
-          <button class="secondary" id="refreshBtn" type="button">Actualizar</button>
-        </div>
-      </div>
-
-      <div class="table-wrap" aria-label="Tabla planificaciones">
-        <table>
-          <thead>
-            <tr>
-              <th>Área</th>
-              <th>Solicitante</th>
-              <th>Prioridad</th>
-              <th>Lista de labores</th>
-              <th>Estado</th>
-              <th>Tiempo</th>
-              <th>Ejecutado</th>
-              <th>Fecha registro</th>
-            </tr>
-          </thead>
-          <tbody id="tbody">
-            <tr><td colspan="8">Cargando…</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="meta" id="count" style="margin-top:10px"></div>
-    </section>
-  </main>
-
-  <script src="./assets/config.js"></script>
-  <script src="./assets/api.js"></script>
-  <script src="./assets/ui.js"></script>
-  <script src="./assets/select.js"></script>
-  <script src="./assets/ver.js"></script>
-</body>
-</html>
+      <script src="./assets/config.js"></script>
+      <script src="./assets/ui.js"></script>
+      <script src="./assets/api.js"></script>
+      <script src="./assets/enhanced-select.js"></script>
+      <script src="./assets/ver.js"></script>
+    </body>
+    </html>
