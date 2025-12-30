@@ -1,140 +1,126 @@
-const APPS_SCRIPT_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxRYj6GaB8O7q-reEmLTPuZsoDDNQo9Gp_MDlJaFTJ-MiCF5vZ5DRk7gptwDYjA85G4UQ/exec";
+/* Ver planificaciones */
 
-const $ = (sel) => document.querySelector(sel);
+const URL = window.APPS_SCRIPT_WEBAPP_URL;
+const $ = (s) => document.querySelector(s);
 
+const q = $("#q");
+const fArea = $("#fArea");
+const fEstado = $("#fEstado");
+const refreshBtn = $("#refreshBtn");
 const tbody = $("#tbody");
 const msg = $("#msg");
-const countLabel = $("#countLabel");
+const countBadge = $("#countBadge");
 
-const searchText = $("#searchText");
-const filterArea = $("#filterArea");
-const filterEstado = $("#filterEstado");
-const refreshBtn = $("#refreshBtn");
+let CONFIG = null;
+let ROWS = [];
 
-const statusDot = $("#statusDot");
-const statusText = $("#statusText");
-
-let ALL_ROWS = [];
-
-function setMessage(text, type = "") {
-  msg.textContent = text || "";
-  msg.className = `msg ${type}`.trim();
+function showMsg(text, type) {
+  if (!text) {
+    msg.style.display = "none";
+    msg.textContent = "";
+    msg.className = "msg";
+    return;
+  }
+  msg.style.display = "block";
+  msg.textContent = text;
+  msg.className = `msg ${type || ""}`.trim();
 }
 
-function setTopStatus(state, text) {
-  statusText.textContent = text;
-  const colors = {
-    ok: "rgba(34,197,94,.9)",
-    warn: "rgba(250,204,21,.9)",
-    err: "rgba(239,68,68,.9)",
-    idle: "rgba(148,163,184,.7)"
-  };
-  statusDot.style.background = colors[state] || colors.idle;
-}
-
-function badgeForEstado(estado) {
-  const s = String(estado || "").toLowerCase();
-  if (s === "pendiente") return "badge badge-pendiente";
-  if (s === "concluido") return "badge badge-concluido";
-  if (s === "pausado") return "badge badge-pausado";
-  if (s === "anulado") return "badge badge-anulado";
-  return "badge";
-}
-
-function setAreaOptionsFromRows(rows) {
-  const areas = Array.from(new Set(rows.map(r => r.area).filter(Boolean))).sort();
-  filterArea.innerHTML = `<option value="Todas">Área: Todas</option>` + areas.map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join("");
-}
-
-function escapeHtml(str) {
-  return String(str || "")
+function escapeHtml(s) {
+  return String(s || "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+    .replaceAll(">", "&gt;");
 }
 
-function render(rows) {
-  if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="8" class="muted">No hay registros.</td></tr>`;
-    countLabel.textContent = "0 resultados";
+function buildFilterOptions() {
+  // Área
+  const a0 = `<option value="__ALL__">Área: Todas</option>`;
+  fArea.innerHTML = a0 + (CONFIG.areas || []).map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join("");
+
+  // Estado
+  const e0 = `<option value="__ALL__">Estado: Todos</option>`;
+  fEstado.innerHTML = e0 + (CONFIG.estados || []).map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
+}
+
+function matchRow(row, text, areaSel, estadoSel) {
+  const t = (text || "").trim().toLowerCase();
+
+  if (areaSel && areaSel !== "__ALL__" && row.area !== areaSel) return false;
+  if (estadoSel && estadoSel !== "__ALL__" && row.estado !== estadoSel) return false;
+
+  if (!t) return true;
+
+  const hay = [
+    row.area,
+    row.solicitante,
+    row.prioridad,
+    row.labores,
+    row.estado,
+    row.tiempo_estimado,
+    row.ejecutado,
+    row.fecha_registro,
+  ].join(" ").toLowerCase();
+
+  return hay.includes(t);
+}
+
+function render() {
+  const text = q.value;
+  const a = fArea.value;
+  const s = fEstado.value;
+
+  const filtered = ROWS.filter(r => matchRow(r, text, a, s));
+  countBadge.textContent = `${filtered.length} registros`;
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="color:rgba(255,255,255,.55)">No hay registros.</td></tr>`;
     return;
   }
 
-  countLabel.textContent = `${rows.length} resultado(s)`;
-
-  tbody.innerHTML = rows.map((r) => {
-    const estado = r.estado || "Pendiente";
-
-    return `
-      <tr>
-        <td data-label="Área">${escapeHtml(r.area)}</td>
-        <td data-label="Solicitante">${escapeHtml(r.solicitante)}</td>
-        <td data-label="Prioridad">${escapeHtml(r.prioridad)}</td>
-        <td data-label="Lista de labores"><div class="labores-cell">${escapeHtml(r.labores)}</div></td>
-        <td data-label="Estado"><span class="${badgeForEstado(estado)}">${escapeHtml(estado)}</span></td>
-        <td data-label="Tiempo (h)">${escapeHtml(r.tiempoEstimadoHoras)}</td>
-        <td data-label="Ejecutado">${escapeHtml(r.ejecutado || "")}</td>
-        <td data-label="Fecha registro">${escapeHtml(r.fechaRegistro || "")}</td>
-      </tr>
-    `;
-  }).join("");
+  tbody.innerHTML = filtered.map(r => `
+    <tr>
+      <td>${escapeHtml(r.area)}</td>
+      <td>${escapeHtml(r.solicitante)}</td>
+      <td>${escapeHtml(r.prioridad)}</td>
+      <td style="white-space:pre-wrap">${escapeHtml(r.labores)}</td>
+      <td>${escapeHtml(r.estado)}</td>
+      <td>${escapeHtml(r.tiempo_estimado)}</td>
+      <td>${escapeHtml(r.ejecutado)}</td>
+      <td>${escapeHtml(r.fecha_registro)}</td>
+    </tr>
+  `).join("");
 }
 
-function applyFilters() {
-  const q = (searchText.value || "").trim().toLowerCase();
-  const area = filterArea.value || "Todas";
-  const estado = filterEstado.value || "Todos";
-
-  const filtered = ALL_ROWS.filter((r) => {
-    if (area !== "Todas" && r.area !== area) return false;
-    if (estado !== "Todos" && (r.estado || "Pendiente") !== estado) return false;
-
-    if (!q) return true;
-
-    const haystack = [
-      r.area, r.solicitante, r.prioridad, r.labores, r.estado,
-      String(r.tiempoEstimadoHoras || ""), r.ejecutado, r.fechaRegistro
-    ].join(" ").toLowerCase();
-
-    return haystack.includes(q);
-  });
-
-  render(filtered);
+async function loadConfig() {
+  if (!URL) throw new Error("Configura la URL del Web App en assets/config.js");
+  setStatus("idle", "Conectando…");
+  const json = await fetchJson(`${URL}?action=config`);
+  CONFIG = json.config;
+  buildFilterOptions();
 }
 
 async function loadRows() {
-  setTopStatus("idle", "Conectando…");
-  setMessage("");
+  setStatus("idle", "Cargando…");
+  showMsg("");
 
-  const url = `${APPS_SCRIPT_WEBAPP_URL}?action=rows`;
-  const res = await fetch(url);
-  const json = await res.json();
-
-  if (!json.ok) throw new Error(json.error || "No se pudo cargar la data.");
-
-  ALL_ROWS = json.rows || [];
-  setAreaOptionsFromRows(ALL_ROWS);
-
-  if (!filterEstado.value || filterEstado.value === "Todos") {
-    filterEstado.value = "Pendiente";
-  }
-
-  setTopStatus("ok", "Conectado");
-  applyFilters();
+  const json = await fetchJson(`${URL}?action=list`);
+  ROWS = json.rows || [];
+  setStatus("ok", "Conectado");
+  render();
 }
 
-refreshBtn.addEventListener("click", () => loadRows().catch((e) => {
-  setTopStatus("err", "Error");
-  setMessage(e.message, "err");
-}));
+refreshBtn.addEventListener("click", () => loadRows().catch(e => showMsg(e.message, "err")));
+q.addEventListener("input", render);
+fArea.addEventListener("change", render);
+fEstado.addEventListener("change", render);
 
-searchText.addEventListener("input", applyFilters);
-filterArea.addEventListener("change", applyFilters);
-filterEstado.addEventListener("change", applyFilters);
-
-loadRows().catch((e) => {
-  setTopStatus("err", "Error");
-  setMessage(e.message, "err");
-});
+(async function init(){
+  try{
+    await loadConfig();
+    await loadRows();
+  } catch(e){
+    setStatus("err", "Error");
+    showMsg(e.message || "No se pudo cargar.", "err");
+  }
+})();

@@ -1,183 +1,192 @@
-/**
- * crear.js
- * Lógica de la página Crear:
- * - Carga config (áreas, solicitantes por área, prioridades)
- * - Maneja cascada Área -> Solicitante
- * - Valida campos
- * - POST action=create
- * - Toast de confirmación con el nombre (solicitante)
- */
+/* Crear planificación */
+
+const URL = window.APPS_SCRIPT_WEBAPP_URL;
+
+const $ = (s) => document.querySelector(s);
 
 const form = $("#taskForm");
-const areaSelect = $("#area");
-const solicitanteSelect = $("#solicitante");
-const prioridadSelect = $("#prioridad");
-const tiempoInput = $("#tiempo");
+const area = $("#area");
+const solicitante = $("#solicitante");
+const prioridad = $("#prioridad");
+const tiempo = $("#tiempo");
 const labores = $("#labores");
-const chars = $("#chars");
+const observacion = $("#observacion");
+
+const msg = $("#msg");
 const submitBtn = $("#submitBtn");
 const resetBtn = $("#resetBtn");
+const spinner = $("#spinner");
+const btnText = $("#btnText");
+const chars = $("#chars");
 
-// Guardamos la config del backend en memoria para usarla en validación
 let CONFIG = null;
 
-/**
- * Rellena un <select> con opciones
- * @param {HTMLSelectElement} select
- * @param {string[]} items
- * @param {string} placeholder
- */
-function buildOptions(select, items, placeholder) {
-  select.innerHTML = "";
-
-  const opt0 = document.createElement("option");
-  opt0.value = "";
-  opt0.textContent = placeholder;
-  opt0.disabled = true;
-  opt0.selected = true;
-  select.appendChild(opt0);
-
-  (items || []).forEach((v) => {
-    const opt = document.createElement("option");
-    opt.value = v;
-    opt.textContent = v;
-    select.appendChild(opt);
-  });
+function showMsg(text, type) {
+  if (!text) {
+    msg.style.display = "none";
+    msg.textContent = "";
+    msg.className = "msg";
+    return;
+  }
+  msg.style.display = "block";
+  msg.textContent = text;
+  msg.className = `msg ${type || ""}`.trim();
 }
 
-/** Muestra contador de caracteres del textarea */
+function setLoading(loading) {
+  submitBtn.disabled = loading;
+  spinner.style.display = loading ? "inline-block" : "none";
+  btnText.textContent = loading ? "Guardando..." : "Guardar";
+}
+
 function updateCharCount() {
   chars.textContent = `${(labores.value || "").length} caracteres`;
 }
 
-/** Bloquea el botón mientras se guarda */
-function setLoading(isLoading) {
-  submitBtn.disabled = isLoading;
-  submitBtn.textContent = isLoading ? "Guardando..." : "Guardar";
+/* Tiempo estimado en español: H/D/S/M (mayúscula o minúscula) */
+function isValidTiempo(v) {
+  return /^\d+\s*[HDSM]$/i.test(String(v || "").trim());
 }
 
-/**
- * Carga config desde Apps Script:
- * areas, solicitantesByArea, prioridades
- */
+function normalizeTiempo(v) {
+  const t = String(v || "").trim().toUpperCase().replace(/\s+/g, "");
+  return t;
+}
+
+function buildOptions(select, items, placeholder) {
+  select.innerHTML = "";
+  const o0 = document.createElement("option");
+  o0.value = "";
+  o0.textContent = placeholder;
+  o0.disabled = true;
+  o0.selected = true;
+  select.appendChild(o0);
+
+  (items || []).forEach((val) => {
+    const o = document.createElement("option");
+    o.value = val;
+    o.textContent = val;
+    select.appendChild(o);
+  });
+}
+
 async function loadConfig() {
-  setTopStatus("idle", "Conectando...");
-
-  const { config } = await apiGet({ action: "config" });
-
-  CONFIG = config;
-
-  buildOptions(areaSelect, CONFIG.areas, "Selecciona un área");
-  buildOptions(prioridadSelect, CONFIG.prioridades, "Selecciona prioridad");
-
-  solicitanteSelect.disabled = true;
-  buildOptions(solicitanteSelect, [], "Selecciona primero un área");
-
-  setTopStatus("ok", "Conectado");
-}
-
-/** Cuando cambia el área, actualizamos el select de solicitantes */
-function onAreaChange() {
-  const area = areaSelect.value;
-  const list = CONFIG?.solicitantesByArea?.[area] || [];
-
-  if (!area || list.length === 0) {
-    solicitanteSelect.disabled = true;
-    buildOptions(solicitanteSelect, [], "Selecciona primero un área");
+  if (!URL) {
+    setStatus("err", "Falta URL");
+    showMsg("Configura la URL del Web App en assets/config.js", "err");
     return;
   }
 
-  solicitanteSelect.disabled = false;
-  buildOptions(solicitanteSelect, list, "Selecciona solicitante");
+  setStatus("idle", "Conectando…");
+  const json = await fetchJson(`${URL}?action=config`);
+
+  CONFIG = json.config;
+
+  buildOptions(area, CONFIG.areas, "Selecciona un área");
+  buildOptions(prioridad, CONFIG.prioridades, "Selecciona prioridad");
+
+  solicitante.disabled = true;
+  buildOptions(solicitante, [], "Selecciona primero un área");
+
+  setStatus("ok", "Conectado");
 }
 
-/**
- * Valida campos obligatorios
- * Nota: Tiempo estimado ahora es texto libre (solo validamos no vacío)
- */
-function validate(data) {
-  if (!data.area) return "Selecciona un Área.";
-  if (!data.solicitante) return "Selecciona un Solicitante.";
-  if (!data.prioridad) return "Selecciona una Prioridad.";
-  if (!data.labores || data.labores.trim().length < 3) return "Describe la labor (mín. 3 caracteres).";
-  if (!data.tiempo_estimado) return "Ingresa el tiempo estimado (ej: 3 días).";
+function onAreaChange() {
+  const a = area.value;
+  const list = (CONFIG && CONFIG.solicitanteByArea && CONFIG.solicitanteByArea[a]) || [];
 
-  // Validación simple anti-vacío/solo espacios
-  if (data.tiempo_estimado.trim().length < 2) return "Tiempo estimado muy corto.";
-  return "";
+  if (!a || list.length === 0) {
+    solicitante.disabled = true;
+    buildOptions(solicitante, [], "Selecciona primero un área");
+    return;
+  }
+
+  solicitante.disabled = false;
+  buildOptions(solicitante, list, "Selecciona solicitante");
 }
 
-/** Prepara payload para enviar al backend */
-function getFormData() {
+function getData() {
   return {
-    area: areaSelect.value.trim(),
-    solicitante: solicitanteSelect.value.trim(),
-    prioridad: prioridadSelect.value.trim(),
-    labores: labores.value.trim(),
-    tiempo_estimado: String(tiempoInput.value || "").trim(),
+    area: String(area.value || "").trim(),
+    solicitante: String(solicitante.value || "").trim(),
+    prioridad: String(prioridad.value || "").trim(),
+    labores: String(labores.value || "").trim(),
+    tiempo_estimado: normalizeTiempo(tiempo.value),
+    observacion: String(observacion.value || "").trim(),
   };
 }
 
-/** Submit principal */
-async function onSubmit(e) {
+function validate(d) {
+  if (!d.area) return "Selecciona un Área.";
+  if (!d.solicitante) return "Selecciona un Solicitante.";
+  if (!d.prioridad) return "Selecciona una Prioridad.";
+  if (!d.labores || d.labores.length < 3) return "Describe la labor (mín. 3 caracteres).";
+  if (!d.tiempo_estimado) return "Ingresa el tiempo estimado (ej: 3D, 5H, 1S, 1M).";
+  if (!isValidTiempo(d.tiempo_estimado)) return "Tiempo estimado inválido. Usa: 3D, 5H, 1S, 1M.";
+  return "";
+}
+
+async function save(d) {
+  const payload = { action: "create", data: d };
+
+  return fetchJson(URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(payload),
+  });
+}
+
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
-
-  if (!CONFIG) {
-    toast("Error", "No hay configuración cargada.", "err");
-    return;
-  }
-
-  const data = getFormData();
-
-  const err = validate(data);
-  if (err) {
-    toast("Revisa campos", err, "err");
-    return;
-  }
+  showMsg("");
 
   try {
+    if (!CONFIG) throw new Error("No hay configuración cargada.");
+
+    const data = getData();
+    const err = validate(data);
+    if (err) {
+      setStatus("warn", "Revisa campos");
+      showMsg(err, "warn");
+      return;
+    }
+
     setLoading(true);
-    setTopStatus("idle", "Guardando...");
+    setStatus("idle", "Guardando…");
 
-    // action=create para que Apps Script sepa que crear
-    const result = await apiPost({ action: "create", ...data });
+    const res = await save(data);
 
-    setTopStatus("ok", "Guardado");
+    setStatus("ok", "Guardado");
+    toast("Guardado", `${data.solicitante}, tu planificación se guardó con éxito.`, "ok");
+    showMsg(`Registro guardado (Fila: ${res.row}).`, "ok");
 
-    // Mensaje solicitado: "Angel, tu planificación se guardó con éxito."
-    toast(`${data.solicitante}, tu planificación se guardó con éxito.`, `Fila: ${result.row}`, "ok");
-
-    // Reset de formulario y select dependiente
     form.reset();
-    solicitanteSelect.disabled = true;
-    buildOptions(solicitanteSelect, [], "Selecciona primero un área");
+    solicitante.disabled = true;
+    buildOptions(solicitante, [], "Selecciona primero un área");
     updateCharCount();
-  } catch (error) {
-    setTopStatus("err", "Error");
-    toast("No se pudo guardar", error.message || "Error.", "err");
+  } catch (ex) {
+    setStatus("err", "Error");
+    showMsg(ex.message || "Error guardando.", "err");
+    toast("Error", ex.message || "No se pudo guardar.", "err");
   } finally {
     setLoading(false);
   }
-}
+});
 
-/** Reset manual */
-function onReset() {
+resetBtn.addEventListener("click", () => {
   form.reset();
-  solicitanteSelect.disabled = true;
-  buildOptions(solicitanteSelect, [], "Selecciona primero un área");
+  showMsg("");
+  solicitante.disabled = true;
+  buildOptions(solicitante, [], "Selecciona primero un área");
   updateCharCount();
-  setTopStatus("ok", "Conectado");
-}
+  setStatus("ok", "Conectado");
+});
 
-/** Event listeners */
-areaSelect.addEventListener("change", onAreaChange);
+area.addEventListener("change", onAreaChange);
 labores.addEventListener("input", updateCharCount);
-form.addEventListener("submit", onSubmit);
-resetBtn.addEventListener("click", onReset);
 
-/** Init */
 updateCharCount();
 loadConfig().catch((e) => {
-  setTopStatus("err", "Sin conexión");
-  toast("Sin conexión", e.message, "err");
+  setStatus("err", "Sin conexión");
+  showMsg(e.message || "No se pudo conectar.", "err");
 });

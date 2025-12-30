@@ -1,87 +1,54 @@
-const APPS_SCRIPT_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxRYj6GaB8O7q-reEmLTPuZsoDDNQo9Gp_MDlJaFTJ-MiCF5vZ5DRk7gptwDYjA85G4UQ/exec";
+/* Dashboard */
 
-const $ = (sel) => document.querySelector(sel);
+const URL = window.APPS_SCRIPT_WEBAPP_URL;
+const $ = (s) => document.querySelector(s);
 
-const kpiPendientes = $("#kpiPendientes");
-const kpiConcluidos = $("#kpiConcluidos");
-const kpiRetrasados = $("#kpiRetrasados");
-const tbody = $("#tbody");
-const msg = $("#msg");
+const kTotal = $("#kTotal");
+const kPend = $("#kPend");
+const kConc = $("#kConc");
+const kRetr = $("#kRetr");
 const refreshBtn = $("#refreshBtn");
+const asOf = $("#asOf");
+const msg = $("#msg");
 
-const statusDot = $("#statusDot");
-const statusText = $("#statusText");
-
-function setMessage(text, type = "") {
-  msg.textContent = text || "";
-  msg.className = `msg ${type}`.trim();
-}
-
-function setTopStatus(state, text) {
-  statusText.textContent = text;
-  const colors = {
-    ok: "rgba(34,197,94,.9)",
-    warn: "rgba(250,204,21,.9)",
-    err: "rgba(239,68,68,.9)",
-    idle: "rgba(148,163,184,.7)"
-  };
-  statusDot.style.background = colors[state] || colors.idle;
-}
-
-function escapeHtml(str) {
-  return String(str || "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function renderRetrasados(list) {
-  if (!list.length) {
-    tbody.innerHTML = `<tr><td colspan="7" class="muted">No hay retrasados.</td></tr>`;
+function showMsg(text, type) {
+  if (!text) {
+    msg.style.display = "none";
+    msg.textContent = "";
+    msg.className = "msg";
     return;
   }
-
-  tbody.innerHTML = list.map((r) => `
-    <tr>
-      <td data-label="Área">${escapeHtml(r.area)}</td>
-      <td data-label="Solicitante">${escapeHtml(r.solicitante)}</td>
-      <td data-label="Prioridad">${escapeHtml(r.prioridad)}</td>
-      <td data-label="Estado">${escapeHtml(r.estado)}</td>
-      <td data-label="Tiempo (h)">${escapeHtml(r.tiempoEstimadoHoras)}</td>
-      <td data-label="Horas transcurridas">${escapeHtml(r.horasTranscurridas)}</td>
-      <td data-label="Fecha registro">${escapeHtml(r.fechaRegistro)}</td>
-    </tr>
-  `).join("");
+  msg.style.display = "block";
+  msg.textContent = text;
+  msg.className = `msg ${type || ""}`.trim();
 }
 
-async function loadStats() {
-  setTopStatus("idle", "Conectando…");
-  setMessage("");
+async function loadDashboard() {
+  if (!URL) throw new Error("Configura la URL del Web App en assets/config.js");
 
-  const url = `${APPS_SCRIPT_WEBAPP_URL}?action=stats`;
-  const res = await fetch(url);
-  const json = await res.json();
+  setStatus("idle", "Cargando…");
+  showMsg("");
 
-  if (!json.ok) throw new Error(json.error || "No se pudo cargar stats.");
-
+  const json = await fetchJson(`${URL}?action=dashboard`);
   const s = json.stats;
 
-  kpiPendientes.textContent = s.pendientes;
-  kpiConcluidos.textContent = s.concluidos;
-  kpiRetrasados.textContent = s.retrasados;
+  kTotal.textContent = s.total ?? "—";
+  kPend.textContent = s.pendientes ?? "—";
+  kConc.textContent = s.concluidos ?? "—";
+  kRetr.textContent = s.retrasados ?? "—";
 
-  renderRetrasados(s.retrasadosList || []);
-  setTopStatus("ok", "Conectado");
+  asOf.textContent = `Actualizado: ${s.as_of || "—"}`;
+  setStatus("ok", "Conectado");
 }
 
-refreshBtn.addEventListener("click", () => loadStats().catch((e) => {
-  setTopStatus("err", "Error");
-  setMessage(e.message, "err");
-}));
+refreshBtn.addEventListener("click", () => {
+  loadDashboard().catch(e => {
+    setStatus("err", "Error");
+    showMsg(e.message || "No se pudo cargar.", "err");
+  });
+});
 
-loadStats().catch((e) => {
-  setTopStatus("err", "Error");
-  setMessage(e.message, "err");
+loadDashboard().catch(e => {
+  setStatus("err", "Error");
+  showMsg(e.message || "No se pudo cargar.", "err");
 });
