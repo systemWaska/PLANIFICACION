@@ -7,100 +7,80 @@
   <link rel="stylesheet" href="./assets/styles.css" />
 </head>
 <body>
-  <div class="bg-glow"></div>
-
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
+        <div class="logo">✓</div>
         <div>
           <div class="title">Crear planificación</div>
           <div class="sub">Registro • Google Sheets</div>
         </div>
       </div>
-
-      <div class="row">
-        <a class="btn ghost" href="./index.html">← Inicio</a>
-        <a class="btn ghost" href="./ver.html">Ver →</a>
-        <div class="pill" aria-live="polite">
-          <span class="dot" id="statusDot"></span>
-          <span id="statusText">Conectando…</span>
-        </div>
+      <div class="actions">
+        <a class="btn" href="./index.html">← Inicio</a>
+        <a class="btn" href="./ver.html">Ver →</a>
+        <div class="pill"><span class="dot" id="statusDot"></span><span id="statusText">Conectando…</span></div>
       </div>
     </div>
   </header>
 
   <main class="container">
-    <div class="card">
-      <div class="hero">
-        <h1>Planifica. Ejecuta. Controla.</h1>
-        <p>Completa los campos. Estado queda <b>Pendiente</b> por defecto. “Ejecutado” se registra cuando se actualice en el Sheet.</p>
-      </div>
-
-      <div class="section">
-        <form id="taskForm" novalidate>
-          <div class="grid-2">
-            <div class="field">
-              <label for="area">Área</label>
-              <select id="area" required>
-                <option value="" selected disabled>Cargando áreas…</option>
-              </select>
-              <div class="helper">El Área controla la lista de Solicitante.</div>
-            </div>
-
-            <div class="field">
-              <label for="solicitante">Solicitante</label>
-              <select id="solicitante" required disabled>
-                <option value="" selected disabled>Selecciona primero un área</option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label for="prioridad">Prioridad</label>
-              <select id="prioridad" required>
-                <option value="" selected disabled>Cargando…</option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label for="tiempo">Tiempo estimado</label>
-              <input id="tiempo" type="text" placeholder="Ej: 3D, 5H, 1S, 1M" required />
-              <div class="helper">Formato: <b>H</b>=horas, <b>D</b>=días, <b>S</b>=semanas, <b>M</b>=meses. Ej: 3D</div>
-            </div>
+    <section class="card">
+      <form id="taskForm" novalidate>
+        <div class="grid">
+          <div class="field">
+            <label for="area">Área</label>
+            <select id="area" name="area" data-enhanced="1" data-search="0" data-placeholder="Selecciona un área"></select>
+            <div class="help">El Área controla la lista de Solicitante.</div>
           </div>
 
-          <div class="field" style="margin-top:14px;">
+          <div class="field">
+            <label for="solicitante">Solicitante</label>
+            <select id="solicitante" name="solicitante" data-enhanced="1" data-search="1" data-placeholder="Selecciona solicitante" disabled></select>
+          </div>
+
+          <div class="field">
+            <label for="prioridad">Prioridad</label>
+            <select id="prioridad" name="prioridad" data-enhanced="1" data-search="0" data-placeholder="Selecciona prioridad"></select>
+          </div>
+
+          <div class="field">
+            <label for="tiempo">Tiempo estimado</label>
+            <input id="tiempo" class="input" name="tiempo" type="text" placeholder="Ejemplo: 3 días, 5 horas, 1S, 2D, 1M" />
+            <div class="help">Usa S (semanas), D (días), H (horas), M (meses) o texto libre.</div>
+          </div>
+        </div>
+
+        <div class="grid" style="grid-template-columns:1fr;">
+          <div class="field">
             <label for="labores">Lista de labores</label>
-            <textarea id="labores" placeholder="Describe la labor…" required></textarea>
-            <div class="row" style="justify-content:space-between;">
-              <small id="chars">0 caracteres</small>
-              <small>Tip: escribe en bullets para claridad.</small>
+            <textarea id="labores" name="labores" placeholder="Describe la labor…"></textarea>
+            <div class="meta-row">
+              <div class="meta" id="chars">0 caracteres</div>
+              <div class="meta">Tip: escribe en bullets para claridad.</div>
             </div>
           </div>
+        </div>
 
-          <div class="field" style="margin-top:14px;">
+        <div class="grid" style="grid-template-columns:1fr;">
+          <div class="field">
             <label for="observacion">Observación (opcional)</label>
-            <textarea id="observacion" placeholder="Notas, bloqueos, contexto…"></textarea>
+            <textarea id="observacion" name="observacion" placeholder="Notas, bloqueos, contexto…"></textarea>
           </div>
+        </div>
 
-          <div class="row" style="margin-top:18px;">
-            <button class="btn primary" id="submitBtn" type="submit">
-              <span class="spinner" id="spinner" style="display:none;"></span>
-              <span id="btnText">Guardar</span>
-            </button>
-            <button class="btn" id="resetBtn" type="button">Limpiar</button>
-          </div>
-
-          <div id="msg" class="msg" style="display:none;"></div>
-        </form>
-      </div>
-
-      <div class="footer-note">Front: GitHub Pages • Back: Google Apps Script</div>
-    </div>
+        <div class="actions-row">
+          <button class="primary" id="submitBtn" type="submit">Guardar</button>
+          <button class="secondary" id="resetBtn" type="button">Limpiar</button>
+        </div>
+      </form>
+    </section>
   </main>
 
   <script src="./assets/config.js"></script>
+  <script src="./assets/api.js"></script>
   <script src="./assets/ui.js"></script>
+  <script src="./assets/select.js"></script>
   <script src="./assets/crear.js"></script>
 </body>
 </html>

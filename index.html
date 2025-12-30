@@ -7,89 +7,50 @@
   <link rel="stylesheet" href="./assets/styles.css" />
 </head>
 <body>
-  <div class="bg-glow"></div>
-
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
+        <div class="logo">✓</div>
         <div>
           <div class="title">Planificación</div>
           <div class="sub">Sistema interno • Google Sheets</div>
         </div>
       </div>
-
-      <div class="pill" aria-live="polite">
-        <span class="dot" id="statusDot"></span>
-        <span id="statusText">Listo</span>
+      <div class="actions">
+        <div class="pill"><span class="dot"></span><span id="statusText">Listo</span></div>
       </div>
     </div>
   </header>
 
   <main class="container">
-    <div class="card">
-      <div class="hero">
-        <h1>¿Qué deseas hacer?</h1>
-        <p>Elige una opción. Crear registra en Sheets. Ver muestra el historial (incluye Ejecutado y Fecha registro).</p>
+    <section class="card">
+      <h1 class="h1">¿Qué deseas hacer?</h1>
+      <p class="p">Elige una opción. Crear registra en Sheets. Ver muestra el historial (incluye Ejecutado y Fecha registro).</p>
+
+      <div class="tiles">
+        <a class="tile" href="./crear.html" aria-label="Crear planificación">
+          <div class="tile-left">
+            <div class="icon">＋</div>
+            <div>
+              <h3>Crear planificación</h3>
+              <small>Registro nueva labor (Estado = Pendiente)</small>
+            </div>
+          </div>
+          <div class="arrow">→</div>
+        </a>
+
+        <a class="tile" href="./ver.html" aria-label="Ver planificaciones">
+          <div class="tile-left">
+            <div class="icon">≡</div>
+            <div>
+              <h3>Ver planificaciones</h3>
+              <small>Tabla con filtros, búsqueda y Ejecutado</small>
+            </div>
+          </div>
+          <div class="arrow">→</div>
+        </a>
       </div>
-
-      <div class="section">
-        <div class="grid-2">
-          <a class="card" href="./crear.html" style="border-radius:22px;">
-            <div style="padding:18px 18px;">
-              <div class="row" style="justify-content:space-between;">
-                <div class="row">
-                  <div class="logo" style="width:44px;height:44px;border-radius:18px;background:rgba(99,102,241,.16);border-color:rgba(99,102,241,.35)"></div>
-                  <div>
-                    <div style="font-weight:900;font-size:18px;">Crear planificación</div>
-                    <div style="color:rgba(255,255,255,.55);margin-top:3px;">Registro rápido (Estado = Pendiente).</div>
-                  </div>
-                </div>
-                <div style="color:rgba(255,255,255,.75);font-weight:900;">Entrar →</div>
-              </div>
-            </div>
-          </a>
-
-          <a class="card" href="./ver.html" style="border-radius:22px;">
-            <div style="padding:18px 18px;">
-              <div class="row" style="justify-content:space-between;">
-                <div class="row">
-                  <div class="logo" style="width:44px;height:44px;border-radius:18px;background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.28)"></div>
-                  <div>
-                    <div style="font-weight:900;font-size:18px;">Ver planificaciones</div>
-                    <div style="color:rgba(255,255,255,.55);margin-top:3px;">Tabla con filtros, búsqueda y Ejecutado.</div>
-                  </div>
-                </div>
-                <div style="color:rgba(255,255,255,.75);font-weight:900;">Entrar →</div>
-              </div>
-            </div>
-          </a>
-
-          <a class="card" href="./dashboard.html" style="border-radius:22px; grid-column: 1 / -1;">
-            <div style="padding:18px 18px;">
-              <div class="row" style="justify-content:space-between;">
-                <div class="row">
-                  <div class="logo" style="width:44px;height:44px;border-radius:18px;background:rgba(250,204,21,.10);border-color:rgba(250,204,21,.22)"></div>
-                  <div>
-                    <div style="font-weight:900;font-size:18px;">Dashboard</div>
-                    <div style="color:rgba(255,255,255,.55);margin-top:3px;">Pendientes, concluidos y retrasados (según tiempo estimado).</div>
-                  </div>
-                </div>
-                <div style="color:rgba(255,255,255,.75);font-weight:900;">Entrar →</div>
-              </div>
-            </div>
-          </a>
-
-        </div>
-      </div>
-
-      <div class="footer-note">Front: GitHub Pages • Back: Google Apps Script</div>
-    </div>
+    </section>
   </main>
-
-  <script src="./assets/ui.js"></script>
-  <script>
-    setStatus("ok", "Listo");
-  </script>
 </body>
 </html>

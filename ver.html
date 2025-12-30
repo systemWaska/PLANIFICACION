@@ -7,92 +7,78 @@
   <link rel="stylesheet" href="./assets/styles.css" />
 </head>
 <body>
-  <div class="bg-glow"></div>
-
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
+        <div class="logo">✓</div>
         <div>
           <div class="title">Planificaciones</div>
           <div class="sub">Visualización • Google Sheets</div>
         </div>
       </div>
-
-      <div class="row">
-        <a class="btn ghost" href="./index.html">← Inicio</a>
-        <a class="btn ghost" href="./crear.html">Crear →</a>
-        <div class="pill" aria-live="polite">
-          <span class="dot" id="statusDot"></span>
-          <span id="statusText">Conectando…</span>
-        </div>
+      <div class="actions">
+        <a class="btn" href="./index.html">← Inicio</a>
+        <a class="btn" href="./crear.html">Crear →</a>
+        <div class="pill"><span class="dot" id="statusDot"></span><span id="statusText">Cargando…</span></div>
       </div>
     </div>
   </header>
 
   <main class="container">
-    <div class="card">
-      <div class="hero">
-        <h1>Todas las planificaciones</h1>
-        <p>Búsqueda + filtros. Incluye ejecutado y fecha registro.</p>
+    <section class="card">
+      <h1 class="h1" style="font-size:52px">Todas las planificaciones</h1>
+      <p class="p">Búsqueda + filtros. Incluye ejecutado y fecha registro.</p>
+
+      <div class="grid" style="margin-top:18px">
+        <div class="field">
+          <label for="q">Buscar</label>
+          <input id="q" class="input" type="text" placeholder="Buscar por área, solicitante, labor, prioridad, estado…" />
+        </div>
+
+        <div class="field">
+          <label for="fArea">Área</label>
+          <select id="fArea" data-enhanced="1" data-search="1" data-placeholder="Área: Todas"></select>
+        </div>
+
+        <div class="field">
+          <label for="fEstado">Estado</label>
+          <select id="fEstado" data-enhanced="1" data-search="0" data-placeholder="Estado: Todos"></select>
+        </div>
+
+        <div class="field">
+          <label>&nbsp;</label>
+          <button class="secondary" id="refreshBtn" type="button">Actualizar</button>
+        </div>
       </div>
 
-      <div class="section">
-        <div class="grid-3">
-          <div class="field">
-            <label for="q">Buscar</label>
-            <input id="q" type="search" placeholder="Buscar por área, solicitante, labor, prioridad, estado…" />
-          </div>
-
-          <div class="field">
-            <label for="fArea">Área</label>
-            <select id="fArea">
-              <option value="__ALL__">Área: Todas</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label for="fEstado">Estado</label>
-            <select id="fEstado">
-              <option value="__ALL__">Estado: Todos</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="row" style="margin-top:14px;">
-          <button class="btn" id="refreshBtn" type="button">Actualizar</button>
-          <span class="badge" id="countBadge">0 registros</span>
-        </div>
-
-        <div class="table-wrap" style="margin-top:14px;">
-          <table>
-            <thead>
-              <tr>
-                <th>Área</th>
-                <th>Solicitante</th>
-                <th>Prioridad</th>
-                <th>Lista de labores</th>
-                <th>Estado</th>
-                <th>Tiempo</th>
-                <th>Ejecutado</th>
-                <th>Fecha registro</th>
-              </tr>
-            </thead>
-            <tbody id="tbody">
-              <tr><td colspan="8" style="color:rgba(255,255,255,.55)">Cargando…</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div id="msg" class="msg" style="display:none; margin-top:14px;"></div>
+      <div class="table-wrap" aria-label="Tabla planificaciones">
+        <table>
+          <thead>
+            <tr>
+              <th>Área</th>
+              <th>Solicitante</th>
+              <th>Prioridad</th>
+              <th>Lista de labores</th>
+              <th>Estado</th>
+              <th>Tiempo</th>
+              <th>Ejecutado</th>
+              <th>Fecha registro</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="8">Cargando…</td></tr>
+          </tbody>
+        </table>
       </div>
 
-      <div class="footer-note">Front: GitHub Pages • Back: Google Apps Script</div>
-    </div>
+      <div class="meta" id="count" style="margin-top:10px"></div>
+    </section>
   </main>
 
   <script src="./assets/config.js"></script>
+  <script src="./assets/api.js"></script>
   <script src="./assets/ui.js"></script>
+  <script src="./assets/select.js"></script>
   <script src="./assets/ver.js"></script>
 </body>
 </html>
