@@ -1,169 +1,109 @@
-const APPS_SCRIPT_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxRYj6GaB8O7q-reEmLTPuZsoDDNQo9Gp_MDlJaFTJ-MiCF5vZ5DRk7gptwDYjA85G4UQ/exec";
+/**
+ * shared.js
+ * Funciones comunes reutilizadas en todas las páginas:
+ * - URL del WebApp
+ * - Helpers de DOM
+ * - Estado superior (Conectado / Error)
+ * - Toasts (alertas)
+ * - apiGet / apiPost
+ */
 
+const APPS_SCRIPT_WEBAPP_URL =
+  "https://script.google.com/macros/s/AKfycbw2TYdikRhGWefhv6ijzG_pz_vlULRWMihjlMrgtlVzvq6nhYot1101G3Ict_XToPWrLQ/exec";
+
+/** Shortcut para document.querySelector */
 const $ = (sel) => document.querySelector(sel);
 
-const form = $("#taskForm");
-const areaSelect = $("#area");
-const solicitanteSelect = $("#solicitante");
-const prioridadSelect = $("#prioridad");
-const tiempoInput = $("#tiempo");
-const labores = $("#labores");
+/**
+ * Cambia el estado superior (pill) con color y texto
+ * @param {"ok"|"warn"|"err"|"idle"} state
+ * @param {string} text
+ */
+function setTopStatus(state, text) {
+  const dot = $("#statusDot");
+  const label = $("#statusText");
+  if (!dot || !label) return;
 
-const msg = $("#msg");
-const submitBtn = $("#submitBtn");
-const resetBtn = $("#resetBtn");
-const spinner = $("#spinner");
-const btnText = $("#btnText");
-const chars = $("#chars");
-const toast = $("#toast");
+  label.textContent = text;
 
-let CONFIG = null;
-
-function setMessage(text, type = "") {
-  msg.textContent = text || "";
-  msg.className = `msg ${type}`.trim();
-}
-
-function setLoading(isLoading) {
-  submitBtn.disabled = isLoading;
-  spinner.style.display = isLoading ? "inline-block" : "none";
-  btnText.textContent = isLoading ? "Guardando..." : "Guardar";
-}
-
-function buildOptions(select, items, placeholder) {
-  select.innerHTML = "";
-  const opt0 = document.createElement("option");
-  opt0.value = "";
-  opt0.textContent = placeholder;
-  opt0.disabled = true;
-  opt0.selected = true;
-  select.appendChild(opt0);
-
-  (items || []).forEach((v) => {
-    const opt = document.createElement("option");
-    opt.value = v;
-    opt.textContent = v;
-    select.appendChild(opt);
-  });
-}
-
-function updateCharCount() {
-  const n = (labores.value || "").length;
-  chars.textContent = `${n} caracteres`;
-}
-
-function showToast(text) {
-  toast.textContent = text;
-  toast.classList.add("show");
-  window.clearTimeout(showToast._t);
-  showToast._t = window.setTimeout(() => toast.classList.remove("show"), 2800);
-}
-
-function getFormData() {
-  return {
-    area: areaSelect.value.trim(),
-    solicitante: solicitanteSelect.value.trim(),
-    prioridad: prioridadSelect.value.trim(),
-    labores: labores.value.trim(),
-    tiempoEstimadoHoras: tiempoInput.value
+  const colors = {
+    ok: "rgba(34,197,94,.9)",
+    warn: "rgba(250,204,21,.9)",
+    err: "rgba(239,68,68,.9)",
+    idle: "rgba(148,163,184,.7)",
   };
+
+  dot.style.background = colors[state] || colors.idle;
 }
 
-function validate(data) {
-  if (!data.area) return "Selecciona un Área.";
-  if (!data.solicitante) return "Selecciona un Solicitante.";
-  if (!data.prioridad) return "Selecciona una Prioridad.";
-  if (!data.tiempoEstimadoHoras) return "Ingresa el tiempo estimado (horas).";
-  const hrs = Number(data.tiempoEstimadoHoras);
-  if (!Number.isFinite(hrs) || hrs <= 0) return "Tiempo estimado inválido.";
-  if (!data.labores || data.labores.length < 3) return "Describe la labor (mín. 3 caracteres).";
-  return "";
+/**
+ * Toast (alerta flotante)
+ * @param {string} title - Texto principal
+ * @param {string} desc - Texto secundario
+ * @param {"ok"|"err"} type
+ */
+function toast(title, desc = "", type = "ok") {
+  const wrap = $("#toastWrap");
+  if (!wrap) return;
+
+  const el = document.createElement("div");
+  el.className = `toast ${type}`;
+
+  // Se renderiza simple para evitar inyección
+  const safeTitle = String(title ?? "");
+  const safeDesc = String(desc ?? "");
+
+  el.innerHTML = `
+    <div class="t">${safeTitle}</div>
+    ${safeDesc ? `<div class="d">${safeDesc}</div>` : ""}
+  `;
+
+  wrap.appendChild(el);
+
+  // Auto-close
+  setTimeout(() => {
+    el.style.opacity = "0";
+    el.style.transform = "translateY(6px)";
+    el.style.transition = "all .25s ease";
+    setTimeout(() => el.remove(), 260);
+  }, 3200);
 }
 
-async function loadConfig() {
-  const url = `${APPS_SCRIPT_WEBAPP_URL}?action=config`;
+/**
+ * GET al WebApp (Apps Script)
+ * @param {Record<string,string>} params
+ * @returns {Promise<any>}
+ */
+async function apiGet(params) {
+  const url = `${APPS_SCRIPT_WEBAPP_URL}?${new URLSearchParams(params).toString()}`;
   const res = await fetch(url);
   const json = await res.json();
-  if (!json.ok) throw new Error(json.error || "No se pudo cargar config.");
 
-  CONFIG = json.config;
-
-  buildOptions(areaSelect, CONFIG.areas, "Selecciona un área");
-  buildOptions(prioridadSelect, CONFIG.prioridades, "Selecciona prioridad");
-
-  solicitanteSelect.disabled = true;
-  buildOptions(solicitanteSelect, [], "Selecciona primero un área");
-}
-
-function onAreaChange() {
-  const area = areaSelect.value;
-  const solicitantes = CONFIG?.solicitanteByArea?.[area] || [];
-
-  if (!area || solicitantes.length === 0) {
-    solicitanteSelect.disabled = true;
-    buildOptions(solicitanteSelect, [], "Selecciona primero un área");
-    return;
-  }
-
-  solicitanteSelect.disabled = false;
-  buildOptions(solicitanteSelect, solicitantes, "Selecciona solicitante");
-}
-
-async function postToAppsScript(payload) {
-  const res = await fetch(APPS_SCRIPT_WEBAPP_URL, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify(payload)
-  });
-
-  const text = await res.text();
-  let json;
-  try { json = JSON.parse(text); } catch { throw new Error("Respuesta inválida del servidor."); }
-  if (!json.ok) throw new Error(json.error || "Error guardando en el Sheet.");
+  if (!json.ok) throw new Error(json.error || "Error en servidor.");
   return json;
 }
 
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  setMessage("");
+/**
+ * POST al WebApp (Apps Script)
+ * @param {any} payload
+ * @returns {Promise<any>}
+ */
+async function apiPost(payload) {
+  const res = await fetch(APPS_SCRIPT_WEBAPP_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(payload),
+  });
 
+  // Apps Script a veces responde como texto; parseamos manualmente
+  const text = await res.text();
+  let json;
   try {
-    if (!CONFIG) throw new Error("Config no cargada.");
-
-    const data = getFormData();
-    const err = validate(data);
-    if (err) {
-      setMessage(err, "err");
-      return;
-    }
-
-    setLoading(true);
-    const result = await postToAppsScript(data);
-
-    showToast(`${result.solicitante || data.solicitante}, tu planificación se guardó con éxito.`);
-    setMessage(`Guardado ✅ (Fila: ${result.row})`, "ok");
-
-    form.reset();
-    solicitanteSelect.disabled = true;
-    buildOptions(solicitanteSelect, [], "Selecciona primero un área");
-    updateCharCount();
-  } catch (error) {
-    setMessage(error.message || "Error enviando la información.", "err");
-  } finally {
-    setLoading(false);
+    json = JSON.parse(text);
+  } catch {
+    throw new Error("Respuesta inválida del servidor.");
   }
-});
 
-resetBtn.addEventListener("click", () => {
-  form.reset();
-  setMessage("");
-  solicitanteSelect.disabled = true;
-  buildOptions(solicitanteSelect, [], "Selecciona primero un área");
-  updateCharCount();
-});
-
-areaSelect.addEventListener("change", onAreaChange);
-labores.addEventListener("input", updateCharCount);
-
-updateCharCount();
-loadConfig().catch((e) => setMessage(e.message, "err"));
+  if (!json.ok) throw new Error(json.error || "Error guardando.");
+  return json;
+}
