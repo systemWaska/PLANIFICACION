@@ -14,15 +14,15 @@
       <div class="logo">✓</div>
       <div>
         <div class="title">Planificaciones</div>
-        <div class="sub">Visualización de las planificaciones</div>
+        <div class="sub">Visualización • Google Sheets</div>
       </div>
     </div>
 
-    <div class="right">
-      <a class="navlink" href="./index.html">← Inicio</a>
-      <a class="navlink" href="./crear.html">Crear →</a>
-      <div class="pill" id="statusPill">
-        <span class="dot" id="statusDot"></span>
+    <div class="actions">
+      <a class="link-pill" href="./index.html">← Inicio</a>
+      <a class="link-pill" href="./crear.html">Crear →</a>
+      <div id="statusPill" class="pill idle">
+        <span id="statusDot" class="dot"></span>
         <span id="statusText">Conectando...</span>
       </div>
     </div>
@@ -30,21 +30,27 @@
 
   <main class="container">
     <section class="card">
-      <div class="cardHead">
-        <h1 class="h1">Todas las planificaciones</h1>
-        <p class="p">Incluye “Ejecutado”, “Fecha registro” y filtros para control rápido.</p>
+      <div class="card-head">
+        <h1>Todas las planificaciones</h1>
+        <p class="muted">Incluye “Ejecutado”, “Fecha registro” y filtros para control rápido.</p>
       </div>
 
-      <div class="list-toolbar">
-        <div class="search">
-          <input id="searchInput" type="search" placeholder="Buscar por área, apoyo, labor, estado..." />
-        </div>
+      <div class="filters">
+        <input id="search" class="input" type="search" placeholder="Buscar por área, apoyo, labor, prioridad, estado..." />
 
-        <div class="filters">
-          <select id="filterArea"><option value="">Área: Todas</option></select>
-          <select id="filterEstado"><option value="">Estado: Todos</option></select>
-          <button id="refreshBtn" type="button">Actualizar</button>
-        </div>
+        <select id="filterArea" class="input">
+          <option value="Todas">Área: Todas</option>
+        </select>
+
+        <select id="filterEstado" class="input">
+          <option value="Todos">Estado: Todos</option>
+          <option value="Pendiente">Pendiente</option>
+          <option value="Concluido">Concluido</option>
+          <option value="Pausado">Pausado</option>
+          <option value="Anulado">Anulado</option>
+        </select>
+
+        <button id="refreshBtn" class="btn ghost" type="button">Actualizar</button>
       </div>
 
       <div class="table-wrap">
@@ -58,17 +64,19 @@
               <th>Proyectado</th>
               <th>Ejecutado</th>
               <th>Estado</th>
-              <th>Observación</th>
+              <th>Tiempo estimado</th>
               <th>Fecha registro</th>
             </tr>
           </thead>
-          <tbody id="plansTbody">
+          <tbody id="tbody">
             <tr><td colspan="9" class="muted">Cargando...</td></tr>
           </tbody>
         </table>
       </div>
 
-      <div class="msg" id="msg"></div>
+      <div class="footer-note">
+        Front: GitHub Pages • Back: Google Apps Script
+      </div>
     </section>
   </main>
 
