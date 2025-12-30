@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Dashboard</title>
   <link rel="stylesheet" href="./assets/styles.css" />
 </head>
@@ -10,75 +10,56 @@
   <div class="bg-glow"></div>
 
   <header class="topbar">
-    <div class="brand">
-      <div class="logo">✓</div>
-      <div>
-        <div class="title">Dashboard</div>
-        <div class="sub">Resumen • Retrasos por tiempo estimado</div>
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <div class="title">Dashboard</div>
+          <div class="sub">Resumen • Google Sheets</div>
+        </div>
       </div>
-    </div>
 
-    <div class="top-actions">
-      <a class="chip" href="./index.html">← Inicio</a>
-      <a class="chip" href="./crear.html">Crear →</a>
-      <a class="chip" href="./ver.html">Ver →</a>
-      <div id="statusPill" class="status-pill idle">
-        <span id="statusDot" class="dot"></span>
-        <span id="statusText">Conectando…</span>
+      <div class="row">
+        <a class="btn ghost" href="./index.html">← Inicio</a>
+        <a class="btn ghost" href="./crear.html">Crear</a>
+        <a class="btn ghost" href="./ver.html">Ver</a>
+        <div class="pill" aria-live="polite">
+          <span class="dot" id="statusDot"></span>
+          <span id="statusText">Conectando…</span>
+        </div>
       </div>
     </div>
   </header>
 
   <main class="container">
-    <section class="card">
-      <h1>Resumen</h1>
-      <p class="muted">Un registro se considera retrasado si está Pendiente y supera su tiempo estimado.</p>
-
-      <div class="kpi-grid">
-        <div class="kpi">
-          <div class="kpi-label">Pendientes</div>
-          <div id="kpiPendientes" class="kpi-value">—</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-label">Concluidos</div>
-          <div id="kpiConcluidos" class="kpi-value">—</div>
-        </div>
-        <div class="kpi danger">
-          <div class="kpi-label">Retrasados</div>
-          <div id="kpiRetrasados" class="kpi-value">—</div>
-        </div>
+    <div class="card">
+      <div class="hero">
+        <h1>Resumen</h1>
+        <p>Retrasados se calcula con Fecha registro + Tiempo estimado (H/D/S/M).</p>
       </div>
 
-      <div class="row-between" style="margin-top:18px;">
-        <h2 style="margin:0;">Retrasados</h2>
-        <button id="refreshBtn" class="btn">Actualizar</button>
+      <div class="section">
+        <div class="kpi" id="kpi">
+          <div class="box"><div class="num" id="kTotal">—</div><div class="lbl">Total</div></div>
+          <div class="box"><div class="num" id="kPend">—</div><div class="lbl">Pendientes</div></div>
+          <div class="box"><div class="num" id="kConc">—</div><div class="lbl">Concluidos</div></div>
+          <div class="box"><div class="num" id="kRetr">—</div><div class="lbl">Retrasados</div></div>
+        </div>
+
+        <div class="row" style="margin-top:16px;">
+          <button class="btn" id="refreshBtn" type="button">Actualizar</button>
+          <span class="badge" id="asOf">—</span>
+        </div>
+
+        <div id="msg" class="msg" style="display:none; margin-top:14px;"></div>
       </div>
 
-      <div class="table-wrap" style="margin-top:10px;">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Área</th>
-              <th>Solicitante</th>
-              <th>Prioridad</th>
-              <th>Estado</th>
-              <th>Tiempo (h)</th>
-              <th>Horas transcurridas</th>
-              <th>Fecha registro</th>
-            </tr>
-          </thead>
-          <tbody id="tbody">
-            <tr><td colspan="7" class="muted">Cargando…</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div id="msg" class="msg"></div>
-    </section>
+      <div class="footer-note">Front: GitHub Pages • Back: Google Apps Script</div>
+    </div>
   </main>
 
-  <footer class="footer">Front: GitHub Pages • Back: Google Apps Script</footer>
-
+  <script src="./assets/config.js"></script>
+  <script src="./assets/ui.js"></script>
   <script src="./assets/dashboard.js"></script>
 </body>
 </html>

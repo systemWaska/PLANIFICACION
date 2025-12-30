@@ -1,84 +1,106 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Crear planificación</title>
-  <link rel="stylesheet" href="./assets/styles.css"/>
+  <link rel="stylesheet" href="./assets/styles.css" />
 </head>
 <body>
   <div class="bg-glow"></div>
 
   <header class="topbar">
-    <div class="brand">
-      <div class="logo"></div>
-      <div>
-        <div class="title">Crear planificación</div>
-        <div class="sub">Registro • Google Sheets</div>
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <div class="title">Crear planificación</div>
+          <div class="sub">Registro • Google Sheets</div>
+        </div>
       </div>
-    </div>
 
-    <div class="pill">
-      <span class="dot" id="statusDot"></span>
-      <span id="statusText">Conectando...</span>
+      <div class="row">
+        <a class="btn ghost" href="./index.html">← Inicio</a>
+        <a class="btn ghost" href="./ver.html">Ver →</a>
+        <div class="pill" aria-live="polite">
+          <span class="dot" id="statusDot"></span>
+          <span id="statusText">Conectando…</span>
+        </div>
+      </div>
     </div>
   </header>
 
   <main class="container">
-    <section class="shell">
-      <div class="h1">Registrar labor</div>
-      <p class="lead">Estado se guarda como <b>Pendiente</b>. “Tiempo estimado” es obligatorio.</p>
+    <div class="card">
+      <div class="hero">
+        <h1>Planifica. Ejecuta. Controla.</h1>
+        <p>Completa los campos. Estado queda <b>Pendiente</b> por defecto. “Ejecutado” se registra cuando se actualice en el Sheet.</p>
+      </div>
 
-      <form id="taskForm" class="form" autocomplete="off">
-        <div class="field">
-          <label>Área</label>
-          <select id="area" required>
-            <option value="" selected disabled>Cargando áreas...</option>
-          </select>
-          <div class="helper"><span>El Área controla “Solicitante”.</span></div>
-        </div>
+      <div class="section">
+        <form id="taskForm" novalidate>
+          <div class="grid-2">
+            <div class="field">
+              <label for="area">Área</label>
+              <select id="area" required>
+                <option value="" selected disabled>Cargando áreas…</option>
+              </select>
+              <div class="helper">El Área controla la lista de Solicitante.</div>
+            </div>
 
-        <div class="field">
-          <label>Solicitante</label>
-          <select id="solicitante" required disabled>
-            <option value="" selected disabled>Selecciona primero un área</option>
-          </select>
-        </div>
+            <div class="field">
+              <label for="solicitante">Solicitante</label>
+              <select id="solicitante" required disabled>
+                <option value="" selected disabled>Selecciona primero un área</option>
+              </select>
+            </div>
 
-        <div class="field">
-          <label>Prioridad</label>
-          <select id="prioridad" required>
-            <option value="" selected disabled>Cargando...</option>
-          </select>
-        </div>
+            <div class="field">
+              <label for="prioridad">Prioridad</label>
+              <select id="prioridad" required>
+                <option value="" selected disabled>Cargando…</option>
+              </select>
+            </div>
 
-        <div class="field">
-          <label>Tiempo estimado</label>
-          <input id="tiempo" type="text" placeholder="Ej: 3 días / 5 horas / 1 semana" required />
-          <div class="helper"><span>Texto libre (no solo horas).</span></div>
-        </div>
-
-        <div class="field" style="grid-column: 1 / -1;">
-          <label>Lista de labores</label>
-          <textarea id="labores" placeholder="Describe la labor..." required></textarea>
-          <div class="helper">
-            <span>Tip: usa bullets.</span>
-            <span id="chars">0 caracteres</span>
+            <div class="field">
+              <label for="tiempo">Tiempo estimado</label>
+              <input id="tiempo" type="text" placeholder="Ej: 3D, 5H, 1S, 1M" required />
+              <div class="helper">Formato: <b>H</b>=horas, <b>D</b>=días, <b>S</b>=semanas, <b>M</b>=meses. Ej: 3D</div>
+            </div>
           </div>
-        </div>
 
-        <div class="actions" style="grid-column: 1 / -1;">
-          <button class="btn primary" id="submitBtn" type="submit">Guardar</button>
-          <button class="btn" id="resetBtn" type="button">Limpiar</button>
-        </div>
-      </form>
+          <div class="field" style="margin-top:14px;">
+            <label for="labores">Lista de labores</label>
+            <textarea id="labores" placeholder="Describe la labor…" required></textarea>
+            <div class="row" style="justify-content:space-between;">
+              <small id="chars">0 caracteres</small>
+              <small>Tip: escribe en bullets para claridad.</small>
+            </div>
+          </div>
 
-      <div class="footer">Front: GitHub Pages • Back: Google Apps Script</div>
-    </section>
+          <div class="field" style="margin-top:14px;">
+            <label for="observacion">Observación (opcional)</label>
+            <textarea id="observacion" placeholder="Notas, bloqueos, contexto…"></textarea>
+          </div>
+
+          <div class="row" style="margin-top:18px;">
+            <button class="btn primary" id="submitBtn" type="submit">
+              <span class="spinner" id="spinner" style="display:none;"></span>
+              <span id="btnText">Guardar</span>
+            </button>
+            <button class="btn" id="resetBtn" type="button">Limpiar</button>
+          </div>
+
+          <div id="msg" class="msg" style="display:none;"></div>
+        </form>
+      </div>
+
+      <div class="footer-note">Front: GitHub Pages • Back: Google Apps Script</div>
+    </div>
   </main>
 
-  <div class="toast-wrap" id="toastWrap"></div>
-  <script src="./assets/shared.js"></script>
+  <script src="./assets/config.js"></script>
+  <script src="./assets/ui.js"></script>
   <script src="./assets/crear.js"></script>
 </body>
 </html>
