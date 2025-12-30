@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Planificación</title>
   <link rel="stylesheet" href="./assets/styles.css" />
 </head>
@@ -17,43 +17,48 @@
         <div class="sub">Sistema interno • Google Sheets</div>
       </div>
     </div>
-    <div class="pill ok">
+    <div class="status-pill ok">
       <span class="dot"></span>
       <span>Listo</span>
     </div>
   </header>
 
   <main class="container">
-    <section class="hero-card">
+    <section class="card hero">
       <h1>¿Qué deseas hacer?</h1>
-      <p class="muted">
-        Elige una opción. Crear registra en Sheets. Ver muestra el historial (incluye Ejecutado y Fecha registro).
-      </p>
+      <p class="muted">Crea una planificación o revisa el historial. El dashboard muestra retrasos según “Tiempo estimado”.</p>
 
-      <div class="menu-actions">
-        <a class="menu-btn primary" href="./crear.html">
-          <span class="icon">＋</span>
+      <div class="grid-2">
+        <a class="action-card" href="./crear.html">
+          <div class="action-icon">＋</div>
           <div>
-            <strong>Crear planificación</strong>
-            <small>Registrar nueva labor (Estado = Pendiente)</small>
+            <div class="action-title">Crear planificación</div>
+            <div class="action-sub">Registro rápido (Pendiente por defecto).</div>
           </div>
-          <span class="arrow">→</span>
+          <div class="action-cta">Entrar →</div>
         </a>
 
-        <a class="menu-btn secondary" href="./ver.html">
-          <span class="icon">≡</span>
+        <a class="action-card" href="./ver.html">
+          <div class="action-icon">≡</div>
           <div>
-            <strong>Ver planificaciones</strong>
-            <small>Tabla con filtros, búsqueda y Ejecutado</small>
+            <div class="action-title">Ver planificaciones</div>
+            <div class="action-sub">Tabla + búsqueda + filtros.</div>
           </div>
-          <span class="arrow">→</span>
+          <div class="action-cta">Entrar →</div>
         </a>
-      </div>
 
-      <div class="footer-note">
-        Front: GitHub Pages • Back: Google Apps Script
+        <a class="action-card" href="./dashboard.html">
+          <div class="action-icon">▦</div>
+          <div>
+            <div class="action-title">Dashboard</div>
+            <div class="action-sub">Pendientes, concluidos y retrasados.</div>
+          </div>
+          <div class="action-cta">Entrar →</div>
+        </a>
       </div>
     </section>
   </main>
+
+  <footer class="footer">Front: GitHub Pages • Back: Google Apps Script</footer>
 </body>
 </html>
