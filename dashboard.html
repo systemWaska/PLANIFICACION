@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="./assets/styles.css" />
+</head>
+<body>
+  <div class="bg-glow"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">✓</div>
+      <div>
+        <div class="title">Dashboard</div>
+        <div class="sub">Resumen • Retrasos por tiempo estimado</div>
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <a class="chip" href="./index.html">← Inicio</a>
+      <a class="chip" href="./crear.html">Crear →</a>
+      <a class="chip" href="./ver.html">Ver →</a>
+      <div id="statusPill" class="status-pill idle">
+        <span id="statusDot" class="dot"></span>
+        <span id="statusText">Conectando…</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h1>Resumen</h1>
+      <p class="muted">Un registro se considera retrasado si está Pendiente y supera su tiempo estimado.</p>
+
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-label">Pendientes</div>
+          <div id="kpiPendientes" class="kpi-value">—</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Concluidos</div>
+          <div id="kpiConcluidos" class="kpi-value">—</div>
+        </div>
+        <div class="kpi danger">
+          <div class="kpi-label">Retrasados</div>
+          <div id="kpiRetrasados" class="kpi-value">—</div>
+        </div>
+      </div>
+
+      <div class="row-between" style="margin-top:18px;">
+        <h2 style="margin:0;">Retrasados</h2>
+        <button id="refreshBtn" class="btn">Actualizar</button>
+      </div>
+
+      <div class="table-wrap" style="margin-top:10px;">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Área</th>
+              <th>Solicitante</th>
+              <th>Prioridad</th>
+              <th>Estado</th>
+              <th>Tiempo (h)</th>
+              <th>Horas transcurridas</th>
+              <th>Fecha registro</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="7" class="muted">Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="msg" class="msg"></div>
+    </section>
+  </main>
+
+  <footer class="footer">Front: GitHub Pages • Back: Google Apps Script</footer>
+
+  <script src="./assets/dashboard.js"></script>
+</body>
+</html>
