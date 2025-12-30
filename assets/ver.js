@@ -1,126 +1,124 @@
-/* Ver planificaciones */
-
-const URL = window.APPS_SCRIPT_WEBAPP_URL;
+// Ver planificaciones (tabla + filtros)
 const $ = (s) => document.querySelector(s);
+
+const statusDot = $("#statusDot");
+const statusText = $("#statusText");
 
 const q = $("#q");
 const fArea = $("#fArea");
 const fEstado = $("#fEstado");
 const refreshBtn = $("#refreshBtn");
 const tbody = $("#tbody");
-const msg = $("#msg");
-const countBadge = $("#countBadge");
+const countEl = $("#count");
 
 let CONFIG = null;
 let ROWS = [];
 
-function showMsg(text, type) {
-  if (!text) {
-    msg.style.display = "none";
-    msg.textContent = "";
-    msg.className = "msg";
-    return;
-  }
-  msg.style.display = "block";
-  msg.textContent = text;
-  msg.className = `msg ${type || ""}`.trim();
+function setTopStatus(state, text) {
+  statusText.textContent = text;
+  const colors = { ok:"rgba(34,197,94,.9)", warn:"rgba(250,204,21,.9)", err:"rgba(239,68,68,.9)", idle:"rgba(148,163,184,.7)" };
+  statusDot.style.background = colors[state] || colors.idle;
 }
 
-function escapeHtml(s) {
-  return String(s || "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
+function buildOptions(select, items, placeholder){
+  select.innerHTML = "";
+  const opt0 = document.createElement("option");
+  opt0.value = "";
+  opt0.textContent = placeholder;
+  opt0.selected = true;
+  select.appendChild(opt0);
+
+  (items || []).forEach((v) => {
+    const opt = document.createElement("option");
+    opt.value = v;
+    opt.textContent = v;
+    select.appendChild(opt);
+  });
+
+  if (window.EnhancedSelect) window.EnhancedSelect.enhanceSelect(select);
 }
 
-function buildFilterOptions() {
-  // Área
-  const a0 = `<option value="__ALL__">Área: Todas</option>`;
-  fArea.innerHTML = a0 + (CONFIG.areas || []).map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join("");
-
-  // Estado
-  const e0 = `<option value="__ALL__">Estado: Todos</option>`;
-  fEstado.innerHTML = e0 + (CONFIG.estados || []).map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
+function escapeHtml(str){
+  return (str || "").toString()
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 }
 
-function matchRow(row, text, areaSel, estadoSel) {
-  const t = (text || "").trim().toLowerCase();
-
-  if (areaSel && areaSel !== "__ALL__" && row.area !== areaSel) return false;
-  if (estadoSel && estadoSel !== "__ALL__" && row.estado !== estadoSel) return false;
-
-  if (!t) return true;
-
-  const hay = [
-    row.area,
-    row.solicitante,
-    row.prioridad,
-    row.labores,
-    row.estado,
-    row.tiempo_estimado,
-    row.ejecutado,
-    row.fecha_registro,
+function rowToText(r){
+  return [
+    r.area, r.solicitante, r.prioridad, r.labores, r.estado, r.tiempo, r.ejecutado, r.registro
   ].join(" ").toLowerCase();
-
-  return hay.includes(t);
 }
 
-function render() {
-  const text = q.value;
-  const a = fArea.value;
-  const s = fEstado.value;
-
-  const filtered = ROWS.filter(r => matchRow(r, text, a, s));
-  countBadge.textContent = `${filtered.length} registros`;
-
-  if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" style="color:rgba(255,255,255,.55)">No hay registros.</td></tr>`;
+function render(rows){
+  if (!rows.length){
+    tbody.innerHTML = `<tr><td colspan="8">No hay registros.</td></tr>`;
+    countEl.textContent = "";
     return;
   }
 
-  tbody.innerHTML = filtered.map(r => `
+  tbody.innerHTML = rows.map(r => `
     <tr>
       <td>${escapeHtml(r.area)}</td>
       <td>${escapeHtml(r.solicitante)}</td>
-      <td>${escapeHtml(r.prioridad)}</td>
-      <td style="white-space:pre-wrap">${escapeHtml(r.labores)}</td>
+      <td><span class="badge">${escapeHtml(r.prioridad)}</span></td>
+      <td>${escapeHtml(r.labores)}</td>
       <td>${escapeHtml(r.estado)}</td>
-      <td>${escapeHtml(r.tiempo_estimado)}</td>
-      <td>${escapeHtml(r.ejecutado)}</td>
-      <td>${escapeHtml(r.fecha_registro)}</td>
+      <td>${escapeHtml(r.tiempo)}</td>
+      <td>${escapeHtml(r.ejecutado || "")}</td>
+      <td>${escapeHtml(r.registro || "")}</td>
     </tr>
   `).join("");
+
+  countEl.textContent = `${rows.length} registro(s)`;
 }
 
-async function loadConfig() {
-  if (!URL) throw new Error("Configura la URL del Web App en assets/config.js");
-  setStatus("idle", "Conectando…");
-  const json = await fetchJson(`${URL}?action=config`);
+function applyFilters(){
+  const qq = (q.value || "").trim().toLowerCase();
+  const a = (fArea.value || "").trim();
+  const st = (fEstado.value || "").trim();
+
+  let rows = ROWS.slice();
+  if (a) rows = rows.filter(r => r.area === a);
+  if (st) rows = rows.filter(r => r.estado === st);
+  if (qq) rows = rows.filter(r => rowToText(r).includes(qq));
+
+  render(rows);
+}
+
+async function loadConfig(){
+  const json = await apiGet("config");
   CONFIG = json.config;
-  buildFilterOptions();
+
+  buildOptions(fArea, ["Todas", ...CONFIG.areas], "Área: Todas");
+  buildOptions(fEstado, ["Todos", ...CONFIG.estados], "Estado: Todos");
+
+  fArea.addEventListener("change", () => {
+    if (fArea.value === "Todas") fArea.value = "";
+    applyFilters();
+  });
+  fEstado.addEventListener("change", () => {
+    if (fEstado.value === "Todos") fEstado.value = "";
+    applyFilters();
+  });
 }
 
-async function loadRows() {
-  setStatus("idle", "Cargando…");
-  showMsg("");
-
-  const json = await fetchJson(`${URL}?action=list`);
+async function loadRows(){
+  setTopStatus("idle","Cargando…");
+  const json = await apiGet("list");
   ROWS = json.rows || [];
-  setStatus("ok", "Conectado");
-  render();
+  setTopStatus("ok","Conectado");
+  applyFilters();
 }
 
-refreshBtn.addEventListener("click", () => loadRows().catch(e => showMsg(e.message, "err")));
-q.addEventListener("input", render);
-fArea.addEventListener("change", render);
-fEstado.addEventListener("change", render);
+q.addEventListener("input", applyFilters);
+refreshBtn.addEventListener("click", () => loadRows().catch(e => UI.toast(e.message, "err")));
 
-(async function init(){
-  try{
-    await loadConfig();
-    await loadRows();
-  } catch(e){
-    setStatus("err", "Error");
-    showMsg(e.message || "No se pudo cargar.", "err");
-  }
-})();
+Promise.all([loadConfig(), loadRows()]).catch((e)=>{
+  setTopStatus("err","Error");
+  UI.toast(e.message || "Error cargando.", "err");
+  tbody.innerHTML = `<tr><td colspan="8">${escapeHtml(e.message || "Error")}</td></tr>`;
+});

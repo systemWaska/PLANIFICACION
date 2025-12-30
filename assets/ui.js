@@ -1,64 +1,36 @@
-/* Utilidades de UI: toast + helpers */
+// Alertas tipo "toast" (éxito / error / info)
+(function(){
+  const rootId = "toastRoot";
 
-(function () {
-  const wrapId = "toastWrap";
-
-  function ensureWrap() {
-    let wrap = document.getElementById(wrapId);
-    if (!wrap) {
-      wrap = document.createElement("div");
-      wrap.id = wrapId;
-      wrap.className = "toast-wrap";
-      document.body.appendChild(wrap);
-    }
-    return wrap;
+  function ensureRoot(){
+    let root = document.getElementById(rootId);
+    if (root) return root;
+    root = document.createElement("div");
+    root.id = rootId;
+    root.className = "toast-root";
+    document.body.appendChild(root);
+    return root;
   }
 
-  // toast(title, description, type)
-  window.toast = function (title, description, type) {
-    const wrap = ensureWrap();
-    const t = document.createElement("div");
-    t.className = `toast ${type || ""}`.trim();
-    t.innerHTML = `
-      <div class="t"></div>
-      <div class="d"></div>
-    `;
-    t.querySelector(".t").textContent = title || "";
-    t.querySelector(".d").textContent = description || "";
-    wrap.appendChild(t);
+  function toast(message, type="info", ms=3800){
+    const root = ensureRoot();
+    const el = document.createElement("div");
+    el.className = `toast ${type}`;
+    el.innerHTML = `<div class="toast-dot"></div><div class="toast-msg">${message}</div>`;
+    root.appendChild(el);
 
-    setTimeout(() => {
-      t.style.opacity = "0";
-      t.style.transform = "translateY(-6px)";
-      t.style.transition = "all .25s ease";
-      setTimeout(() => t.remove(), 280);
-    }, 3800);
-  };
+    requestAnimationFrame(()=> el.classList.add("show"));
+    const t = setTimeout(()=>{
+      el.classList.remove("show");
+      setTimeout(()=> el.remove(), 260);
+    }, ms);
 
-  // fetch JSON con manejo de errores
-  window.fetchJson = async function (url, options) {
-    const res = await fetch(url, options || {});
-    const txt = await res.text();
-    let json;
-    try { json = JSON.parse(txt); }
-    catch { throw new Error("Respuesta inválida del servidor."); }
-    if (!json.ok) throw new Error(json.error || "Error del servidor.");
-    return json;
-  };
+    el.addEventListener("click", ()=>{
+      clearTimeout(t);
+      el.classList.remove("show");
+      setTimeout(()=> el.remove(), 260);
+    });
+  }
 
-  // estado superior (pill)
-  window.setStatus = function (state, text) {
-    const dot = document.getElementById("statusDot");
-    const label = document.getElementById("statusText");
-    if (!dot || !label) return;
-
-    const colors = {
-      ok: "rgba(34,197,94,.9)",
-      warn: "rgba(250,204,21,.9)",
-      err: "rgba(239,68,68,.9)",
-      idle: "rgba(148,163,184,.7)",
-    };
-    dot.style.background = colors[state] || colors.idle;
-    label.textContent = text || "";
-  };
+  window.UI = { toast };
 })();
