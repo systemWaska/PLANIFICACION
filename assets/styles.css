@@ -295,3 +295,31 @@ textarea{ resize: vertical; min-height: 120px; }
   .btn{ width:100%; min-width:auto; }
   .actions-row{ width:100%; }
 }
+/* === RESPONSIVE TABLE === */
+@media (max-width: 768px) {
+  table thead {
+    display: none;
+  }
+
+  table tr {
+    display: block;
+    margin-bottom: 1rem;
+    background: rgba(255,255,255,.04);
+    border-radius: 12px;
+    padding: 12px;
+  }
+
+  table td {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 14px;
+  }
+
+  table td::before {
+    content: attr(data-label);
+    opacity: .6;
+    font-weight: 500;
+  }
+}
+
