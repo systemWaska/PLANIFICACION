@@ -1,4 +1,12 @@
-const APPS_SCRIPT_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw2TYdikRhGWefhv6ijzG_pz_vlULRWMihjlMrgtlVzvq6nhYot1101G3Ict_XToPWrLQ/exec";
+/**
+ * CREAR (OPTIMO)
+ * - Carga config dinámica (área/apoyo/prioridad)
+ * - Estado fijo: Pendiente
+ * - Sin Proyectado / sin Ejecutado
+ * - Tiempo estimado obligatorio (campo observacion)
+ */
+
+const APPS_SCRIPT_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxRYj6GaB8O7q-reEmLTPuZsoDDNQo9Gp_MDlJaFTJ-MiCF5vZ5DRk7gptwDYjA85G4UQ/exec";
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -6,9 +14,8 @@ const form = $("#taskForm");
 const areaSelect = $("#area");
 const apoyoSelect = $("#apoyo");
 const prioridadSelect = $("#prioridad");
-const estadoSelect = $("#estado");
 const labores = $("#labores");
-const observacion = $("#observacion");
+const observacion = $("#observacion"); // ahora = Tiempo estimado
 
 const msg = $("#msg");
 const submitBtn = $("#submitBtn");
@@ -32,6 +39,7 @@ function setMessage(text, type = "") {
 
 function setTopStatus(state, text) {
   statusText.textContent = text;
+
   const colors = {
     ok: "rgba(34,197,94,.9)",
     warn: "rgba(250,204,21,.9)",
@@ -67,7 +75,6 @@ function setLoading(isLoading) {
 function clearInvalid() {
   [...form.querySelectorAll(".invalid")].forEach(el => el.classList.remove("invalid"));
 }
-
 function markInvalid(el) {
   if (!el) return;
   el.classList.add("invalid");
@@ -75,9 +82,16 @@ function markInvalid(el) {
 
 function updateBadges() {
   const p = prioridadSelect.value || "—";
-  const s = estadoSelect.value || "—";
   prioBadge.textContent = `Prioridad: ${p}`;
-  stateBadge.textContent = `Estado: ${s}`;
+  stateBadge.textContent = `Estado: Pendiente`;
+
+  const prioMap = {
+    "Prioridad 1": "rgba(239,68,68,.16)",
+    "Prioridad 2": "rgba(250,204,21,.14)",
+    "RUT": "rgba(59,130,246,.14)"
+  };
+  prioBadge.style.background = prioMap[p] || "rgba(148,163,184,.08)";
+  stateBadge.style.background = "rgba(250,204,21,.12)";
 }
 
 function updateCharCount() {
@@ -86,25 +100,32 @@ function updateCharCount() {
 }
 
 async function loadConfig() {
+  if (!APPS_SCRIPT_WEBAPP_URL || APPS_SCRIPT_WEBAPP_URL.includes("PEGA_AQUI")) {
+    setTopStatus("err", "Falta URL del WebApp");
+    setMessage("Configura APPS_SCRIPT_WEBAPP_URL en assets/crear.js", "err");
+    return;
+  }
+
   setTopStatus("idle", "Conectando...");
-  setMessage("Cargando configuración...");
+  setMessage("Cargando configuración...", "");
 
   const url = `${APPS_SCRIPT_WEBAPP_URL}?action=config`;
-  const res = await fetch(url);
+  const res = await fetch(url, { method: "GET" });
   const json = await res.json();
 
   if (!json.ok) throw new Error(json.error || "No se pudo cargar config.");
+
   CONFIG = json.config;
 
   buildOptions(areaSelect, CONFIG.areas, "Selecciona un área");
   buildOptions(prioridadSelect, CONFIG.prioridades, "Selecciona prioridad");
-  buildOptions(estadoSelect, CONFIG.estados, "Selecciona estado");
 
   apoyoSelect.disabled = true;
   buildOptions(apoyoSelect, [], "Selecciona primero un área");
 
   setTopStatus("ok", "Conectado");
-  setMessage("");
+  setMessage("", "");
+
   updateBadges();
 }
 
@@ -122,14 +143,18 @@ function onAreaChange() {
   buildOptions(apoyoSelect, apoyos, "Selecciona apoyo");
 }
 
+function onPrioridadChange() {
+  updateBadges();
+}
+
 function getFormData() {
   return {
     area: areaSelect.value.trim(),
     apoyo: apoyoSelect.value.trim(),
     prioridad: prioridadSelect.value.trim(),
     labores: labores.value.trim(),
-    estado: estadoSelect.value.trim(),
-    observacion: (observacion.value || "").trim()
+    estado: "Pendiente",                 // fijo
+    observacion: (observacion.value || "").trim() // TIEMPO ESTIMADO obligatorio
   };
 }
 
@@ -139,8 +164,13 @@ function validate(data) {
   if (!data.area) { markInvalid(areaSelect); return "Selecciona un Área."; }
   if (!data.apoyo) { markInvalid(apoyoSelect); return "Selecciona un Apoyo."; }
   if (!data.prioridad) { markInvalid(prioridadSelect); return "Selecciona una Prioridad."; }
-  if (!data.estado) { markInvalid(estadoSelect); return "Selecciona un Estado."; }
   if (!data.labores || data.labores.length < 3) { markInvalid(labores); return "Describe la labor (mín. 3 caracteres)."; }
+
+  // Tiempo estimado obligatorio
+  if (!data.observacion || data.observacion.length < 2) {
+    markInvalid(observacion);
+    return "Tiempo estimado obligatorio (Ej: 2h, 3 días, 1 semana).";
+  }
 
   return "";
 }
@@ -178,7 +208,7 @@ form.addEventListener("submit", async (e) => {
 
     setLoading(true);
     setTopStatus("idle", "Guardando...");
-    setMessage("Guardando en Google Sheets...");
+    setMessage("Guardando en Google Sheets...", "");
 
     const result = await postToAppsScript(data);
 
@@ -211,8 +241,7 @@ resetBtn.addEventListener("click", () => {
 });
 
 areaSelect.addEventListener("change", onAreaChange);
-estadoSelect.addEventListener("change", updateBadges);
-prioridadSelect.addEventListener("change", updateBadges);
+prioridadSelect.addEventListener("change", onPrioridadChange);
 labores.addEventListener("input", updateCharCount);
 
 updateCharCount();
