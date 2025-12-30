@@ -6,6 +6,7 @@ const fEstado = $("#fEstado");
 const refreshBtn = $("#refreshBtn");
 const msg = $("#msg");
 const rows = $("#rows");
+const cards = $("#cards");
 
 let CONFIG = null;
 let DATA = [];
@@ -69,6 +70,9 @@ function applyFilters() {
 function render(list) {
   if (!list.length) {
     rows.innerHTML = `<tr><td colspan="8">No hay registros.</td></tr>`;
+    if (cards) {
+      cards.innerHTML = `<div class="card-item"><div class="card-row"><div class="k">Sin registros</div><div class="v">No hay registros.</div></div></div>`;
+    }
     return;
   }
 
@@ -84,6 +88,22 @@ function render(list) {
       <td>${escapeHtml(r.fechaRegistro)}</td>
     </tr>
   `).join("");
+
+  // En mobile mostramos cards (la tabla queda para desktop)
+  if (cards) {
+    cards.innerHTML = list.map((r) => `
+      <div class="card-item">
+        <div class="card-row"><div class="k">Área</div><div class="v">${escapeHtml(r.area)}</div></div>
+        <div class="card-row"><div class="k">Solicitante</div><div class="v">${escapeHtml(r.solicitante)}</div></div>
+        <div class="card-row"><div class="k">Prioridad</div><div class="v"><span class="badge">${escapeHtml(r.prioridad)}</span></div></div>
+        <div class="card-row"><div class="k">Estado</div><div class="v"><span class="badge">${escapeHtml(r.estado)}</span></div></div>
+        <div class="card-row"><div class="k">Tiempo estimado</div><div class="v">${escapeHtml(r.tiempo)}</div></div>
+        <div class="card-row"><div class="k">Ejecutado</div><div class="v">${escapeHtml(r.ejecutado)}</div></div>
+        <div class="card-row"><div class="k">Registro</div><div class="v">${escapeHtml(r.fechaRegistro)}</div></div>
+        <div class="card-row"><div class="k">Labores</div><div class="v">${escapeHtml(r.labores)}</div></div>
+      </div>
+    `).join("");
+  }
 }
 
 async function load() {
@@ -96,7 +116,7 @@ async function load() {
 
   buildSelect(fArea, CONFIG.areas, "Área: Todas");
   buildSelect(fEstado, ["Pendiente", "Concluido", "Pausado", "Anulado"], "Estado: Todos");
-  EnhancedSelect.enhanceAll(document);
+
 
   const res = await API.get("list");
   DATA = res.rows || [];

@@ -66,7 +66,7 @@ function onAreaChange() {
   solicitante.disabled = false;
   buildSelect(solicitante, list, "Selecciona solicitante");
 
-  EnhancedSelect.enhanceAll(document); // mantiene el select custom sincronizado
+
 }
 
 function validate() {
@@ -100,7 +100,7 @@ async function loadConfig() {
   buildSelect(prioridad, config.prioridades, "Selecciona prioridad");
   resetSolicitante();
 
-  EnhancedSelect.enhanceAll(document);
+
 
   setTopStatus("ok", "Conectado");
 }
@@ -130,7 +130,7 @@ form.addEventListener("submit", async (e) => {
 
     form.reset();
     resetSolicitante();
-    EnhancedSelect.enhanceAll(document);
+
     updateChars();
     setTopStatus("ok", "Guardado");
   } catch (e2) {
@@ -145,7 +145,7 @@ form.addEventListener("submit", async (e) => {
 resetBtn.addEventListener("click", () => {
   form.reset();
   resetSolicitante();
-  EnhancedSelect.enhanceAll(document);
+
   updateChars();
   setMsg("");
   setTopStatus("ok", "Conectado");

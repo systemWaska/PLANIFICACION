@@ -118,6 +118,12 @@ input[type="text"], input[type="date"], textarea, select{
   color:var(--text);
   outline:none;
 }
+
+/* Mejora visual del desplegable en modo oscuro (nativo) */
+select option, select optgroup{
+  background: #0b1020;
+  color: var(--text);
+}
 textarea{min-height: 120px; resize: vertical}
 input:focus, textarea:focus, select:focus{
   border-color: rgba(109,94,252,.55);
@@ -164,6 +170,25 @@ th{
 }
 td{color: rgba(238,242,255,.86)}
 .scroll-x{overflow:auto}
+
+/* Vista mobile: tabla -> cards */
+.cards{display:none}
+.cards .card-item{
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04);
+  border-radius: 18px;
+  padding: 14px;
+}
+.cards .card-row{display:flex; justify-content:space-between; gap:12px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,.07)}
+.cards .card-row:last-child{border-bottom:none}
+.cards .k{color:var(--muted2); font-size:12px}
+.cards .v{color:rgba(238,242,255,.92); font-size:13px; text-align:right; max-width: 64%; word-break:break-word}
+
+@media (max-width: 720px){
+  table{min-width: 0}
+  .table-wrap{display:none}
+  .cards{display:grid; grid-template-columns:1fr; gap:12px}
+}
 
 .badge{
   display:inline-flex;
