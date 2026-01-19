@@ -18,10 +18,11 @@
           </div>
         </div>
         <nav class="nav">
-          <a class="btn" href="./index.html">← Inicio</a>
-          <a class="btn" href="./crear.html">Crear →</a>
-          <a class="btn" href="./ver.html">Ver →</a>
-          <a class="btn" href="./dashboard.html">Dashboard →</a>
+          <a class="btn" data-nav="inicio" href="./index.html">← Inicio</a>
+          <a class="btn" data-nav="crear" href="./crear.html">Crear →</a>
+          <a class="btn" data-nav="ver" href="./ver.html">Ver →</a>
+          <a class="btn" data-nav="dashboard" href="./dashboard.html">Dashboard →</a>
+          <button class="btn btn-icon" id="themeToggle" type="button" aria-label="Cambiar tema">🌙</button>
           <span class="pill"><span class="dot" id="statusDot"></span><span id="statusText">Listo</span></span>
         </nav>
       </header>
@@ -31,29 +32,40 @@
           <div class="card-pad">
 
 <h1>Dashboard</h1>
-<p class="lead">Resumen por estado y tiempos estimados (texto).</p>
+<p class="lead">Resumen por estado, tiempos y alertas de vencimiento.</p>
 
-<div class="grid3">
-  <div class="pill"><span class="dot" id="kpiDot1"></span><span id="kpi1">Pendientes: —</span></div>
-  <div class="pill"><span class="dot" id="kpiDot2"></span><span id="kpi2">Concluidos: —</span></div>
+<div class="kpi-grid">
+  <div class="pill"><span class="dot dot-warn" id="kpiDot1"></span><span id="kpi1">Pendientes: —</span></div>
+  <div class="pill"><span class="dot dot-good" id="kpiDot2"></span><span id="kpi2">Concluidos: —</span></div>
+  <div class="pill"><span class="dot dot-warn" id="kpiDot4"></span><span id="kpi4">Por vencer (48h): —</span></div>
+  <div class="pill"><span class="dot dot-bad" id="kpiDot5"></span><span id="kpi5">Vencidos: —</span></div>
   <div class="pill"><span class="dot" id="kpiDot3"></span><span id="kpi3">Total: —</span></div>
 </div>
 
-<div class="grid2" style="margin-top:14px">
-  <div class="card" style="background: rgba(255,255,255,.03);">
+<div class="dash-grid" style="margin-top:14px">
+  <div class="card card-soft">
     <div class="card-pad">
-      <div style="font-weight:760; margin-bottom:10px">Top solicitantes</div>
+      <div class="section-title">Top solicitantes</div>
       <div id="topSolicitantes" class="msg">Cargando...</div>
     </div>
   </div>
-  <div class="card" style="background: rgba(255,255,255,.03);">
+  <div class="card card-soft">
     <div class="card-pad">
-      <div style="font-weight:760; margin-bottom:10px">Tiempos más frecuentes</div>
+      <div class="section-title">Tiempos más frecuentes</div>
       <div id="topTiempos" class="msg">Cargando...</div>
     </div>
   </div>
+  <div class="card card-soft">
+    <div class="card-pad">
+      <div class="section-title">Alertas</div>
+      <div class="msg" style="margin-bottom:8px">Por vencer (≤ 48h) y vencidos (no concluidos).</div>
+      <div id="alertsList" class="alerts-list">Cargando...</div>
+      <div style="margin-top:10px">
+        <a class="btn" href="./ver.html">Ver en tabla →</a>
+      </div>
+    </div>
+  </div>
 </div>
-
 <div class="table-wrap scroll-x" style="margin-top:14px">
   <table>
     <thead>
