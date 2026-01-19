@@ -1,8 +1,9 @@
-const { $, toast, hideCurrentNav, initTheme } = UI;
-
-// Oculta el botón de la pestaña donde estás (ej: si estás en "Crear", oculta "Crear")
-initTheme();
-hideCurrentNav();
+// Página: CREAR (formulario)
+// ui.js ya se encarga de:
+// - Inicializar tema + botón ☀️/🌙
+// - Ocultar el link de navegación de la página actual
+// Por eso aquí solo usamos helpers básicos.
+const { $, toast } = UI;
 
 const form = $("#taskForm");
 const area = $("#area");

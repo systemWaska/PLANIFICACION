@@ -1,4 +1,11 @@
 // UI helpers: toast, safe text, debounce, date formatting, navbar helpers, theme
+// -----------------------------------------------------------------------------
+// Este archivo se carga en TODAS las páginas (index/crear/ver/dashboard).
+// Objetivo:
+//   1) Tener una sola fuente de helpers (fechas, clases CSS, etc.).
+//   2) Evitar repetir lógica en cada página.
+//   3) Que el botón de tema (🌙/☀️) funcione de forma consistente.
+// -----------------------------------------------------------------------------
 const UI = (() => {
   const $ = (s, root = document) => root.querySelector(s);
   const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
@@ -109,16 +116,25 @@ const UI = (() => {
   }
 
   function initTheme() {
+    // Idempotencia REAL:
+    // - Aplicamos el tema siempre (para mantener consistencia entre páginas).
+    // - El listener del botón SOLO se agrega una vez por botón.
+    //   (Soluciona el bug donde el click parece “no funcionar” si se registran 2 listeners).
+
     const theme = getPreferredTheme_();
     applyTheme_(theme);
 
     const btn = $("#themeToggle");
-    if (btn) {
-      btn.addEventListener("click", () => {
-        const current = document.documentElement.dataset.theme || "dark";
-        applyTheme_(current === "dark" ? "light" : "dark");
-      });
-    }
+    if (!btn) return;
+
+    // Evita doble binding si alguien vuelve a llamar initTheme() (por ejemplo, desde ver.js)
+    if (btn.dataset.bound === "1") return;
+    btn.dataset.bound = "1";
+
+    btn.addEventListener("click", () => {
+      const current = document.documentElement.dataset.theme || "dark";
+      applyTheme_(current === "dark" ? "light" : "dark");
+    });
   }
 
   // -------------------------
@@ -184,9 +200,10 @@ const UI = (() => {
 
   // Init theme + hide current nav on every page automatically
   // (Esto evita repetir la llamada en cada página y corrige el menú)
+  // Ejecuta automáticamente en todas las páginas.
   document.addEventListener("DOMContentLoaded", () => {
-    initTheme();
-    hideCurrentNav();
+    initTheme();      // Activa tema (y botón)
+    hideCurrentNav(); // Oculta el botón del menú de la página actual
   });
 
   return {

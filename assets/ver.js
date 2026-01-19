@@ -1,8 +1,9 @@
-const { $, toast, escapeHtml, debounce, formatDateShort, formatDateTime, hideCurrentNav, stateClass, dueClass, initTheme } = UI;
-
-// Init theme + hide current nav item
-initTheme();
-hideCurrentNav();
+// Página: VER (tabla de planificaciones)
+// ------------------------------------------------------------
+// Nota: No llamamos initTheme() ni hideCurrentNav() aquí,
+// porque ui.js ya lo hace automáticamente en DOMContentLoaded.
+// Esto evita listeners duplicados y errores sutiles.
+const { $, toast, escapeHtml, debounce, formatDateShort, formatDateTime, stateClass, dueClass } = UI;
 
 const q = $("#q");
 const fArea = $("#fArea");
@@ -130,8 +131,29 @@ async function load() {
   setMsg("Cargando registros...");
   rows.innerHTML = `<tr><td colspan="8">Cargando...</td></tr>`;
 
-  const cfgRes = await API.get("config");
+  // 1) Config: cache en navegador (10 min)
+  //    Esto evita pedir config cada vez que entras a /ver.html.
+  const CFG_CACHE_KEY = "plan_cfg_v1";
+  const CFG_CACHE_TTL_MS = 10 * 60 * 1000;
+  const cachedRaw = localStorage.getItem(CFG_CACHE_KEY);
+  const cached = cachedRaw ? JSON.parse(cachedRaw) : null;
+  const now = Date.now();
+
+  // 2) Pedimos config + list en paralelo para que cargue más rápido.
+  const cfgPromise = (cached && (now - cached.ts) < CFG_CACHE_TTL_MS)
+    ? Promise.resolve({ ok: true, config: cached.config })
+    : API.get("config");
+
+  const listPromise = API.get("list");
+
+  const [cfgRes, res] = await Promise.all([cfgPromise, listPromise]);
+
   CONFIG = cfgRes.config;
+
+  // Guardar config en cache del navegador
+  if (!cached || (now - cached.ts) >= CFG_CACHE_TTL_MS) {
+    localStorage.setItem(CFG_CACHE_KEY, JSON.stringify({ ts: now, config: CONFIG }));
+  }
 
   buildSelect(fArea, CONFIG.areas, "Área: Todas");
   buildSelect(
@@ -142,7 +164,6 @@ async function load() {
     "Estado: Todos"
   );
 
-  const res = await API.get("list");
   DATA = res.rows || [];
 
   setMsg("");

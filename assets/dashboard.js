@@ -1,7 +1,9 @@
-const { $, toast, escapeHtml, hideCurrentNav, formatDateTime, stateClass, dueClass, initTheme } = UI;
-
-initTheme();
-hideCurrentNav();
+// Página: DASHBOARD
+// ------------------------------------------------------------
+// Aquí se resumen métricas y alertas (por vencer / vencidos).
+// Nota: initTheme() y hideCurrentNav() no se llaman aquí
+// porque ui.js ya los ejecuta automáticamente.
+const { $, toast, escapeHtml, formatDateTime, stateClass, dueClass } = UI;
 
 const kpiPendientes = $("#kpi1");
 const kpiConcluidos = $("#kpi2");
@@ -45,6 +47,7 @@ function parseDate(value) {
 
 async function load() {
   setTopStatus("idle", "Cargando...");
+  // 7 columnas: +1 por "Fecha proyectada"
   dashRows.innerHTML = `<tr><td colspan="7">Cargando...</td></tr>`;
   alertsList.innerHTML = `<div class="msg">Cargando...</div>`;
 
@@ -121,6 +124,7 @@ async function load() {
     : `<div class="msg">No hay alertas por ahora.</div>`;
 
   // --- Últimos registros (tabla) ---
+  // La API ya devuelve "últimos primero" (rows.reverse() en Apps Script)
   const last = rows.slice(0, 12);
   dashRows.innerHTML = last.length ? last.map((r) => {
     const dueCls = dueClass(r.proyectado, r.estado);
@@ -131,8 +135,10 @@ async function load() {
         <td><span class="badge">${escapeHtml(r.prioridad)}</span></td>
         <td><span class="badge ${escapeHtml(stateClass(r.estado))}">${escapeHtml(r.estado)}</span></td>
         <td><span class="badge badge-time">${escapeHtml(r.tiempo)}</span></td>
-        <td>${escapeHtml(formatDateTime(r.proyectado))}</td>
+        <!-- Primero: fecha de registro (cuando se creó) -->
         <td>${escapeHtml(formatDateTime(r.fechaRegistro))}</td>
+        <!-- Segundo: fecha proyectada (registro + tiempo_estimado) -->
+        <td>${escapeHtml(formatDateTime(r.proyectado))}</td>
       </tr>
     `;
   }).join("") : `<tr><td colspan="7">No hay registros.</td></tr>`;

@@ -1,8 +1,6 @@
-const { $, hideCurrentNav, initTheme } = UI;
-
-// Oculta el botón de la pestaña donde estás (ej: si estás en "Inicio", oculta "Inicio")
-initTheme();
-hideCurrentNav();
+// Página: INICIO
+// ui.js ya inicializa tema y oculta el enlace de la página actual.
+const { $ } = UI;
 
 function setTopStatus(state, text) {
   const dot = $("#statusDot");
