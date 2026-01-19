@@ -115,7 +115,10 @@ async function load() {
   CONFIG = cfgRes.config;
 
   buildSelect(fArea, CONFIG.areas, "Área: Todas");
-  buildSelect(fEstado, ["Pendiente", "Concluido", "Pausado", "Anulado"], "Estado: Todos");
+  // Estados vienen desde Config (BD_PERSONAL). Si no existieran, usamos fallback.
+  buildSelect(fEstado, (CONFIG && CONFIG.estados && CONFIG.estados.length)
+    ? CONFIG.estados
+    : ["Pendiente", "Concluido", "Finalizado", "Pausado", "Anulado", "Suspendido"], "Estado: Todos");
 
 
   const res = await API.get("list");

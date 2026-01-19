@@ -38,7 +38,8 @@ async function load() {
 
   const total = rows.length;
   const pendientes = rows.filter(r => r.estado === "Pendiente").length;
-  const concluidos = rows.filter(r => r.estado === "Concluido").length;
+  // Compat: algunas configuraciones usan "Finalizado" en lugar de "Concluido".
+  const concluidos = rows.filter(r => r.estado === "Concluido" || r.estado === "Finalizado").length;
 
   kpi1.textContent = `Pendientes: ${pendientes}`;
   kpi2.textContent = `Concluidos: ${concluidos}`;

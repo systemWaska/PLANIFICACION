@@ -74,6 +74,10 @@ function validate() {
   if (!solicitante.value) return "Selecciona un Solicitante.";
   if (!prioridad.value) return "Selecciona una Prioridad.";
   if (!tiempo.value.trim()) return "Completa el Tiempo estimado.";
+  // Validación de formato (se mantiene el diseño, solo validamos el texto).
+  // Backend acepta: N + (h|d|s|m). Ej: 1h, 2d, 3s, 1m
+  const t = tiempo.value.trim().toLowerCase().replace(/\s+/g, "");
+  if (!/^\d+[hdsm]$/.test(t)) return "Tiempo estimado inválido. Usa 1h, 1d, 2s, 1m.";
   if (!labores.value.trim() || labores.value.trim().length < 3) return "Describe la labor (mín. 3 caracteres).";
   return "";
 }
