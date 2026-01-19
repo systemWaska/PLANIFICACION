@@ -1,4 +1,4 @@
-// UI helpers: toast, safe text, debounce, date formatting, navbar helpers
+// UI helpers: toast, safe text, debounce, date formatting, navbar helpers, theme
 const UI = (() => {
   const $ = (s, root = document) => root.querySelector(s);
   const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
@@ -20,6 +20,9 @@ const UI = (() => {
     };
   }
 
+  // -------------------------
+  // Toast
+  // -------------------------
   function toast(message, type = "ok") {
     const host = $("#toastHost") || (() => {
       const h = document.createElement("div");
@@ -72,24 +75,113 @@ const UI = (() => {
     }).format(d);
   }
 
+  function parseDateSafe(value) {
+    if (!value) return null;
+    const d = (value instanceof Date) ? value : new Date(value);
+    if (Number.isNaN(d.getTime())) return null;
+    return d;
+  }
+
+  // -------------------------
+  // Theme (dark / light)
+  // -------------------------
+  function getPreferredTheme_() {
+    // 1) Usuario guardó preferencia
+    const saved = localStorage.getItem("theme");
+    if (saved === "light" || saved === "dark") return saved;
+
+    // 2) Preferencia del sistema
+    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) return "light";
+    return "dark";
+  }
+
+  function applyTheme_(theme) {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem("theme", theme);
+
+    // Actualiza icono si existe botón
+    const btn = $("#themeToggle");
+    if (btn) {
+      // Si estás en dark, muestra sol para pasar a light. Si estás en light, muestra luna.
+      btn.textContent = theme === "dark" ? "☀️" : "🌙";
+      btn.setAttribute("aria-label", theme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro");
+    }
+  }
+
+  function initTheme() {
+    const theme = getPreferredTheme_();
+    applyTheme_(theme);
+
+    const btn = $("#themeToggle");
+    if (btn) {
+      btn.addEventListener("click", () => {
+        const current = document.documentElement.dataset.theme || "dark";
+        applyTheme_(current === "dark" ? "light" : "dark");
+      });
+    }
+  }
+
   // -------------------------
   // Navbar helper
   // -------------------------
   // Hides the link that points to the current page.
-  // This avoids showing "Ver" while you're already in "Ver", etc.
   function hideCurrentNav() {
     const current = (location.pathname.split("/").pop() || "index.html").toLowerCase();
     $$(".nav a").forEach((a) => {
-      try {
-        const href = (a.getAttribute("href") || "").split("?")[0];
-        const file = (href.split("/").pop() || "").toLowerCase();
-        if (!file) return;
-        if (file === current) a.style.display = "none";
-      } catch (_) {
-        // ignore
-      }
+      const href = (a.getAttribute("href") || "").split("?")[0];
+      const file = (href.split("/").pop() || "").toLowerCase();
+      if (!file) return;
+      if (file === current) a.style.display = "none";
     });
   }
 
-  return { $, $$, toast, escapeHtml, debounce, formatDateShort, formatDateTime, hideCurrentNav };
+  // -------------------------
+  // UI semantics helpers
+  // -------------------------
+  function estadoClass(estado) {
+    const s = String(estado || "").toLowerCase();
+    if (s.includes("concl") || s.includes("final")) return "state-good";
+    if (s.includes("pend")) return "state-warn";
+    if (s.includes("paus") || s.includes("suspend")) return "state-info";
+    if (s.includes("anul") || s.includes("cancel")) return "state-bad";
+    return "state-neutral";
+  }
+
+  // Due status based on proyectado date.
+  // - overdue: now > due
+  // - dueSoon: due - now <= thresholdHours (default 48h)
+  function dueStatus(proyectado, estado, thresholdHours = 48) {
+    const done = ["concluido", "finalizado", "anulado"].some(k => String(estado||"").toLowerCase().includes(k));
+    if (done) return { kind: "done", cls: "" };
+
+    const d = parseDateSafe(proyectado);
+    if (!d) return { kind: "none", cls: "" };
+
+    const now = new Date();
+    const diffMs = d.getTime() - now.getTime();
+
+    if (diffMs < 0) return { kind: "overdue", cls: "row-bad" };
+
+    const thresholdMs = thresholdHours * 60 * 60 * 1000;
+    if (diffMs <= thresholdMs) return { kind: "dueSoon", cls: "row-warn" };
+
+    return { kind: "ok", cls: "" };
+  }
+
+  // Init theme on every page automatically
+  document.addEventListener("DOMContentLoaded", initTheme);
+
+  return {
+    $,
+    $$,
+    toast,
+    escapeHtml,
+    debounce,
+    formatDateShort,
+    formatDateTime,
+    parseDateSafe,
+    hideCurrentNav,
+    estadoClass,
+    dueStatus
+  };
 })();

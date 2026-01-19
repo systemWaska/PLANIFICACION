@@ -22,7 +22,33 @@
   /* Inputs/Selects */
   --field-bg: rgba(7,10,18,.55);
   --field-border: rgba(255,255,255,.10);
+
+  /* Gradientes controlados por variables */
+  --gradA: rgba(59,130,246,.38);
+  --gradB: rgba(34,197,94,.22);
+  --topGlow: var(--glow);
 }
+
+/* =============== Light theme =============== */
+:root[data-theme="light"]{
+  --bg:#f4f6fb;
+  --card: rgba(255,255,255,.92);
+  --card2: rgba(255,255,255,.96);
+  --border: rgba(15,23,42,.10);
+  --text:#0f172a;
+  --muted: rgba(15,23,42,.72);
+  --muted2: rgba(15,23,42,.55);
+  --accent:#4f46e5;
+  --shadow: 0 18px 60px rgba(15,23,42,.12);
+
+  --field-bg: rgba(255,255,255,.90);
+  --field-border: rgba(15,23,42,.12);
+
+  --gradA: rgba(99,102,241,.16);
+  --gradB: rgba(34,197,94,.10);
+  --topGlow: rgba(79,70,229,.10);
+}
+
 
 /* =============== Base =============== */
 
@@ -33,8 +59,8 @@ body{
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", sans-serif;
   color:var(--text);
   background:
-    radial-gradient(900px 520px at 10% 0%, rgba(59,130,246,.38), transparent 60%),
-    radial-gradient(800px 520px at 90% 10%, rgba(34,197,94,.22), transparent 55%),
+    radial-gradient(900px 520px at 10% 0%, var(--gradA), transparent 60%),
+    radial-gradient(800px 520px at 90% 10%, var(--gradB), transparent 55%),
     var(--bg);
 }
 
@@ -43,7 +69,7 @@ a{color:inherit}
 /* =============== Topbar / Nav =============== */
 .bg-glow{
   position:fixed; inset:0; pointer-events:none;
-  background: radial-gradient(1200px 600px at 50% 0%, rgba(109,94,252,.10), transparent 60%);
+  background: radial-gradient(1200px 600px at 50% 0%, var(--topGlow), transparent 60%);
   filter: blur(0px);
 }
 
@@ -223,6 +249,30 @@ td{color: rgba(238,242,255,.86)}
   white-space:nowrap;
 }
 
+
+/* Badge variants (estado) */
+.badge.state-pendiente{background: rgba(250,204,21,.14); border-color: rgba(250,204,21,.30)}
+.badge.state-concluido,.badge.state-finalizado{background: rgba(34,197,94,.14); border-color: rgba(34,197,94,.30)}
+.badge.state-pausado{background: rgba(59,130,246,.14); border-color: rgba(59,130,246,.30)}
+.badge.state-anulado,.badge.state-suspendido{background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.26)}
+
+/* Row due indicators */
+tr.due-warn{box-shadow: inset 4px 0 0 rgba(250,204,21,.65)}
+tr.due-bad{box-shadow: inset 4px 0 0 rgba(239,68,68,.65)}
+
+/* KPI grid */
+.kpi-grid{display:grid; grid-template-columns: repeat(5, 1fr); gap:14px}
+@media (max-width: 980px){.kpi-grid{grid-template-columns: repeat(2, 1fr)}}
+@media (max-width: 560px){.kpi-grid{grid-template-columns: 1fr}}
+.dot-warn{background: rgba(250,204,21,.9)}
+.dot-good{background: rgba(34,197,94,.9)}
+.dot-bad{background: rgba(239,68,68,.9)}
+.dot-accent{background: rgba(109,94,252,.9)}
+.dot-idle{background: rgba(148,163,184,.7)}
+
+/* Icon button in nav */
+.btn.btn-icon{padding:10px 12px; min-width: 42px; justify-content:center}
+
 .cards-list{
   display:grid;
   grid-template-columns: 1fr 1fr;
@@ -351,3 +401,71 @@ select.es-native{
   color: rgba(238,242,255,.50);
   font-size: 12px;
 }
+
+
+/* =============== Icon buttons =============== */
+.btn.btn-icon{
+  padding:10px 12px;
+  min-width:44px;
+  justify-content:center;
+}
+
+/* =============== Badges: estados y alertas =============== */
+.badge.state-good{
+  background: rgba(34,197,94,.14);
+  border-color: rgba(34,197,94,.28);
+}
+.badge.state-warn{
+  background: rgba(250,204,21,.14);
+  border-color: rgba(250,204,21,.28);
+}
+.badge.state-bad{
+  background: rgba(239,68,68,.14);
+  border-color: rgba(239,68,68,.28);
+}
+.badge.state-info{
+  background: rgba(109,94,252,.14);
+  border-color: rgba(109,94,252,.28);
+}
+.badge.alert-warn{
+  background: rgba(250,204,21,.18);
+  border-color: rgba(250,204,21,.38);
+}
+.badge.alert-bad{
+  background: rgba(239,68,68,.18);
+  border-color: rgba(239,68,68,.38);
+}
+
+/* =============== Row alerts (tabla) =============== */
+.row-alert{
+  position: relative;
+}
+.row-alert.row-alert-warn td:first-child{
+  border-left: 4px solid rgba(250,204,21,.85);
+}
+.row-alert.row-alert-bad td:first-child{
+  border-left: 4px solid rgba(239,68,68,.85);
+}
+
+/* =============== Dashboard grid =============== */
+.kpi-grid{
+  display:grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap:14px;
+}
+@media (max-width: 980px){
+  .kpi-grid{grid-template-columns: repeat(2, 1fr);}
+}
+.dash-grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap:14px;
+}
+@media (max-width: 980px){
+  .dash-grid{grid-template-columns:1fr;}
+}
+
+
+/* =============== Row due highlights (table) =============== */
+tr.row-due-soon td:first-child{border-left: 3px solid rgba(250,204,21,.8)}
+tr.row-due-overdue td:first-child{border-left: 3px solid rgba(239,68,68,.8)}

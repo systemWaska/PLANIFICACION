@@ -1,6 +1,7 @@
-const { $, toast, escapeHtml, debounce, formatDateShort, formatDateTime, hideCurrentNav } = UI;
+const { $, toast, escapeHtml, debounce, formatDateShort, formatDateTime, hideCurrentNav, stateClass, dueClass, initTheme } = UI;
 
-// Oculta el botón de la pestaña donde estás (ej: si estás en "Ver", oculta "Ver →")
+// Init theme + hide current nav item
+initTheme();
 hideCurrentNav();
 
 const q = $("#q");
@@ -61,7 +62,8 @@ function applyFilters() {
     if (!text) return true;
 
     const hay = [
-      r.area, r.solicitante, r.prioridad, r.labores, r.estado, r.tiempo, r.ejecutado, r.fechaRegistro
+      r.id, r.area, r.solicitante, r.prioridad, r.labores, r.estado,
+      r.tiempo, r.proyectado, r.ejecutado, r.fechaRegistro
     ].map(normalize).join(" | ");
 
     return hay.includes(text);
@@ -80,36 +82,40 @@ function render(list) {
   }
 
   rows.innerHTML = list.map((r) => {
-    // Ejecutado debe verse como fecha (no como "Wed Jan ... GMT...")
     const ejecutado = formatDateShort(r.ejecutado);
-    // Registro se ve mejor como fecha + hora
     const registro = formatDateTime(r.fechaRegistro);
+    const stClass = stateClass(r.estado);
+    const dueCls = dueClass(r.proyectado, r.estado);
+
     return `
-    <tr>
+    <tr class="${dueCls}">
       <td>${escapeHtml(r.area)}</td>
-      <td>${escapeHtml(r.solicitante)}</td>
+      <td class="cell-strong">${escapeHtml(r.solicitante)}</td>
       <td><span class="badge">${escapeHtml(r.prioridad)}</span></td>
-      <td>${escapeHtml(r.labores)}</td>
-      <td><span class="badge">${escapeHtml(r.estado)}</span></td>
-      <td>${escapeHtml(r.tiempo)}</td>
+      <td class="cell-muted">${escapeHtml(r.labores)}</td>
+      <td><span class="badge ${stClass}">${escapeHtml(r.estado)}</span></td>
+      <td><span class="badge badge-time">${escapeHtml(r.tiempo)}</span></td>
       <td>${escapeHtml(ejecutado)}</td>
       <td>${escapeHtml(registro)}</td>
     </tr>
   `;
   }).join("");
 
-  // En mobile mostramos cards (la tabla queda para desktop)
+  // Mobile: cards
   if (cards) {
     cards.innerHTML = list.map((r) => {
       const ejecutado = formatDateShort(r.ejecutado);
       const registro = formatDateTime(r.fechaRegistro);
+      const stClass = stateClass(r.estado);
+      const dueCls = dueClass(r.proyectado, r.estado);
+
       return `
-      <div class="card-item">
+      <div class="card-item ${dueCls}">
         <div class="card-row"><div class="k">Área</div><div class="v">${escapeHtml(r.area)}</div></div>
         <div class="card-row"><div class="k">Solicitante</div><div class="v">${escapeHtml(r.solicitante)}</div></div>
         <div class="card-row"><div class="k">Prioridad</div><div class="v"><span class="badge">${escapeHtml(r.prioridad)}</span></div></div>
-        <div class="card-row"><div class="k">Estado</div><div class="v"><span class="badge">${escapeHtml(r.estado)}</span></div></div>
-        <div class="card-row"><div class="k">Tiempo estimado</div><div class="v">${escapeHtml(r.tiempo)}</div></div>
+        <div class="card-row"><div class="k">Estado</div><div class="v"><span class="badge ${stClass}">${escapeHtml(r.estado)}</span></div></div>
+        <div class="card-row"><div class="k">Tiempo</div><div class="v"><span class="badge badge-time">${escapeHtml(r.tiempo)}</span></div></div>
         <div class="card-row"><div class="k">Ejecutado</div><div class="v">${escapeHtml(ejecutado)}</div></div>
         <div class="card-row"><div class="k">Registro</div><div class="v">${escapeHtml(registro)}</div></div>
         <div class="card-row"><div class="k">Labores</div><div class="v">${escapeHtml(r.labores)}</div></div>
@@ -128,14 +134,17 @@ async function load() {
   CONFIG = cfgRes.config;
 
   buildSelect(fArea, CONFIG.areas, "Área: Todas");
-  // Estados vienen desde Config (BD_PERSONAL). Si no existieran, usamos fallback.
-  buildSelect(fEstado, (CONFIG && CONFIG.estados && CONFIG.estados.length)
-    ? CONFIG.estados
-    : ["Pendiente", "Concluido", "Finalizado", "Pausado", "Anulado", "Suspendido"], "Estado: Todos");
-
+  buildSelect(
+    fEstado,
+    (CONFIG && CONFIG.estados && CONFIG.estados.length)
+      ? CONFIG.estados
+      : ["Pendiente", "Concluido", "Finalizado", "Pausado", "Anulado", "Suspendido"],
+    "Estado: Todos"
+  );
 
   const res = await API.get("list");
   DATA = res.rows || [];
+
   setMsg("");
   setTopStatus("ok", "Conectado");
   applyFilters();
