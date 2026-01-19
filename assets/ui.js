@@ -168,8 +168,12 @@ const UI = (() => {
     return { kind: "ok", cls: "" };
   }
 
-  // Init theme on every page automatically
-  document.addEventListener("DOMContentLoaded", initTheme);
+  // Init theme + hide current nav on every page automatically
+  // (Esto evita repetir la llamada en cada página y corrige el menú)
+  document.addEventListener("DOMContentLoaded", () => {
+    initTheme();
+    hideCurrentNav();
+  });
 
   return {
     $,
@@ -180,6 +184,7 @@ const UI = (() => {
     formatDateShort,
     formatDateTime,
     parseDateSafe,
+    initTheme,
     hideCurrentNav,
     estadoClass,
     dueStatus
