@@ -55,8 +55,12 @@
 
     <div>
       <label for="tiempo">Tiempo estimado</label>
-      <input id="tiempo" type="text" required placeholder="Ej: 5 horas, 3 días, 1S, 2D, 1M" />
-      <div class="hint">Escribe libremente. Recomendado: 1S (semana), 1D (día), 1M (mes), o “5 horas”.</div>
+      <!--
+        Formato soportado por el backend (Apps Script):
+        1h = 1 hora | 1d = 1 día | 2s = 2 semanas | 1m = 1 mes
+      -->
+      <input id="tiempo" type="text" required placeholder="Ej: 1h, 1d, 2s, 1m" />
+      <div class="hint">Usa: 1h (hora), 1d (día), 2s (semanas), 1m (mes). Ej: 4h, 3d, 2s.</div>
     </div>
   </div>
 
