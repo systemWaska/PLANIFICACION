@@ -147,6 +147,15 @@ const UI = (() => {
     return "state-neutral";
   }
 
+  // -------------------------------------------------
+  // Backwards-compatible aliases
+  // Some pages call these helpers using English names.
+  // -------------------------------------------------
+  // stateClass(estado) -> css class for the estado badge
+  function stateClass(estado) {
+    return estadoClass(estado);
+  }
+
   // Due status based on proyectado date.
   // - overdue: now > due
   // - dueSoon: due - now <= thresholdHours (default 48h)
@@ -168,6 +177,11 @@ const UI = (() => {
     return { kind: "ok", cls: "" };
   }
 
+  // dueClass(proyectado, estado) -> row css class ("row-warn" / "row-bad" / "")
+  function dueClass(proyectado, estado, thresholdHours = 48) {
+    return dueStatus(proyectado, estado, thresholdHours).cls;
+  }
+
   // Init theme + hide current nav on every page automatically
   // (Esto evita repetir la llamada en cada página y corrige el menú)
   document.addEventListener("DOMContentLoaded", () => {
@@ -186,7 +200,10 @@ const UI = (() => {
     parseDateSafe,
     initTheme,
     hideCurrentNav,
+    // Estado / due helpers
     estadoClass,
-    dueStatus
+    stateClass,
+    dueStatus,
+    dueClass
   };
 })();
