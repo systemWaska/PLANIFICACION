@@ -1,4 +1,4 @@
-// UI helpers: toast, safe text, debounce
+// UI helpers: toast, safe text, debounce, date formatting, navbar helpers
 const UI = (() => {
   const $ = (s, root = document) => root.querySelector(s);
   const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
@@ -43,5 +43,53 @@ const UI = (() => {
     el.addEventListener("click", remove);
   }
 
-  return { $, $$, toast, escapeHtml, debounce };
+  // -------------------------
+  // Date formatting
+  // -------------------------
+  // Turns a value (Date | string) into dd/mm/yyyy.
+  function formatDateShort(value, locale = "es-PE") {
+    if (!value) return "";
+    const d = (value instanceof Date) ? value : new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value);
+    return new Intl.DateTimeFormat(locale, {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).format(d);
+  }
+
+  // Turns a value (Date | string) into dd/mm/yyyy HH:MM.
+  function formatDateTime(value, locale = "es-PE") {
+    if (!value) return "";
+    const d = (value instanceof Date) ? value : new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value);
+    return new Intl.DateTimeFormat(locale, {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit"
+    }).format(d);
+  }
+
+  // -------------------------
+  // Navbar helper
+  // -------------------------
+  // Hides the link that points to the current page.
+  // This avoids showing "Ver" while you're already in "Ver", etc.
+  function hideCurrentNav() {
+    const current = (location.pathname.split("/").pop() || "index.html").toLowerCase();
+    $$(".nav a").forEach((a) => {
+      try {
+        const href = (a.getAttribute("href") || "").split("?")[0];
+        const file = (href.split("/").pop() || "").toLowerCase();
+        if (!file) return;
+        if (file === current) a.style.display = "none";
+      } catch (_) {
+        // ignore
+      }
+    });
+  }
+
+  return { $, $$, toast, escapeHtml, debounce, formatDateShort, formatDateTime, hideCurrentNav };
 })();

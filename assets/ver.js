@@ -1,4 +1,7 @@
-const { $, toast, escapeHtml, debounce } = UI;
+const { $, toast, escapeHtml, debounce, formatDateShort, formatDateTime, hideCurrentNav } = UI;
+
+// Oculta el botón de la pestaña donde estás (ej: si estás en "Ver", oculta "Ver →")
+hideCurrentNav();
 
 const q = $("#q");
 const fArea = $("#fArea");
@@ -76,7 +79,12 @@ function render(list) {
     return;
   }
 
-  rows.innerHTML = list.map((r) => `
+  rows.innerHTML = list.map((r) => {
+    // Ejecutado debe verse como fecha (no como "Wed Jan ... GMT...")
+    const ejecutado = formatDateShort(r.ejecutado);
+    // Registro se ve mejor como fecha + hora
+    const registro = formatDateTime(r.fechaRegistro);
+    return `
     <tr>
       <td>${escapeHtml(r.area)}</td>
       <td>${escapeHtml(r.solicitante)}</td>
@@ -84,25 +92,30 @@ function render(list) {
       <td>${escapeHtml(r.labores)}</td>
       <td><span class="badge">${escapeHtml(r.estado)}</span></td>
       <td>${escapeHtml(r.tiempo)}</td>
-      <td>${escapeHtml(r.ejecutado)}</td>
-      <td>${escapeHtml(r.fechaRegistro)}</td>
+      <td>${escapeHtml(ejecutado)}</td>
+      <td>${escapeHtml(registro)}</td>
     </tr>
-  `).join("");
+  `;
+  }).join("");
 
   // En mobile mostramos cards (la tabla queda para desktop)
   if (cards) {
-    cards.innerHTML = list.map((r) => `
+    cards.innerHTML = list.map((r) => {
+      const ejecutado = formatDateShort(r.ejecutado);
+      const registro = formatDateTime(r.fechaRegistro);
+      return `
       <div class="card-item">
         <div class="card-row"><div class="k">Área</div><div class="v">${escapeHtml(r.area)}</div></div>
         <div class="card-row"><div class="k">Solicitante</div><div class="v">${escapeHtml(r.solicitante)}</div></div>
         <div class="card-row"><div class="k">Prioridad</div><div class="v"><span class="badge">${escapeHtml(r.prioridad)}</span></div></div>
         <div class="card-row"><div class="k">Estado</div><div class="v"><span class="badge">${escapeHtml(r.estado)}</span></div></div>
         <div class="card-row"><div class="k">Tiempo estimado</div><div class="v">${escapeHtml(r.tiempo)}</div></div>
-        <div class="card-row"><div class="k">Ejecutado</div><div class="v">${escapeHtml(r.ejecutado)}</div></div>
-        <div class="card-row"><div class="k">Registro</div><div class="v">${escapeHtml(r.fechaRegistro)}</div></div>
+        <div class="card-row"><div class="k">Ejecutado</div><div class="v">${escapeHtml(ejecutado)}</div></div>
+        <div class="card-row"><div class="k">Registro</div><div class="v">${escapeHtml(registro)}</div></div>
         <div class="card-row"><div class="k">Labores</div><div class="v">${escapeHtml(r.labores)}</div></div>
       </div>
-    `).join("");
+    `;
+    }).join("");
   }
 }
 

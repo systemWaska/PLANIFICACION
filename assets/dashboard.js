@@ -1,4 +1,7 @@
-const { $, toast, escapeHtml } = UI;
+const { $, toast, escapeHtml, hideCurrentNav } = UI;
+
+// Oculta el botón de la pestaña donde estás (ej: si estás en "Dashboard", oculta "Dashboard")
+hideCurrentNav();
 
 const kpi1 = $("#kpi1");
 const kpi2 = $("#kpi2");

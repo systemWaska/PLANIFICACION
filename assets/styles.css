@@ -1,3 +1,9 @@
+/* =========================================================
+   PLANIFICACION UI (single-file stylesheet)
+   - Mantiene el mismo diseño
+   - Ordenado por secciones para mantenimiento
+   ========================================================= */
+
 :root{
   --bg:#070a12;
   --card: rgba(255,255,255,.06);
@@ -12,7 +18,13 @@
   --bad:#ef4444;
   --shadow: 0 18px 60px rgba(0,0,0,.48);
   --radius: 22px;
+
+  /* Inputs/Selects */
+  --field-bg: rgba(7,10,18,.55);
+  --field-border: rgba(255,255,255,.10);
 }
+
+/* =============== Base =============== */
 
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -27,6 +39,8 @@ body{
 }
 
 a{color:inherit}
+
+/* =============== Topbar / Nav =============== */
 .bg-glow{
   position:fixed; inset:0; pointer-events:none;
   background: radial-gradient(1200px 600px at 50% 0%, rgba(109,94,252,.10), transparent 60%);
@@ -82,6 +96,8 @@ a{color:inherit}
   padding: 0 18px;
 }
 
+/* =============== Cards / Layout =============== */
+
 .card{
   border:1px solid rgba(255,255,255,.10);
   background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.04));
@@ -113,8 +129,8 @@ input[type="text"], input[type="date"], textarea, select{
   width:100%;
   padding: 13px 14px;
   border-radius: 16px;
-  border:1px solid rgba(255,255,255,.10);
-  background: rgba(7,10,18,.55);
+  border:1px solid var(--field-border);
+  background: var(--field-bg);
   color:var(--text);
   outline:none;
 }
@@ -125,10 +141,15 @@ select option, select optgroup{
   color: var(--text);
 }
 textarea{min-height: 120px; resize: vertical}
-input:focus, textarea:focus, select:focus{
+
+/* Focus ring (inputs + select + enhanced select button) */
+:is(input, textarea, select, .es-btn):focus{
   border-color: rgba(109,94,252,.55);
   box-shadow: 0 0 0 4px rgba(109,94,252,.16);
+  outline:none;
 }
+
+/* =============== Tables =============== */
 .row-actions{
   display:flex; gap:12px; margin-top:16px; flex-wrap:wrap;
 }
@@ -230,6 +251,8 @@ td{color: rgba(238,242,255,.86)}
 .menu-sub{color:var(--muted2); font-size:12px; margin-top:3px}
 
 /* Toast */
+
+/* =============== Toast =============== */
 .toast-host{
   position: fixed;
   right: 16px;
@@ -261,6 +284,8 @@ td{color: rgba(238,242,255,.86)}
 .toast-msg{color: rgba(238,242,255,.92); font-size: 13px; line-height:1.3}
 
 /* Enhanced Select */
+
+/* =============== Enhanced Select =============== */
 select.es-native{
   position:absolute;
   opacity:0;
@@ -275,15 +300,10 @@ select.es-native{
   align-items:center;
   padding:13px 14px;
   border-radius:16px;
-  border:1px solid rgba(255,255,255,.10);
-  background: rgba(7,10,18,.55);
+  border:1px solid var(--field-border);
+  background: var(--field-bg);
   color: var(--text);
   cursor:pointer;
-}
-.es-btn:focus{
-  outline:none;
-  border-color: rgba(109,94,252,.55);
-  box-shadow: 0 0 0 4px rgba(109,94,252,.16);
 }
 .es-label{white-space:nowrap; overflow:hidden; text-overflow: ellipsis; padding-right:10px}
 .es-caret{opacity:.8}

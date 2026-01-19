@@ -1,4 +1,7 @@
-const { $, toast } = UI;
+const { $, toast, hideCurrentNav } = UI;
+
+// Oculta el botón de la pestaña donde estás (ej: si estás en "Crear", oculta "Crear")
+hideCurrentNav();
 
 const form = $("#taskForm");
 const area = $("#area");

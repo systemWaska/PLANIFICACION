@@ -1,4 +1,7 @@
-const { $ } = UI;
+const { $, hideCurrentNav } = UI;
+
+// Oculta el botón de la pestaña donde estás (ej: si estás en "Inicio", oculta "Inicio")
+hideCurrentNav();
 
 function setTopStatus(state, text) {
   const dot = $("#statusDot");
