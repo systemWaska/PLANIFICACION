@@ -136,7 +136,7 @@ async function load() {
         <td><span class="badge ${escapeHtml(stateClass(r.estado))}">${escapeHtml(r.estado)}</span></td>
         <td><span class="badge badge-time">${escapeHtml(r.tiempo)}</span></td>
         <!-- Primero: fecha de registro (cuando se creó) -->
-        <td>${escapeHtml(formatDateTime(r.fechaRegistro))}</td>
+        <td>${escapeHtml(formatDateTime((r.fechaRegistro || r.fecha)))}</td>
         <!-- Segundo: fecha proyectada (registro + tiempo_estimado) -->
         <td>${escapeHtml(formatDateTime(r.proyectado))}</td>
       </tr>

@@ -64,7 +64,7 @@ function applyFilters() {
 
     const hay = [
       r.id, r.area, r.solicitante, r.prioridad, r.labores, r.estado,
-      r.tiempo, r.proyectado, r.ejecutado, r.fechaRegistro
+      r.tiempo, r.proyectado, r.ejecutado, (r.fechaRegistro || r.fecha)
     ].map(normalize).join(" | ");
 
     return hay.includes(text);
@@ -84,7 +84,7 @@ function render(list) {
 
   rows.innerHTML = list.map((r) => {
     const ejecutado = formatDateShort(r.ejecutado);
-    const registro = formatDateTime(r.fechaRegistro);
+    const registro = formatDateTime((r.fechaRegistro || r.fecha));
     const stClass = stateClass(r.estado);
     const dueCls = dueClass(r.proyectado, r.estado);
 
@@ -98,6 +98,7 @@ function render(list) {
       <td><span class="badge badge-time">${escapeHtml(r.tiempo)}</span></td>
       <td>${escapeHtml(ejecutado)}</td>
       <td>${escapeHtml(registro)}</td>
+      <td>${escapeHtml(formatDateTime(r.proyectado))}</td>
     </tr>
   `;
   }).join("");
@@ -106,7 +107,7 @@ function render(list) {
   if (cards) {
     cards.innerHTML = list.map((r) => {
       const ejecutado = formatDateShort(r.ejecutado);
-      const registro = formatDateTime(r.fechaRegistro);
+      const registro = formatDateTime((r.fechaRegistro || r.fecha));
       const stClass = stateClass(r.estado);
       const dueCls = dueClass(r.proyectado, r.estado);
 
@@ -119,6 +120,7 @@ function render(list) {
         <div class="card-row"><div class="k">Tiempo</div><div class="v"><span class="badge badge-time">${escapeHtml(r.tiempo)}</span></div></div>
         <div class="card-row"><div class="k">Ejecutado</div><div class="v">${escapeHtml(ejecutado)}</div></div>
         <div class="card-row"><div class="k">Registro</div><div class="v">${escapeHtml(registro)}</div></div>
+        <div class="card-row"><div class="k">Proyectado</div><div class="v">${escapeHtml(formatDateTime(r.proyectado))}</div></div>
         <div class="card-row"><div class="k">Labores</div><div class="v">${escapeHtml(r.labores)}</div></div>
       </div>
     `;

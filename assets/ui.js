@@ -116,22 +116,20 @@ const UI = (() => {
   }
 
   function initTheme() {
-    // Idempotencia REAL:
-    // - Aplicamos el tema siempre (para mantener consistencia entre páginas).
-    // - El listener del botón SOLO se agrega una vez por botón.
-    //   (Soluciona el bug donde el click parece “no funcionar” si se registran 2 listeners).
-
+    // Aplica el tema guardado o el preferido por el sistema
     const theme = getPreferredTheme_();
     applyTheme_(theme);
 
-    const btn = $("#themeToggle");
-    if (!btn) return;
+    // Listener robusto por delegacion:
+    // - Funciona aunque el boton se renderice antes/despues del script.
+    // - Evita dobles listeners entre paginas.
+    if (window.__themeToggleBound) return;
+    window.__themeToggleBound = true;
 
-    // Evita doble binding si alguien vuelve a llamar initTheme() (por ejemplo, desde ver.js)
-    if (btn.dataset.bound === "1") return;
-    btn.dataset.bound = "1";
-
-    btn.addEventListener("click", () => {
+    document.addEventListener("click", (e) => {
+      const btn = e.target.closest("#themeToggle");
+      if (!btn) return;
+      e.preventDefault();
       const current = document.documentElement.dataset.theme || "dark";
       applyTheme_(current === "dark" ? "light" : "dark");
     });
