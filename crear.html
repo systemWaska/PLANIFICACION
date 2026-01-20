@@ -45,6 +45,12 @@
     <div>
       <label for="solicitante">Solicitante</label>
       <select id="solicitante" required></select>
+	      <!--
+	        CORREO (auto): se obtiene desde la hoja Config.
+	        NO se escribe a mano para evitar errores.
+	      -->
+	      <label for="correo" style="margin-top:10px;">Correo (auto)</label>
+	      <input id="correo" type="email" placeholder="Se completa al elegir solicitante" disabled />
     </div>
   </div>
 
