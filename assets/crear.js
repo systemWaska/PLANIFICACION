@@ -8,6 +8,8 @@ const { $, toast } = UI;
 const form = $("#taskForm");
 const area = $("#area");
 const solicitante = $("#solicitante");
+// NUEVO: campo readonly para mostrar el correo del solicitante (Config -> Email)
+const correo = $("#correo");
 const prioridad = $("#prioridad");
 const tiempo = $("#tiempo");
 const labores = $("#labores");
@@ -61,6 +63,16 @@ function buildSelect(select, items, placeholder) {
 function resetSolicitante() {
   solicitante.disabled = true;
   buildSelect(solicitante, [], "Selecciona primero un área");
+  // Al resetear, también vaciamos el correo
+  if (correo) correo.value = "";
+}
+
+// Cuando cambia el solicitante, buscamos su correo (si existe) desde Config.
+function onSolicitanteChange() {
+  if (!correo) return;
+  const name = (solicitante.value || "").trim();
+  const email = (CONFIG && CONFIG.emailByUser && CONFIG.emailByUser[name]) || "";
+  correo.value = email;
 }
 
 function onAreaChange() {
@@ -71,7 +83,8 @@ function onAreaChange() {
   solicitante.disabled = false;
   buildSelect(solicitante, list, "Selecciona solicitante");
 
-
+  // Cuando cambia el área, limpiamos correo hasta que elijan solicitante
+  if (correo) correo.value = "";
 }
 
 function validate() {
@@ -166,6 +179,7 @@ resetBtn.addEventListener("click", () => {
 });
 
 area.addEventListener("change", onAreaChange);
+solicitante.addEventListener("change", onSolicitanteChange);
 labores.addEventListener("input", updateChars);
 
 updateChars();
