@@ -68,6 +68,43 @@
   box-shadow: 0 16px 40px rgba(79,70,229,.14);
 }
 
+/* =============================
+   Light theme – tabla / cards
+   Motivo: en modo claro la tabla se veía "ploma" y con poco contraste.
+   Estos overrides mantienen el mismo layout, pero con colores claros.
+   ============================= */
+:root[data-theme="light"] .table-wrap{
+  background: rgba(255,255,255,.92);
+  border-color: rgba(15,23,42,.10);
+}
+:root[data-theme="light"] th,
+:root[data-theme="light"] td{
+  border-bottom: 1px solid rgba(15,23,42,.08);
+}
+:root[data-theme="light"] th{
+  color: rgba(15,23,42,.90);
+  background: rgba(15,23,42,.04);
+}
+:root[data-theme="light"] td{
+  color: rgba(15,23,42,.86);
+}
+:root[data-theme="light"] .cards .card-item{
+  background: rgba(255,255,255,.92);
+  border-color: rgba(15,23,42,.10);
+}
+:root[data-theme="light"] .cards .card-row{
+  border-bottom: 1px solid rgba(15,23,42,.08);
+}
+:root[data-theme="light"] .badge{
+  background: rgba(15,23,42,.03);
+  border-color: rgba(15,23,42,.10);
+  color: rgba(15,23,42,.86);
+}
+
+/* Row due indicators (modo claro) */
+:root[data-theme="light"] tr.due-warn{box-shadow: inset 4px 0 0 rgba(202,138,4,.55)}
+:root[data-theme="light"] tr.due-bad{box-shadow: inset 4px 0 0 rgba(220,38,38,.55)}
+
 
 /* =============== Base =============== */
 
@@ -351,6 +388,57 @@ tr.due-bad{box-shadow: inset 4px 0 0 rgba(239,68,68,.65)}
 .toast-warn .toast-dot{background: var(--warn)}
 .toast-err .toast-dot{background: var(--bad)}
 .toast-msg{color: rgba(238,242,255,.92); font-size: 13px; line-height:1.3}
+
+/* =============== Modal (Popup) =============== */
+.modal-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(6px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 18px;
+  z-index: 1000;
+}
+.modal{
+  width: min(560px, calc(100vw - 36px));
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(10,12,20,.86);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 18px 60px rgba(0,0,0,.62);
+  padding: 28px 22px 20px;
+  text-align:center;
+}
+.modal-icon{
+  width: 86px;
+  height: 86px;
+  border-radius: 999px;
+  display:grid;
+  place-items:center;
+  margin: 0 auto 10px;
+  font-size: 42px;
+  font-weight: 900;
+  border: 4px solid rgba(34,197,94,.25);
+  color: rgba(34,197,94,.95);
+}
+.modal-icon.modal-warn{border-color: rgba(250,204,21,.25); color: rgba(250,204,21,.95)}
+.modal-icon.modal-err{border-color: rgba(239,68,68,.25); color: rgba(239,68,68,.95)}
+.modal-title{font-size: 34px; font-weight: 850; letter-spacing: -.02em; margin: 6px 0 8px}
+.modal-sub{color: var(--muted); margin: 0 0 12px}
+.modal-body{margin: 10px auto 16px; max-width: 420px}
+.modal-kv{display:flex; justify-content:center; gap:8px; margin: 8px 0; color: var(--muted)}
+.modal-kv b{color: var(--text)}
+.modal-actions{display:flex; justify-content:center; padding-top: 6px}
+
+/* Modo claro: fondo del modal */
+:root[data-theme="light"] .modal{
+  background: rgba(255,255,255,.92);
+  border-color: rgba(15,23,42,.12);
+  box-shadow: 0 18px 60px rgba(15,23,42,.18);
+}
+:root[data-theme="light"] .modal-overlay{background: rgba(15,23,42,.25)}
 
 /* Enhanced Select */
 

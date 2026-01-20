@@ -133,9 +133,14 @@ form.addEventListener("submit", async (e) => {
     const payload = getPayload();
     const res = await API.post(payload);
 
+    // Mostrar popup tipo "Evento Registrado" (similar a tu ejemplo)
+    // Incluye el código generado (PLAN-001, etc.) y el usuario.
+    UI.showPlanningSavedModal({ id: res.id || "", user: payload.solicitante || "" });
+
+    // Toast ligero (no reemplaza al modal)
     const name = payload.solicitante || "Tu";
     toast(`${name}, tu planificación se guardó con éxito.`, "ok");
-    setMsg(`Guardado ✅ (Fila: ${res.row})`);
+    setMsg(`Guardado ✅ (Código: ${res.id || ""})`);
 
     form.reset();
     resetSolicitante();

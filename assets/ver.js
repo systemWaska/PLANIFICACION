@@ -75,7 +75,8 @@ function applyFilters() {
 
 function render(list) {
   if (!list.length) {
-    rows.innerHTML = `<tr><td colspan="8">No hay registros.</td></tr>`;
+    // 9 columnas (incluye Fecha proyectada y Ejecutado)
+    rows.innerHTML = `<tr><td colspan="9">No hay registros.</td></tr>`;
     if (cards) {
       cards.innerHTML = `<div class="card-item"><div class="card-row"><div class="k">Sin registros</div><div class="v">No hay registros.</div></div></div>`;
     }
@@ -96,9 +97,9 @@ function render(list) {
       <td class="cell-muted">${escapeHtml(r.labores)}</td>
       <td><span class="badge ${stClass}">${escapeHtml(r.estado)}</span></td>
       <td><span class="badge badge-time">${escapeHtml(r.tiempo)}</span></td>
-      <td>${escapeHtml(ejecutado)}</td>
       <td>${escapeHtml(registro)}</td>
       <td>${escapeHtml(formatDateTime(r.proyectado))}</td>
+      <td>${escapeHtml(ejecutado)}</td>
     </tr>
   `;
   }).join("");
@@ -118,9 +119,9 @@ function render(list) {
         <div class="card-row"><div class="k">Prioridad</div><div class="v"><span class="badge">${escapeHtml(r.prioridad)}</span></div></div>
         <div class="card-row"><div class="k">Estado</div><div class="v"><span class="badge ${stClass}">${escapeHtml(r.estado)}</span></div></div>
         <div class="card-row"><div class="k">Tiempo</div><div class="v"><span class="badge badge-time">${escapeHtml(r.tiempo)}</span></div></div>
-        <div class="card-row"><div class="k">Ejecutado</div><div class="v">${escapeHtml(ejecutado)}</div></div>
         <div class="card-row"><div class="k">Registro</div><div class="v">${escapeHtml(registro)}</div></div>
         <div class="card-row"><div class="k">Proyectado</div><div class="v">${escapeHtml(formatDateTime(r.proyectado))}</div></div>
+        <div class="card-row"><div class="k">Ejecutado</div><div class="v">${escapeHtml(ejecutado)}</div></div>
         <div class="card-row"><div class="k">Labores</div><div class="v">${escapeHtml(r.labores)}</div></div>
       </div>
     `;
@@ -131,7 +132,7 @@ function render(list) {
 async function load() {
   setTopStatus("idle", "Cargando...");
   setMsg("Cargando registros...");
-  rows.innerHTML = `<tr><td colspan="8">Cargando...</td></tr>`;
+  rows.innerHTML = `<tr><td colspan="9">Cargando...</td></tr>`;
 
   // 1) Config: cache en navegador (10 min)
   //    Esto evita pedir config cada vez que entras a /ver.html.
@@ -184,5 +185,5 @@ load().catch((e) => {
   setTopStatus("err", "Error");
   toast(e.message || "Error", "err");
   setMsg(e.message || "Error");
-  rows.innerHTML = `<tr><td colspan="8">Error cargando.</td></tr>`;
+  rows.innerHTML = `<tr><td colspan="9">Error cargando.</td></tr>`;
 });

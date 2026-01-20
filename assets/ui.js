@@ -54,6 +54,91 @@ const UI = (() => {
   }
 
   // -------------------------
+  // Modal (popup) – reusable
+  // -------------------------
+  // Se usa para confirmaciones y para el "Planificación registrada" al crear.
+  // Se crea dinámicamente para no duplicar HTML en cada página.
+  function showModal({
+    title = "",
+    subtitle = "",
+    bodyHtml = "",
+    okText = "Aceptar",
+    tone = "ok" // ok | warn | err
+  } = {}) {
+    // Cierra cualquier modal anterior
+    const existing = document.querySelector(".modal-overlay");
+    if (existing) existing.remove();
+
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+
+    const dialog = document.createElement("div");
+    dialog.className = "modal";
+    dialog.setAttribute("role", "dialog");
+    dialog.setAttribute("aria-modal", "true");
+
+    const icon = tone === "ok" ? "✓" : tone === "warn" ? "!" : "×";
+    dialog.innerHTML = `
+      <div class="modal-icon modal-${escapeHtml(tone)}">${escapeHtml(icon)}</div>
+      <div class="modal-title">${escapeHtml(title)}</div>
+      ${subtitle ? `<div class="modal-sub">${escapeHtml(subtitle)}</div>` : ""}
+      ${bodyHtml ? `<div class="modal-body">${bodyHtml}</div>` : ""}
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="modalOk">${escapeHtml(okText)}</button>
+      </div>
+    `;
+
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+
+    // Bloquea scroll de fondo
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function close() {
+      document.body.style.overflow = prevOverflow;
+      overlay.remove();
+    }
+
+    // Cerrar con click fuera
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) close();
+    });
+
+    // Cerrar con ESC
+    document.addEventListener("keydown", function onKey(ev) {
+      if (ev.key === "Escape") {
+        document.removeEventListener("keydown", onKey);
+        close();
+      }
+    });
+
+    // Botón OK
+    const okBtn = dialog.querySelector("#modalOk");
+    if (okBtn) okBtn.addEventListener("click", close);
+
+    // Foco al botón
+    setTimeout(() => okBtn && okBtn.focus(), 0);
+
+    return { close };
+  }
+
+  // Modal de éxito específico para el registro de planificación.
+  function showPlanningSavedModal({ id = "", user = "" } = {}) {
+    const body = `
+      <div class="modal-kv"><span>Código generado:</span> <b>${escapeHtml(id)}</b></div>
+      ${user ? `<div class="modal-kv"><span>Usuario:</span> <b>${escapeHtml(user)}</b></div>` : ""}
+    `;
+    return showModal({
+      title: "¡Planificación registrada!",
+      subtitle: "El registro se guardó correctamente.",
+      bodyHtml: body,
+      okText: "Aceptar",
+      tone: "ok"
+    });
+  }
+
+  // -------------------------
   // Date formatting
   // -------------------------
   // Turns a value (Date | string) into dd/mm/yyyy.
@@ -219,6 +304,9 @@ const UI = (() => {
     estadoClass,
     stateClass,
     dueStatus,
-    dueClass
+    dueClass,
+    // Modals
+    showModal,
+    showPlanningSavedModal
   };
 })();
