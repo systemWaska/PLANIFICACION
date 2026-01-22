@@ -1,63 +1,100 @@
-/* Home (index) */
+// index.js - Resumen para Inicio
+document.addEventListener("DOMContentLoaded", async () => {
+  // Nav / estado
+  if (window.UI && UI.hideCurrentNav) UI.hideCurrentNav();
+  if (window.UI && UI.setTopStatus) UI.setTopStatus("Conectando...", "idle");
 
-function setText(id, text) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = text;
-}
+  const $pend = document.getElementById("kpiPend");
+  const $done = document.getElementById("kpiDone");
+  const $due  = document.getElementById("kpiDue");
+  const $late = document.getElementById("kpiLate");
+  const $total= document.getElementById("kpiTotal");
+  const $recent = document.getElementById("recentBody");
 
-function escapeHtml(s) {
-  return String(s || "").replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;",
-  }[c]));
-}
+  function set(el, v){ if (el) el.textContent = v; }
 
-async function loadHome() {
-  const err = document.getElementById("homeError");
-  if (err) err.hidden = true;
+  function dtFromProjected(v){
+    if (!v) return null;
+    if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)){
+      const [y,m,d] = v.split("-").map(Number);
+      return new Date(y, m-1, d, 10, 0, 0); // 10:00 por defecto
+    }
+    const dt = new Date(v);
+    if (isNaN(dt.getTime())) return null;
+    return dt;
+  }
+
+  function fmtDate(v){
+    if (!v) return "";
+    if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)){
+      const [y,m,d] = v.split("-").map(Number);
+      return new Date(y, m-1, d).toLocaleDateString("es-PE");
+    }
+    const dt = new Date(v);
+    if (isNaN(dt.getTime())) return String(v);
+    return dt.toLocaleDateString("es-PE");
+  }
 
   try {
-    const summary = await API.get({ action: "summary" });
+    const rows = await API.get("list");
+    if (window.UI && UI.setTopStatus) UI.setTopStatus("Listo", "good");
+    const now = new Date();
+    const doneStates = new Set(["Concluido","Finalizado","Finalizado hoy"]);
 
-    setText("mPend", summary.pending ?? "—");
-    setText("mDone", summary.done ?? "—");
-    setText("mSoon", summary.dueSoon ?? "—");
-    setText("mLate", summary.overdue ?? "—");
-    setText("mTotal", summary.total ?? "—");
+    let pend=0, done=0, due=0, late=0, total=0;
 
-    const recent = await API.get({ action: "list", limit: 6 });
-    const tbody = document.getElementById("homeRecentBody");
-    if (tbody) {
-      tbody.innerHTML = "";
-      const items = Array.isArray(recent.items) ? recent.items : [];
-      if (!items.length) {
-        tbody.innerHTML = `<tr><td colspan="3" class="muted">Sin registros recientes.</td></tr>`;
+    (rows || []).forEach(r => {
+      total++;
+      const st = (r.estado || "").trim();
+      const isDone = doneStates.has(st);
+      if (isDone) done++; else pend++;
+
+      const dt = dtFromProjected(r.proyectado);
+      if (!dt || isDone) return;
+
+      const diff = dt.getTime() - now.getTime();
+      const hours = diff / 36e5;
+
+      if (hours < 0) late++;
+      else if (hours <= 48) due++;
+    });
+
+    set($pend, pend);
+    set($done, done);
+    set($due, due);
+    set($late, late);
+    set($total, total);
+
+    // Recientes: últimos 6 por Fecha (si existe), sino por id
+    const sorted = (rows || []).slice().sort((a,b) => {
+      const da = new Date(a.fecha || a.createdAt || 0).getTime();
+      const db = new Date(b.fecha || b.createdAt || 0).getTime();
+      return (db||0) - (da||0);
+    }).slice(0,6);
+
+    if ($recent) {
+      if (!sorted.length){
+        $recent.innerHTML = '<tr><td colspan="5" class="muted">No hay registros.</td></tr>';
       } else {
-        for (const r of items) {
+        $recent.innerHTML = "";
+        sorted.forEach(r => {
+          const stClass = (window.UI && UI.stateClass) ? UI.stateClass(r.estado) : "";
           const tr = document.createElement("tr");
           tr.innerHTML = `
-            <td><span class="mono">${escapeHtml(r.id)}</span></td>
-            <td>${escapeHtml(r.area)}</td>
-            <td>${escapeHtml(r.solicitante)}</td>
+            <td>${r.id || ""}</td>
+            <td>${r.area || ""}</td>
+            <td>${r.solicitante || ""}</td>
+            <td><span class="badge ${stClass}">${r.estado || ""}</span></td>
+            <td>${fmtDate(r.proyectado)}</td>
           `;
-          tbody.appendChild(tr);
-        }
+          $recent.appendChild(tr);
+        });
       }
     }
-
-    setText("statusDot", "●");
-    setText("statusText", "Listo");
   } catch (e) {
-    if (err) {
-      err.hidden = false;
-      err.textContent = (e && e.message) ? e.message : "No se pudo cargar el resumen.";
-    }
-    setText("statusDot", "●");
-    setText("statusText", "Error");
+    // si falla, no rompemos inicio
+    if ($recent) $recent.innerHTML = '<tr><td colspan="5" class="muted">No se pudo cargar el resumen.</td></tr>';
+    if (window.UI && UI.setTopStatus) UI.setTopStatus("Error", "bad");
+    if (window.UI && UI.toast) UI.toast(e.message || String(e), "error");
   }
-}
-
-document.addEventListener("DOMContentLoaded", loadHome);
+});
