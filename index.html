@@ -1,162 +1,128 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Planificación</title>
-    <link rel="stylesheet" href="assets/styles.css?v=20260122-2" />
-    <script src="assets/config.js?v=20260122-2"></script>
-    <script src="assets/api.js?v=20260122-2"></script>
-    <script src="assets/ui.js?v=20260122-2"></script>
-    <script defer src="assets/init.js?v=20260122-2"></script>
-    <script defer src="assets/index.js?v=20260122-2"></script>
-  </head>
-  <body>
-    <div class="app">
-      <header class="topbar">
-        <div class="brand">
-          <div class="brand-dot"></div>
-          <div>
-            <div class="brand-title">Planificación</div>
-            <div class="brand-sub">Sistema interno • Google Sheets</div>
-          </div>
-        </div>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Planificación</title>
+  <link rel="stylesheet" href="./assets/styles.css?v=20260122-2" />
+</head>
+<body>
+  <div class="bg-glow"></div>
 
-        <nav class="nav">
-          <a class="nav-link" href="crear.html">Crear →</a>
-          <a class="nav-link" href="ver.html">Ver →</a>
-          <a class="nav-link" href="cerrar.html">Cerrar →</a>
-          <a class="nav-link" href="dashboard.html">Dashboard →</a>
-          <button id="toggleTheme" class="nav-icon" title="Tema">☀</button>
-          <span id="connStatus" class="pill pill-muted">Conectando…</span>
-        </nav>
-      </header>
-
-      <main class="container">
-        <div class="card">
-          <div class="card-pad">
-            <h1>¿Qué deseas hacer?</h1>
-            <p class="lead">
-              Crea una planificación o revisa el historial. Usa <b>Cerrar</b> para finalizar y dejar una actualización.
-            </p>
-
-            <div class="cards-list">
-              <a class="menu-card" href="crear.html">
-                <div class="menu-left">
-                  <div class="ic">+</div>
-                  <div>
-                    <div class="menu-title">Crear planificación</div>
-                    <div class="menu-sub">Registro rápido (Estado = Pendiente por defecto).</div>
-                  </div>
-                </div>
-                <div class="menu-right">Entrar →</div>
-              </a>
-
-              <a class="menu-card" href="ver.html">
-                <div class="menu-left">
-                  <div class="ic">≡</div>
-                  <div>
-                    <div class="menu-title">Ver planificaciones</div>
-                    <div class="menu-sub">Tabla con búsqueda y filtros (incluye Ejecutado y Fecha registro).</div>
-                  </div>
-                </div>
-                <div class="menu-right">Entrar →</div>
-              </a>
-
-              <a class="menu-card" href="cerrar.html">
-                <div class="menu-left">
-                  <div class="ic">✓</div>
-                  <div>
-                    <div class="menu-title">Cerrar planificación</div>
-                    <div class="menu-sub">Finaliza y deja una actualización (requiere DNI).</div>
-                  </div>
-                </div>
-                <div class="menu-right">Entrar →</div>
-              </a>
-
-              <a class="menu-card" href="dashboard.html">
-                <div class="menu-left">
-                  <div class="ic">▦</div>
-                  <div>
-                    <div class="menu-title">Dashboard</div>
-                    <div class="menu-sub">Resumen por estado y alertas de vencimiento.</div>
-                  </div>
-                </div>
-                <div class="menu-right">Entrar →</div>
-              </a>
-            </div>
-
-            <div class="home-grid">
-              <div class="home-block">
-                <div class="section-title">
-                  <h2>Resumen rápido</h2>
-                  <a class="link" href="dashboard.html">Ver dashboard</a>
-                </div>
-
-                <div class="metrics-row" id="homeMetrics">
-                  <div class="metric">
-                    <div class="metric-label">Pendientes</div>
-                    <div class="metric-value" id="mPendientes">—</div>
-                  </div>
-                  <div class="metric">
-                    <div class="metric-label">Concluidos</div>
-                    <div class="metric-value" id="mConcluidos">—</div>
-                  </div>
-                  <div class="metric">
-                    <div class="metric-label">Por vencer (48h)</div>
-                    <div class="metric-value" id="mPorVencer">—</div>
-                  </div>
-                  <div class="metric">
-                    <div class="metric-label">Vencidos</div>
-                    <div class="metric-value" id="mVencidos">—</div>
-                  </div>
-                  <div class="metric">
-                    <div class="metric-label">Total</div>
-                    <div class="metric-value" id="mTotal">—</div>
-                  </div>
-                </div>
-
-                <div class="home-split">
-                  <div class="panel">
-                    <div class="panel-title">Actividad reciente</div>
-                    <div class="table-wrap">
-                      <table class="table" id="homeRecent">
-                        <thead>
-                          <tr>
-                            <th>ID</th>
-                            <th>Área</th>
-                            <th>Solicitante</th>
-                            <th>Estado</th>
-                            <th>Proyectado</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr>
-                            <td colspan="5" class="muted">Cargando…</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  <div class="panel">
-                    <div class="panel-title">Tips</div>
-                    <ul class="tips">
-                      <li>La fecha proyectada se guarda con hora por defecto <b>10 a. m.</b> (puedes cambiarla luego si lo habilitamos).</li>
-                      <li>Si tu DNI aún no está registrado, el sistema te pedirá registrarlo al intentar cerrar.</li>
-                      <li>Si no aparece tu correo/DNI, agrégalo en la hoja <b>Config</b> (BD_PERSONAL).</li>
-                    </ul>
-                  </div>
-                </div>
-
-                <div id="homeError" class="callout callout-warn hidden"></div>
-              </div>
-            </div>
-
-            <div class="foot muted">Front: GitHub Pages • Back: Google Apps Script</div>
-          </div>
-        </div>
-      </main>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <div class="title">Planificación</div>
+        <div class="sub">Sistema interno • Google Sheets</div>
+      </div>
     </div>
-  </body>
+    <nav class="nav">
+      <a class="btn" data-nav="crear" href="./crear.html">Crear →</a>
+      <a class="btn" data-nav="ver" href="./ver.html">Ver →</a>
+      <a class="btn" data-nav="cerrar" href="./cerrar.html">Cerrar →</a>
+      <a class="btn" data-nav="dashboard" href="./dashboard.html">Dashboard →</a>
+      <button class="btn btn-icon" id="themeToggle" type="button" aria-label="Cambiar tema">🌙</button>
+      <span class="pill"><span class="dot dot-idle" id="statusDot"></span><span id="statusText">Conectando...</span></span>
+    </nav>
+  </header>
+
+  <main class="container">
+    <!-- Hero / menú -->
+    <section class="card">
+      <div class="card-pad">
+        <h1>¿Qué deseas hacer?</h1>
+        <p class="lead">Crea una planificación, cierra una existente o revisa el historial. El dashboard resume pendientes, concluidos y alertas.</p>
+
+        <div class="cards-list">
+          <a class="menu-card" href="./crear.html">
+            <div class="icon">＋</div>
+            <div>
+              <div class="menu-title">Crear planificación</div>
+              <div class="menu-desc">Registro rápido (Estado = Pendiente por defecto).</div>
+            </div>
+            <div class="arrow">Entrar →</div>
+          </a>
+
+          <a class="menu-card" href="./ver.html">
+            <div class="icon">≡</div>
+            <div>
+              <div class="menu-title">Ver planificaciones</div>
+              <div class="menu-desc">Tabla con búsqueda y filtros (incluye Ejecutado y Fecha registro).</div>
+            </div>
+            <div class="arrow">Entrar →</div>
+          </a>
+
+          <a class="menu-card" href="./cerrar.html">
+            <div class="icon">✓</div>
+            <div>
+              <div class="menu-title">Cerrar planificación</div>
+              <div class="menu-desc">Marca como Finalizado y deja una actualización (por usuario).</div>
+            </div>
+            <div class="arrow">Entrar →</div>
+          </a>
+
+          <a class="menu-card" href="./dashboard.html">
+            <div class="icon">▦</div>
+            <div>
+              <div class="menu-title">Dashboard</div>
+              <div class="menu-desc">Resumen por estado y alertas de vencimiento.</div>
+            </div>
+            <div class="arrow">Entrar →</div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Resumen rápido estilo “tickets” -->
+    <section class="card" style="margin-top: 16px">
+      <div class="card-pad">
+        <div class="row" style="justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap;">
+          <div>
+            <h2 style="margin:0">Resumen rápido</h2>
+            <div class="muted">Datos en vivo desde Sheets (vía Apps Script).</div>
+          </div>
+          <a class="link" href="./dashboard.html">Ver dashboard</a>
+        </div>
+
+        <div class="kpi-row" style="margin-top: 14px">
+          <div class="kpi"><div class="kpi-label">Pendientes</div><div class="kpi-value" id="kpiPend">—</div></div>
+          <div class="kpi"><div class="kpi-label">Concluidos</div><div class="kpi-value" id="kpiDone">—</div></div>
+          <div class="kpi"><div class="kpi-label">Por vencer (48h)</div><div class="kpi-value" id="kpiSoon">—</div></div>
+          <div class="kpi"><div class="kpi-label">Vencidos</div><div class="kpi-value" id="kpiLate">—</div></div>
+          <div class="kpi"><div class="kpi-label">Total</div><div class="kpi-value" id="kpiTotal">—</div></div>
+        </div>
+
+        <div class="grid2" style="margin-top: 14px">
+          <div class="card" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08)">
+            <div class="card-pad" style="padding:14px">
+              <div class="section-title">Actividad reciente</div>
+              <div id="lastTable" class="muted">Cargando…</div>
+            </div>
+          </div>
+
+          <div class="card" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08)">
+            <div class="card-pad" style="padding:14px">
+              <div class="section-title">Tips</div>
+              <ul class="muted" style="margin:10px 0 0 18px; line-height: 1.6">
+                <li>Usa <b>Cerrar</b> para finalizar y dejar una actualización.</li>
+                <li>La fecha proyectada se guarda sin hora (por defecto 10 a. m.).</li>
+                <li>Si tu DNI aún no está registrado, el sistema te pedirá registrarlo.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <div class="footer-note">Front: GitHub Pages • Back: Google Apps Script</div>
+  </main>
+
+  <script src="./assets/config.js?v=20260122-2"></script>
+  <script src="./assets/api.js?v=20260122-2"></script>
+  <script src="./assets/ui.js?v=20260122-2"></script>
+  <script src="./assets/index.js?v=20260122-2"></script>
+  <script src="./assets/init.js?v=20260122-2"></script>
+</body>
 </html>
