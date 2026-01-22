@@ -45,7 +45,13 @@
     <div>
       <label for="solicitante">Solicitante</label>
       <select id="solicitante" required></select>
-</div>
+	      <!--
+	        CORREO (auto): se obtiene desde la hoja Config.
+	        NO se escribe a mano para evitar errores.
+	      -->
+	      <label for="correo" style="margin-top:10px;">Correo (auto)</label>
+	      <input id="correo" type="email" placeholder="Se completa al elegir solicitante" disabled />
+    </div>
   </div>
 
   <div class="grid2">
@@ -64,14 +70,6 @@
       <div class="hint">Usa: 1h (hora), 1d (día), 2s (semanas), 1m (mes). Ej: 4h, 3d, 2s.</div>
     </div>
   </div>
-
-  <div class="field">
-    <label for="proyectado">Fecha proyectada</label>
-    <input id="proyectado" type="date" required />
-    <div class="hint">Por defecto se registrará en calendario a las 10:00 a. m.</div>
-  </div>
-
-
 
   <label for="labores">Lista de labores</label>
   <textarea id="labores" required placeholder="Describe la labor..."></textarea>
@@ -95,7 +93,6 @@
 
       <script src="./assets/config.js?v=20260119-2"></script>
       <script src="./assets/ui.js?v=20260119-3"></script>
-      <script src="./assets/init.js?v=20260122-1"></script>
       <script src="./assets/api.js?v=20260119-2"></script>
       <script src="./assets/crear.js?v=20260119-2"></script>
     </body>
