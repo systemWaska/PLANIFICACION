@@ -106,11 +106,15 @@ function getPayload() {
 
 async function loadConfig() {
   setTopStatus("idle", "Conectando...");
-  const { config } = await API.get("config");
-  CONFIG = config;
+  // El backend puede devolver {ok:true, areas/personal/prioridades...} o {ok:true, config:{...}}.
+  // Normalizamos para evitar errores tipo: "Cannot read properties of undefined (reading 'areas')".
+  const res = await API.get("config");
+  const cfg = (res && res.config) ? res.config : res;
+  if (!cfg) throw new Error("No se recibió configuración.");
+  CONFIG = cfg;
 
-  buildSelect(area, config.areas, "Selecciona un área");
-  buildSelect(prioridad, config.prioridades, "Selecciona prioridad");
+  buildSelect(area, cfg.areas, "Selecciona un área");
+  buildSelect(prioridad, cfg.prioridades, "Selecciona prioridad");
   resetSolicitante();
 
 

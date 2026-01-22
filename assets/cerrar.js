@@ -36,7 +36,9 @@
 
   async function loadConfig() {
     setMsg($authMsg, "Cargando configuración...", "warn");
-    const cfg = await API.get("config");
+    const res = await API.get("config");
+    // Puede venir como {ok:true, areas/personal/...} o como {ok:true, config:{...}}
+    const cfg = (res && res.config) ? res.config : res;
     state.cfg = cfg;
     // Areas
     $area.innerHTML = '<option value="">Selecciona un área</option>';
