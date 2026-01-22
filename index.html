@@ -21,6 +21,7 @@
           <a class="btn" data-nav="inicio" href="./index.html">← Inicio</a>
           <a class="btn" data-nav="crear" href="./crear.html">Crear →</a>
           <a class="btn" data-nav="ver" href="./ver.html">Ver →</a>
+          <a class="btn" data-nav="cerrar" href="./cerrar.html">Cerrar →</a>
           <a class="btn" data-nav="dashboard" href="./dashboard.html">Dashboard →</a>
           <button class="btn btn-icon" id="themeToggle" type="button" aria-label="Cambiar tema">🌙</button>
           <span class="pill"><span class="dot" id="statusDot"></span><span id="statusText">Listo</span></span>
@@ -70,12 +71,75 @@
 </div>
 
           </div>
-          <div class="footer-note">Front: GitHub Pages • Back: Google Apps Script</div>
+          
+        <div class="card" style="margin-top:16px">
+          <div class="row-between">
+            <h2 style="margin:0">Resumen rápido</h2>
+            <a class="link" href="./dashboard.html">Ver dashboard</a>
+          </div>
+
+          <div class="kpi-grid" style="margin-top:14px">
+            <div class="kpi">
+              <div class="kpi-top"><span class="dot dot-warn"></span><span class="kpi-title">Pendientes</span></div>
+              <div class="kpi-value" id="kpiPend">–</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-top"><span class="dot dot-good"></span><span class="kpi-title">Concluidos</span></div>
+              <div class="kpi-value" id="kpiDone">–</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-top"><span class="dot dot-warn"></span><span class="kpi-title">Por vencer (48h)</span></div>
+              <div class="kpi-value" id="kpiDue">–</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-top"><span class="dot dot-bad"></span><span class="kpi-title">Vencidos</span></div>
+              <div class="kpi-value" id="kpiLate">–</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-top"><span class="dot"></span><span class="kpi-title">Total</span></div>
+              <div class="kpi-value" id="kpiTotal">–</div>
+            </div>
+          </div>
+
+          <div class="grid2" style="margin-top:14px">
+            <div class="card" style="margin:0">
+              <h3 style="margin-top:0">Actividad reciente</h3>
+              <div class="table-wrap">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Área</th>
+                      <th>Solicitante</th>
+                      <th>Estado</th>
+                      <th>Proyectado</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recentBody">
+                    <tr><td colspan="5" class="muted">Cargando...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card" style="margin:0">
+              <h3 style="margin-top:0">Tips</h3>
+              <ul class="bullets">
+                <li>Usa <b>Cerrar</b> para finalizar y dejar una actualización.</li>
+                <li>La fecha proyectada se registra sin hora (por defecto 10 a. m.).</li>
+                <li>Si tu DNI aún no está registrado, el sistema te pedirá registrarlo.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-note">Front: GitHub Pages • Back: Google Apps Script</div>
         </div>
       </main>
 
       <script src="./assets/config.js?v=20260119-2"></script>
       <script src="./assets/ui.js?v=20260119-3"></script>
+      <script src="./assets/init.js?v=20260122-1"></script>
       <script src="./assets/api.js?v=20260119-2"></script>
       <script src="./assets/index.js?v=20260119-2"></script>
     </body>
