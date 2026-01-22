@@ -98,7 +98,7 @@ function render(list) {
       <td><span class="badge ${stClass}">${escapeHtml(r.estado)}</span></td>
       <td><span class="badge badge-time">${escapeHtml(r.tiempo)}</span></td>
       <td>${escapeHtml(registro)}</td>
-      <td>${escapeHtml(formatDateShort(r.proyectado))}</td>
+      <td>${escapeHtml(formatDateTime(r.proyectado))}</td>
       <td>${escapeHtml(ejecutado)}</td>
     </tr>
   `;
@@ -120,7 +120,7 @@ function render(list) {
         <div class="card-row"><div class="k">Estado</div><div class="v"><span class="badge ${stClass}">${escapeHtml(r.estado)}</span></div></div>
         <div class="card-row"><div class="k">Tiempo</div><div class="v"><span class="badge badge-time">${escapeHtml(r.tiempo)}</span></div></div>
         <div class="card-row"><div class="k">Registro</div><div class="v">${escapeHtml(registro)}</div></div>
-        <div class="card-row"><div class="k">Proyectado</div><div class="v">${escapeHtml(formatDateShort(r.proyectado))}</div></div>
+        <div class="card-row"><div class="k">Proyectado</div><div class="v">${escapeHtml(formatDateTime(r.proyectado))}</div></div>
         <div class="card-row"><div class="k">Ejecutado</div><div class="v">${escapeHtml(ejecutado)}</div></div>
         <div class="card-row"><div class="k">Labores</div><div class="v">${escapeHtml(r.labores)}</div></div>
       </div>

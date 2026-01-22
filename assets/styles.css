@@ -576,13 +576,3 @@ select.es-native{
 /* =============== Row due highlights (table) =============== */
 tr.row-due-soon td:first-child{border-left: 3px solid rgba(250,204,21,.8)}
 tr.row-due-overdue td:first-child{border-left: 3px solid rgba(239,68,68,.8)}
-
-
-/* --- Extras (Cerrar) --- */
-.hidden{display:none !important;}
-.muted{opacity:.7;}
-
-.bullets{margin:10px 0 0 18px; padding:0;}
-.bullets li{margin:6px 0;}
-
-#alertsList{max-height:320px; overflow:auto; padding-right:6px;}

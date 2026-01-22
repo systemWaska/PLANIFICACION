@@ -281,26 +281,6 @@ const UI = (() => {
     return dueStatus(proyectado, estado, thresholdHours).cls;
   }
 
-  // -------------------------
-  // Connection status pill (top-right)
-  // -------------------------
-  // HTML expected:
-  //   <span id="statusDot" class="dot ..."></span>
-  //   <span id="statusText">...</span>
-  function setTopStatus(text, kind = "info") {
-    const dot = document.getElementById("statusDot");
-    const label = document.getElementById("statusText");
-    if (label) label.textContent = text;
-
-    if (!dot) return;
-    // Re-using existing CSS classes
-    dot.classList.remove("dot-idle", "dot-good", "dot-warn", "dot-bad");
-    if (kind === "ok") dot.classList.add("dot-good");
-    else if (kind === "warn") dot.classList.add("dot-warn");
-    else if (kind === "error") dot.classList.add("dot-bad");
-    else dot.classList.add("dot-idle");
-  }
-
   // Init theme + hide current nav on every page automatically
   // (Esto evita repetir la llamada en cada página y corrige el menú)
   // Ejecuta automáticamente en todas las páginas.
@@ -320,7 +300,6 @@ const UI = (() => {
     parseDateSafe,
     initTheme,
     hideCurrentNav,
-    setTopStatus,
     // Estado / due helpers
     estadoClass,
     stateClass,
@@ -328,8 +307,6 @@ const UI = (() => {
     dueClass,
     // Modals
     showModal,
-    showPlanningSavedModal,
-    // Top status
-    setTopStatus
+    showPlanningSavedModal
   };
 })();
