@@ -28,6 +28,8 @@ function loadConfig() {
 
 function submitForm(e) {
   e.preventDefault();
+
+  // Obtener valores del formulario
   let area = document.getElementById("area").value;
   let solicitante = document.getElementById("solicitante").value;
   let prioridad = document.getElementById("prioridad").value;
@@ -35,27 +37,35 @@ function submitForm(e) {
   let labores = document.getElementById("labores").value;
   let observacion = document.getElementById("observacion").value;
 
-  // Se hace el post a la API
-  fetch("https://script.google.com/macros/s/AKfycbxRYj6GaB8O7q-reEmLTPuZsoDDNQo9Gp_MDlJaFTJ-MiCF5vZ5DRk7gptwDYjA85G4UQ/exec", {
-    method: 'POST',
-    body: JSON.stringify({
-      area: area,
-      solicitante: solicitante,
-      prioridad: prioridad,
-      tiempoEstimado: tiempo,
-      labores: labores,
-      observacion: observacion
-    }),
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  }).then(response => response.json())
+  // Validar campos obligatorios
+  if (!area || !solicitante || !prioridad || !tiempo || !labores) {
+    alert("Por favor completa todos los campos obligatorios.");
+    return;
+  }
+
+  // Preparar payload
+  const payload = {
+    area: area,
+    solicitante: solicitante,
+    prioridad: prioridad,
+    tiempoEstimado: tiempo,
+    labores: labores,
+    observacion: observacion,
+    proyectadoDate: new Date().toISOString().split('T')[0] // Fecha actual como proyectado
+  };
+
+  // Usar API.post() que ya maneja JSONP
+  API.post("create", payload)
     .then(data => {
       if (data.ok) {
-        alert("Planificación creada exitosamente.");
-        // Limpiar formulario
+        alert(`Planificación creada exitosamente. ID: ${data.id}`);
+        document.getElementById("taskForm").reset(); // Limpiar formulario
       } else {
-        alert("Hubo un error.");
+        alert("Error al crear planificación: " + (data.error || "Desconocido"));
       }
+    })
+    .catch(err => {
+      console.error("Error en la petición:", err);
+      alert("Hubo un error de red o servidor. Revisa la consola.");
     });
 }
