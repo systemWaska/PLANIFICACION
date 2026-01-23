@@ -576,39 +576,3 @@ select.es-native{
 /* =============== Row due highlights (table) =============== */
 tr.row-due-soon td:first-child{border-left: 3px solid rgba(250,204,21,.8)}
 tr.row-due-overdue td:first-child{border-left: 3px solid rgba(239,68,68,.8)}
-
-
-/* --- UI helpers (status pills, tags, chips) --- */
-.pill { display:inline-flex; align-items:center; gap:.4rem; padding:.35rem .7rem; border-radius:999px; border:1px solid rgba(255,255,255,.12); background:rgba(0,0,0,.25); font-size:.9rem; }
-.pill-ok { border-color: rgba(120,255,170,.25); }
-.pill-bad { border-color: rgba(255,120,120,.25); }
-
-.tag { display:inline-flex; align-items:center; padding:.2rem .55rem; border-radius:999px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06); font-size:.85rem; }
-
-.chip { cursor:pointer; padding:.35rem .65rem; border-radius:999px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06); color:inherit; }
-.chip:hover { background:rgba(255,255,255,.1); }
-
-.ghost { cursor:pointer; padding:.75rem 1rem; border-radius:999px; border:1px solid rgba(255,255,255,.14); background:transparent; color:inherit; }
-.ghost:hover { background:rgba(255,255,255,.06); }
-
-.divider { height:1px; margin:1rem 0; background:rgba(255,255,255,.10); }
-
-.tableWrap { overflow:auto; border-radius:16px; border:1px solid rgba(255,255,255,.10); }
-.table { width:100%; border-collapse:collapse; }
-.table th, .table td { padding:.65rem .75rem; border-bottom:1px solid rgba(255,255,255,.08); text-align:left; white-space:nowrap; }
-.table thead th { position:sticky; top:0; background:rgba(0,0,0,.25); backdrop-filter: blur(8px); }
-
-/* Index summary layout */
-.section { margin-top: 1.2rem; }
-.card-head { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:.75rem; }
-.link { color: inherit; opacity:.8; text-decoration: underline; }
-.link:hover { opacity:1; }
-.stats5 { display:grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap:.75rem; }
-.stat { border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.04); border-radius:18px; padding:.9rem 1rem; }
-.stat-k { font-size:.9rem; opacity:.75; }
-.stat-v { font-size:1.4rem; font-weight:700; margin-top:.15rem; }
-.bullets { margin:0; padding-left: 1.1rem; }
-.bullets li { margin:.35rem 0; opacity:.9; }
-@media (max-width: 900px) {
-  .stats5 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
