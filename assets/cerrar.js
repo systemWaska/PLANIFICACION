@@ -1,283 +1,188 @@
-/* Cerrar planificación (DNI) */
+/* Cerrar planificación (PIN/DNI por usuario) */
 (() => {
-  const $area = document.getElementById("area");
-  const $sol = document.getElementById("solicitante");
-  const $dni = document.getElementById("dni");
-  const $dni2 = document.getElementById("dni2");
-  const $dniRegister = document.getElementById("dniRegister");
-  const $authMsg = document.getElementById("authMsg");
-  const $btnReload = document.getElementById("btnReload");
+  const $ = (sel) => document.querySelector(sel);
 
-  const $tbody = document.getElementById("tbody");
-  const $closeCard = document.getElementById("closeCard");
-  const $closeMeta = document.getElementById("closeMeta");
-  const $closeId = document.getElementById("closeId");
-  const $updateText = document.getElementById("updateText");
-  const $closeMsg = document.getElementById("closeMsg");
-  const $btnCancelClose = document.getElementById("btnCancelClose");
+  const areaSel = $("#area");
+  const userSel = $("#usuario");
+  const dniInp = $("#dni");
+  const btnLogin = $("#btnLogin");
+  const btnReload = $("#btnReload");
+  const loginMsg = $("#loginMsg");
+  const connPill = $("#connPill");
 
-  const state = {
-    cfg: null,
-    authed: false,
-    area: "",
-    solicitante: "",
-    dni: ""
-  };
+  const tbody = $("#tbody");
+  const selectedId = $("#selectedId");
+  const updateText = $("#updateText");
+  const btnFinalizar = $("#btnFinalizar");
+  const btnPausar = $("#btnPausar");
+  const actionMsg = $("#actionMsg");
 
-  function setMsg(el, text, type) {
-    el.textContent = text || "";
-    el.classList.remove("ok", "warn", "err");
-    if (type) el.classList.add(type);
+  let CONFIG = null;
+  let SESSION = { area: "", usuario: "", dni: "" };
+  let MY_ROWS = [];
+
+  function setConn(ok, text) {
+    if (!connPill) return;
+    connPill.textContent = text || (ok ? "Listo" : "Sin conexión");
+    connPill.classList.toggle("pill-ok", !!ok);
+    connPill.classList.toggle("pill-bad", !ok);
   }
 
-  function isValidDni(v) {
-    return /^\d{8}$/.test(String(v || "").trim());
+  function msg(el, t, bad = false) {
+    if (!el) return;
+    el.textContent = t || "";
+    el.classList.toggle("bad", !!bad);
+  }
+
+  function fillSelect(sel, items, placeholder) {
+    sel.innerHTML = "";
+    const opt0 = document.createElement("option");
+    opt0.value = "";
+    opt0.textContent = placeholder || "Selecciona";
+    sel.appendChild(opt0);
+    (items || []).forEach((x) => {
+      const o = document.createElement("option");
+      o.value = x;
+      o.textContent = x;
+      sel.appendChild(o);
+    });
   }
 
   async function loadConfig() {
-    setMsg($authMsg, "Cargando configuración...", "warn");
-    const res = await API.get("config");
-    // Puede venir como {ok:true, areas/personal/...} o como {ok:true, config:{...}}
-    const cfg = (res && res.config) ? res.config : res;
-    state.cfg = cfg;
-    // Areas
-    $area.innerHTML = '<option value="">Selecciona un área</option>';
-    (cfg.areas || []).forEach(a => {
-      const opt = document.createElement("option");
-      opt.value = a;
-      opt.textContent = a;
-      $area.appendChild(opt);
-    });
-    setMsg($authMsg, "", "");
-  }
-
-  function fillSolicitantes() {
-    const area = $area.value;
-    $sol.disabled = !area;
-    $sol.innerHTML = area
-      ? '<option value="">Selecciona un usuario</option>'
-      : '<option value="">Selecciona primero un área</option>';
-
-    if (!area || !state.cfg) return;
-    const list = (state.cfg.personal || []).filter(p => (p.area || "") === area);
-    list.forEach(p => {
-      const opt = document.createElement("option");
-      opt.value = p.usuario;
-      opt.textContent = p.usuario;
-      $sol.appendChild(opt);
-    });
-  }
-
-  async function authFlow(e) {
-    e.preventDefault();
-    const area = $area.value;
-    const sol = $sol.value;
-    const dni = $dni.value.trim();
-
-    if (!area || !sol) return setMsg($authMsg, "Selecciona Área y Usuario.", "err");
-    if (!isValidDni(dni)) return setMsg($authMsg, "El DNI debe tener 8 dígitos.", "err");
-
-    setMsg($authMsg, "Validando...", "warn");
-
-    // Intentar autenticar
-    const res = await API.post({
-      action: "auth",
-      area,
-      solicitante: sol,
-      dni
-    });
-
-    // Si backend indica que no hay DNI registrado, habilitar registro
-    if (res && res.ok === false && res.code === "NO_DNI") {
-      $dniRegister.classList.remove("hidden");
-      setMsg($authMsg, "Este usuario aún no tiene DNI registrado. Ingresa el DNI y confírmalo para registrarlo.", "warn");
-      return;
-    }
-
-    if (!res || res.ok !== true) {
-      setMsg($authMsg, (res && (res.error || res.message)) || "No se pudo validar.", "err");
-      return;
-    }
-
-    // OK
-    $dniRegister.classList.add("hidden");
-    state.authed = true;
-    state.area = area;
-    state.solicitante = sol;
-    state.dni = dni;
-    setMsg($authMsg, "Acceso correcto. Cargando registros...", "ok");
-    await loadMyPlans();
-  }
-
-  async function registerDniIfNeeded() {
-    const area = $area.value;
-    const sol = $sol.value;
-    const dni = $dni.value.trim();
-    const dni2 = $dni2.value.trim();
-
-    if (!$dniRegister.classList.contains("hidden")) {
-      if (!isValidDni(dni) || !isValidDni(dni2)) {
-        setMsg($authMsg, "Para registrar DNI, ambos deben tener 8 dígitos.", "err");
-        return false;
-      }
-      if (dni !== dni2) {
-        setMsg($authMsg, "Los DNI no coinciden.", "err");
-        return false;
-      }
-
-      setMsg($authMsg, "Registrando DNI...", "warn");
-      const res = await API.post({
-        action: "setDni",
-        area,
-        solicitante: sol,
-        dni
-      });
-
-      if (!res || res.ok !== true) {
-        setMsg($authMsg, (res && (res.error || res.message)) || "No se pudo registrar DNI.", "err");
-        return false;
-      }
-      setMsg($authMsg, "DNI registrado. Validando acceso...", "ok");
-      $dniRegister.classList.add("hidden");
-      return true;
-    }
-    return true;
-  }
-
-  async function handleAuthSubmit(e) {
-    e.preventDefault();
-    // si está pidiendo registro, registramos primero
-    const ok = await registerDniIfNeeded();
-    if (!ok) return;
-    // luego, autenticar normal
-    await authFlow(e);
-  }
-
-  function renderEmpty(text) {
-    $tbody.innerHTML = `<tr><td colspan="5" class="muted">${text}</td></tr>`;
-  }
-
-  function fmtDateOnly(v) {
-    if (!v) return "";
-    // backend puede mandar Date ISO, timestamp o YYYY-MM-DD
-    if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)) {
-      const [y,m,d] = v.split("-").map(Number);
-      return new Date(y, m-1, d).toLocaleDateString("es-PE");
-    }
-    const dt = new Date(v);
-    if (isNaN(dt.getTime())) return String(v);
-    return dt.toLocaleDateString("es-PE");
-  }
-
-  async function loadMyPlans() {
-    if (!state.authed) return renderEmpty("Ingresa para ver tus registros.");
-
-    const res = await API.post({
-      action: "listByUser",
-      area: state.area,
-      solicitante: state.solicitante,
-      dni: state.dni
-    });
-
-    if (!res || res.ok !== true) {
-      renderEmpty((res && (res.error || res.message)) || "No se pudo cargar.");
-      return;
-    }
-
-    const rows = (res.rows || []).filter(r => ["Pendiente", "Pausado"].includes(r.estado));
-    if (!rows.length) return renderEmpty("No tienes registros Pendiente/Pausado.");
-
-    $tbody.innerHTML = "";
-    rows.forEach(r => {
-      const tr = document.createElement("tr");
-      const stClass = (window.UI && UI.stateClass) ? UI.stateClass(r.estado) : "";
-      tr.innerHTML = `
-        <td>${r.id || ""}</td>
-        <td><span class="badge">${r.prioridad || ""}</span></td>
-        <td><span class="badge ${stClass}">${r.estado || ""}</span></td>
-        <td>${fmtDateOnly(r.proyectado)}</td>
-        <td><button class="btn small" data-close="${r.id}">Finalizar</button></td>
-      `;
-      $tbody.appendChild(tr);
-    });
-
-    // botones
-    $tbody.querySelectorAll("[data-close]").forEach(btn => {
-      btn.addEventListener("click", () => openClose(btn.getAttribute("data-close")));
-    });
-  }
-
-  function openClose(id) {
-    $closeId.value = id;
-    $updateText.value = "";
-    setMsg($closeMsg, "", "");
-    $closeMeta.textContent = `${state.area} • ${state.solicitante} • ${id}`;
-    $closeCard.classList.remove("hidden");
-    $closeCard.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  function closePanel() {
-    $closeCard.classList.add("hidden");
-    $closeId.value = "";
-    $updateText.value = "";
-    setMsg($closeMsg, "", "");
-  }
-
-  async function submitClose(e) {
-    e.preventDefault();
-    const id = $closeId.value;
-    if (!id) return;
-
-    setMsg($closeMsg, "Actualizando...", "warn");
-
-    const res = await API.post({
-      action: "closePlan",
-      id,
-      area: state.area,
-      solicitante: state.solicitante,
-      dni: state.dni,
-      update: $updateText.value.trim()
-    });
-
-    if (!res || res.ok !== true) {
-      setMsg($closeMsg, (res && (res.error || res.message)) || "No se pudo actualizar.", "err");
-      return;
-    }
-
-    setMsg($closeMsg, "Listo. Marcado como Finalizado.", "ok");
-    await loadMyPlans();
-    setTimeout(closePanel, 700);
-  }
-
-  async function reloadAll() {
-    state.authed = false;
-    state.area = "";
-    state.solicitante = "";
-    state.dni = "";
-    $dni.value = "";
-    $dni2.value = "";
-    $dniRegister.classList.add("hidden");
-    $area.value = "";
-    fillSolicitantes();
-    renderEmpty("Ingresa para ver tus registros.");
-    setMsg($authMsg, "", "");
-    await loadConfig();
-  }
-
-  // Init
-  document.addEventListener("DOMContentLoaded", async () => {
+    setConn(false, "Conectando...");
     try {
-      await loadConfig();
-      fillSolicitantes();
-      renderEmpty("Ingresa para ver tus registros.");
+      const data = await API.get("config");
+      if (!data || data.ok === false) throw new Error((data && data.error) || "Respuesta inválida.");
+      CONFIG = data;
+      fillSelect(areaSel, data.areas || [], "Selecciona un área");
+      fillSelect(userSel, [], "Selecciona primero un área");
+      userSel.disabled = true;
+      setConn(true, "Listo");
+      msg(loginMsg, "");
     } catch (e) {
-      setMsg($authMsg, "Error cargando configuración.", "err");
+      setConn(false, "Error");
+      msg(loginMsg, "Error cargando configuración. " + (e.message || ""), true);
     }
+  }
 
-    $area.addEventListener("change", fillSolicitantes);
-    document.getElementById("authForm").addEventListener("submit", handleAuthSubmit);
-    document.getElementById("closeForm").addEventListener("submit", submitClose);
-    $btnCancelClose.addEventListener("click", closePanel);
-    $btnReload.addEventListener("click", reloadAll);
-  });
+  function onArea() {
+    const area = areaSel.value;
+    if (!area) {
+      userSel.disabled = true;
+      fillSelect(userSel, [], "Selecciona primero un área");
+      return;
+    }
+    const users = (CONFIG.usersByArea && CONFIG.usersByArea[area]) ? CONFIG.usersByArea[area].map(u => u.usuario) : [];
+    fillSelect(userSel, users, "Selecciona un usuario");
+    userSel.disabled = false;
+  }
+
+  function renderRows() {
+    tbody.innerHTML = "";
+    if (!MY_ROWS.length) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="5" class="muted">No tienes registros Pendiente / Pausado.</td>`;
+      tbody.appendChild(tr);
+      return;
+    }
+    MY_ROWS.forEach((r) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><b>${escapeHtml(r.id)}</b></td>
+        <td>${escapeHtml(r.prioridad || "")}</td>
+        <td><span class="tag">${escapeHtml(r.estado || "")}</span></td>
+        <td>${escapeHtml(r.proyectado || "")}</td>
+        <td><button class="chip" data-id="${escapeHtml(r.id)}">Elegir</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    tbody.querySelectorAll("button[data-id]").forEach((b) => {
+      b.addEventListener("click", () => {
+        const id = b.getAttribute("data-id");
+        selectedId.value = id;
+        btnFinalizar.disabled = false;
+        btnPausar.disabled = false;
+        msg(actionMsg, "");
+      });
+    });
+  }
+
+  async function login() {
+    const area = areaSel.value;
+    const usuario = userSel.value;
+    const dni = (dniInp.value || "").trim();
+
+    if (!area) return msg(loginMsg, "Selecciona Área.", true);
+    if (!usuario) return msg(loginMsg, "Selecciona Usuario.", true);
+    if (!/^\d{8}$/.test(dni)) return msg(loginMsg, "DNI debe tener 8 dígitos.", true);
+
+    SESSION = { area, usuario, dni };
+    msg(loginMsg, "Validando...", false);
+
+    try {
+      // listMine validates DNI on server (and may ask to register DNI)
+      const res = await API.get("listMine", SESSION);
+      if (res && res.requireRegisterDni) {
+        // DNI vacío en Config -> registrar
+        const ok = confirm("Tu DNI no está registrado. ¿Deseas registrarlo ahora con el DNI ingresado?");
+        if (!ok) return msg(loginMsg, "No se registró DNI. No se puede ingresar.", true);
+
+        const reg = await API.get("registerDni", SESSION);
+        if (!reg || reg.ok === false) throw new Error((reg && reg.error) || "No se pudo registrar DNI.");
+      }
+
+      const again = await API.get("listMine", SESSION);
+      if (!again || again.ok === false) throw new Error((again && again.error) || "No se pudo listar.");
+      MY_ROWS = again.rows || [];
+      renderRows();
+      msg(loginMsg, "Ingreso OK. Selecciona un registro para actualizar.", false);
+    } catch (e) {
+      MY_ROWS = [];
+      renderRows();
+      msg(loginMsg, e.message || "Error de ingreso.", true);
+    }
+  }
+
+  async function updateEstado(nuevoEstado) {
+    const id = (selectedId.value || "").trim();
+    const note = (updateText.value || "").trim();
+    if (!id) return msg(actionMsg, "Selecciona un registro.", true);
+    if (!note) return msg(actionMsg, "La actualización es obligatoria.", true);
+
+    msg(actionMsg, "Guardando...", false);
+    try {
+      const payload = { ...SESSION, id, nuevoEstado, note };
+      const res = await API.get("close", payload);
+      if (!res || res.ok === false) throw new Error((res && res.error) || "No se pudo actualizar.");
+      updateText.value = "";
+      selectedId.value = "";
+      btnFinalizar.disabled = true;
+      btnPausar.disabled = true;
+      // refresh
+      const again = await API.get("listMine", SESSION);
+      MY_ROWS = (again && again.rows) ? again.rows : [];
+      renderRows();
+      msg(actionMsg, "Actualizado.", false);
+    } catch (e) {
+      msg(actionMsg, e.message || "Error.", true);
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  areaSel.addEventListener("change", onArea);
+  btnLogin.addEventListener("click", login);
+  btnReload.addEventListener("click", () => loadConfig());
+  btnFinalizar.addEventListener("click", () => updateEstado("Finalizado"));
+  btnPausar.addEventListener("click", () => updateEstado("Pausado"));
+
+  loadConfig();
 })();

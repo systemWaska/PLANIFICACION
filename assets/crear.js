@@ -12,6 +12,7 @@ const solicitante = $("#solicitante");
 const correo = $("#correo");
 const prioridad = $("#prioridad");
 const tiempo = $("#tiempo");
+const proyectadoDate = $("#proyectadoDate");
 const labores = $("#labores");
 const observacion = $("#observacion");
 const msg = $("#msg");
@@ -106,25 +107,10 @@ function getPayload() {
     solicitante: solicitante.value.trim(),
     prioridad: prioridad.value.trim(),
     labores: labores.value.trim(),
-    estado: "Pendiente",
-    tiempo: tiempo.value.trim(),
-    ejecutado: "",
-    observacion: (observacion.value || "").trim()
+    tiempoEstimado: tiempo.value.trim(),
+    proyectadoDate: proyectadoDate.value, // YYYY-MM-DD
+    observacion: obs.value.trim()
   };
-}
-
-async function loadConfig() {
-  setTopStatus("idle", "Conectando...");
-  const { config } = await API.get("config");
-  CONFIG = config;
-
-  buildSelect(area, config.areas, "Selecciona un área");
-  buildSelect(prioridad, config.prioridades, "Selecciona prioridad");
-  resetSolicitante();
-
-
-
-  setTopStatus("ok", "Conectado");
 }
 
 form.addEventListener("submit", async (e) => {
@@ -144,7 +130,7 @@ form.addEventListener("submit", async (e) => {
     setTopStatus("idle", "Guardando...");
 
     const payload = getPayload();
-    const res = await API.post(payload);
+    const res = await API.post("create", payload);
 
     // Mostrar popup tipo "Evento Registrado" (similar a tu ejemplo)
     // Incluye el código generado (PLAN-001, etc.) y el usuario.
@@ -179,9 +165,6 @@ resetBtn.addEventListener("click", () => {
 });
 
 area.addEventListener("change", onAreaChange);
-solicitante.addEventListener("change", onSolicitanteChange);
-labores.addEventListener("input", updateChars);
-
 updateChars();
 loadConfig().catch((e) => {
   setTopStatus("err", "Sin conexión");
