@@ -3,107 +3,124 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Planificación · Cerrar</title>
-  <link rel="stylesheet" href="assets/styles.css?v=20260123-1" />
+  <title>Cerrar planificación</title>
+  <link rel="stylesheet" href="./assets/styles.css?v=20260122-1" />
 </head>
 <body>
+  <div class="bg-glow"></div>
+
   <header class="topbar">
     <div class="brand">
-      <div class="logo"></div>
+      <div class="logo" aria-hidden="true"></div>
       <div>
-        <div class="brand-title">Planificación</div>
-        <div class="brand-sub">Cerrar · Actualizar estado</div>
+        <div class="title">Planificación</div>
+        <div class="subtitle">Cerrar • Actualizar estado</div>
       </div>
     </div>
-
     <nav class="nav">
-      <a class="btn" data-nav="index" href="./index.html">Inicio</a>
+      <a class="btn" data-nav="home" href="./index.html">Inicio</a>
       <a class="btn" data-nav="crear" href="./crear.html">Crear →</a>
       <a class="btn" data-nav="ver" href="./ver.html">Ver →</a>
+      <a class="btn" data-nav="cerrar" href="./cerrar.html">Cerrar →</a>
       <a class="btn" data-nav="dashboard" href="./dashboard.html">Dashboard →</a>
-      <button class="icon-btn" id="themeToggle" title="Modo claro/oscuro">☀️</button>
-      <span class="pill" id="connPill">Conectando...</span>
+      <button class="icon-btn" id="themeToggle" title="Tema" aria-label="Cambiar tema">☀️</button>
     </nav>
   </header>
 
-  <main class="container">
+  <main class="shell">
     <section class="hero">
       <h1>Cerrar planificación</h1>
       <p>Elige tu área, tu nombre y valida con DNI. Luego podrás marcar como <b>Finalizado</b> y dejar una actualización.</p>
     </section>
 
-    <section class="grid2">
-      <div class="card">
-        <h2>Ingreso</h2>
-        <div class="field">
-          <label for="area">Área</label>
-          <select id="area"></select>
-        </div>
-        <div class="field">
-          <label for="usuario">Usuario</label>
-          <select id="usuario" disabled></select>
-        </div>
-        <div class="field">
-          <label for="dni">DNI (8 dígitos)</label>
-          <input id="dni" type="password" inputmode="numeric" maxlength="8" placeholder="••••••••" />
-          <small id="dniHelp">Si el usuario no tiene DNI registrado, podrás registrarlo.</small>
+    <section class="card-pad">
+      <div class="grid2">
+        <div class="card">
+          <h3>Ingreso</h3>
+          <form id="authForm" class="form">
+            <div class="field">
+              <label for="area">Área</label>
+              <select id="area" required>
+                <option value="">Selecciona un área</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="solicitante">Usuario</label>
+              <select id="solicitante" required disabled>
+                <option value="">Selecciona primero un área</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="dni">DNI (8 dígitos)</label>
+              <input id="dni" type="password" inputmode="numeric" maxlength="8" placeholder="••••••••" required />
+              <div class="hint" id="dniHint">Si el usuario no tiene DNI registrado, podrás registrarlo.</div>
+            </div>
+
+            <div id="dniRegister" class="hidden">
+              <div class="field">
+                <label for="dni2">Confirmar DNI</label>
+                <input id="dni2" type="password" inputmode="numeric" maxlength="8" placeholder="••••••••" />
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="btn primary" type="submit" id="btnAuth">Ingresar</button>
+              <button class="btn" type="button" id="btnReload">Recargar</button>
+            </div>
+
+            <div class="msg" id="authMsg" role="status" aria-live="polite"></div>
+          </form>
         </div>
 
-        <div class="row">
-          <button class="primary" id="btnLogin">Ingresar</button>
-          <button class="ghost" id="btnReload">Recargar</button>
+        <div class="card">
+          <h3>Mis planificaciones</h3>
+          <div class="hint">Mostramos solo <b>Pendiente</b> y <b>Pausado</b>. Para cerrar, presiona “Finalizar”.</div>
+          <div class="table-wrap">
+            <table class="table" id="tbl">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Prioridad</th>
+                  <th>Estado</th>
+                  <th>Proyectado</th>
+                  <th style="width:140px;">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="tbody">
+                <tr><td colspan="5" class="muted">Ingresa para ver tus registros.</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-
-        <div class="hint" id="loginMsg"></div>
       </div>
 
-      <div class="card">
-        <h2>Mis planificaciones</h2>
-        <p class="muted">Mostramos solo <b>Pendiente</b> y <b>Pausado</b>. Para cerrar, presiona “Finalizar”.</p>
-        <div class="tableWrap">
-          <table class="table" id="tbl">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Prioridad</th>
-                <th>Estado</th>
-                <th>Proyectado</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="tbody">
-              <tr><td colspan="5" class="muted">Ingresa para ver tus registros.</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="divider"></div>
-
-        <h3>Actualizar / Finalizar</h3>
-        <div class="field">
-          <label for="selectedId">ID seleccionado</label>
-          <input id="selectedId" disabled placeholder="Selecciona un registro..." />
-        </div>
-        <div class="field">
-          <label for="updateText">Actualización (obligatorio)</label>
-          <textarea id="updateText" rows="4" placeholder="¿Qué se hizo? ¿Qué falta?"></textarea>
-        </div>
-        <div class="row">
-          <button class="primary" id="btnFinalizar" disabled>Finalizar</button>
-          <button class="ghost" id="btnPausar" disabled>Pausar</button>
-        </div>
-        <div class="hint" id="actionMsg"></div>
+      <div class="card hidden" id="closeCard">
+        <h3>Finalizar planificación</h3>
+        <div class="muted" id="closeMeta"></div>
+        <form id="closeForm" class="form">
+          <input type="hidden" id="closeId" />
+          <div class="field">
+            <label for="updateText">Actualización (opcional)</label>
+            <textarea id="updateText" rows="4" placeholder="Ej: Se completó la migración. Queda pendiente validar accesos."></textarea>
+          </div>
+          <div class="actions">
+            <button class="btn primary" type="submit">Marcar como Finalizado</button>
+            <button class="btn" type="button" id="btnCancelClose">Cancelar</button>
+          </div>
+          <div class="msg" id="closeMsg" role="status" aria-live="polite"></div>
+        </form>
       </div>
+
     </section>
-
-    <footer class="foot">
-      Front: GitHub Pages · Back: Google Apps Script
-    </footer>
   </main>
 
-  <script src="assets/config.js?v=20260123-1"></script>
-  <script src="assets/api.js?v=20260123-1"></script>
-  <script src="assets/ui.js?v=20260123-1"></script>
-  <script src="assets/cerrar.js?v=20260123-1"></script>
+  <footer class="footer">Front: GitHub Pages • Back: Google Apps Script</footer>
+
+  <script src="assets/ui.js" defer></script>
+  <script src="assets/init.js" defer></script>
+  <script src="assets/api.js" defer></script>
+  <script src="assets/cerrar.js" defer></script>
 </body>
 </html>
