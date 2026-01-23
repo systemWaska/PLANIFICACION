@@ -36,7 +36,7 @@ function submitForm(e) {
   let observacion = document.getElementById("observacion").value;
 
   // Se hace el post a la API
-  fetch("https://script.google.com/macros/s/YOUR_WEB_APP_URL/exec?action=create", {
+  fetch("https://script.google.com/macros/s/AKfycbxRYj6GaB8O7q-reEmLTPuZsoDDNQo9Gp_MDlJaFTJ-MiCF5vZ5DRk7gptwDYjA85G4UQ/exec", {
     method: 'POST',
     body: JSON.stringify({
       area: area,
