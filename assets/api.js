@@ -2,16 +2,18 @@
  * - All requests go through JSONP to avoid CORS.
  * - For mutating actions, we send payload as base64url JSON via GET (?p=...).
  */
-function () {
+(function () {
   const CFG = window.APP_CONFIG || {};
   const SCRIPT_URL = (CFG.SCRIPT_URL || window.SCRIPT_URL || "").trim();
   const DEFAULT_SID = (CFG.SPREADSHEET_ID || "").trim();
 
+  // Encode a string to base64url
   function base64urlEncode(str) {
     const b64 = btoa(unescape(encodeURIComponent(str)));
     return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
   }
 
+  // Get the spreadsheet ID from the URL parameter or the config
   function pickSpreadsheetId() {
     // Priority: URL param sid > APP_CONFIG.SPREADSHEET_ID > empty
     try {
@@ -22,6 +24,7 @@ function () {
     }
   }
 
+  // Function to make JSONP request
   function jsonpRequest(action, params = {}, { timeoutMs = 15000 } = {}) {
     return new Promise((resolve, reject) => {
       if (!SCRIPT_URL) return reject(new Error("SCRIPT_URL no configurado (assets/config.js)."));
@@ -76,6 +79,7 @@ function () {
     });
   }
 
+  // Expose API functions
   window.API = {
     request: jsonpRequest,
     // Backwards-compatible helpers
