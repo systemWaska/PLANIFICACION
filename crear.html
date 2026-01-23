@@ -1,100 +1,88 @@
-    <!doctype html>
-    <html lang="es">
-    <head>
-      <meta charset="utf-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <title>Crear planificación</title>
-      <link rel="stylesheet" href="./assets/styles.css?v=20260119-3" />
-    </head>
-    <body>
-      <div class="bg-glow"></div>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Crear planificación</title>
+  <link rel="stylesheet" href="./assets/styles.css?v=20260119-3" />
+</head>
+<body>
+  <div class="bg-glow"></div>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <div class="title">Crear planificación</div>
+        <div class="sub">Registro • Google Sheets</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a class="btn" data-nav="inicio" href="./index.html">← Inicio</a>
+      <a class="btn" data-nav="crear" href="./crear.html">Crear →</a>
+      <a class="btn" data-nav="ver" href="./ver.html">Ver →</a>
+      <a class="btn" data-nav="cerrar" href="./cerrar.html">Cerrar →</a>
+      <a class="btn" data-nav="dashboard" href="./dashboard.html">Dashboard →</a>
+      <button class="btn btn-icon" id="themeToggle" type="button" aria-label="Cambiar tema">🌙</button>
+      <span class="pill"><span class="dot" id="statusDot"></span><span id="statusText">Listo</span></span>
+    </nav>
+  </header>
 
-      <header class="topbar">
-        <div class="brand">
-          <div class="logo" aria-hidden="true"></div>
-          <div>
-            <div class="title">Crear planificación</div>
-            <div class="sub">Registro • Google Sheets</div>
+  <main class="container">
+    <div class="card">
+      <div class="card-pad">
+        <h1>Crear planificación</h1>
+        <p class="lead">Completa el formulario. El registro se guarda en Sheets con fecha de registro automática. El estado se guarda como <b>Pendiente</b> por defecto.</p>
+        <form id="taskForm" novalidate>
+          <div class="grid2">
+            <div>
+              <label for="area">Área</label>
+              <select id="area" required></select>
+              <div class="hint">El Área controla la lista de Solicitante.</div>
+            </div>
+
+            <div>
+              <label for="solicitante">Solicitante</label>
+              <select id="solicitante" required></select>
+              <label for="correo" style="margin-top:10px;">Fecha proyectada</label>
+              <input id="correo" type="email" placeholder="Se completa al elegir solicitante" disabled />
+            </div>
           </div>
-        </div>
-        <nav class="nav">
-          <a class="btn" data-nav="inicio" href="./index.html">← Inicio</a>
-          <a class="btn" data-nav="crear" href="./crear.html">Crear →</a>
-          <a class="btn" data-nav="ver" href="./ver.html">Ver →</a>
-          <a class="btn" data-nav="cerrar" href="./cerrar.html">Cerrar →</a>
-          <a class="btn" data-nav="dashboard" href="./dashboard.html">Dashboard →</a>
-          <button class="btn btn-icon" id="themeToggle" type="button" aria-label="Cambiar tema">🌙</button>
-          <span class="pill"><span class="dot" id="statusDot"></span><span id="statusText">Listo</span></span>
-        </nav>
-      </header>
 
-      <main class="container">
-        <div class="card">
-          <div class="card-pad">
+          <div class="grid2">
+            <div>
+              <label for="prioridad">Prioridad</label>
+              <select id="prioridad" required></select>
+            </div>
 
-<h1>Crear planificación</h1>
-<p class="lead">Completa el formulario. El registro se guarda en Sheets con fecha de registro automática. El estado se guarda como <b>Pendiente</b> por defecto.</p>
-
-<form id="taskForm" novalidate>
-  <div class="grid2">
-    <div>
-      <label for="area">Área</label>
-      <select id="area" required></select>
-      <div class="hint">El Área controla la lista de Solicitante.</div>
-    </div>
-
-    <div>
-      <label for="solicitante">Solicitante</label>
-      <select id="solicitante" required></select>
-	      <!--
-	        CORREO (auto): se obtiene desde la hoja Config.
-	        NO se escribe a mano para evitar errores.
-	      -->
-	      <label for="correo" style="margin-top:10px;">Fecha proyectada</label>
-	      <input id="correo" type="email" placeholder="Se completa al elegir solicitante" disabled />
-    </div>
-  </div>
-
-  <div class="grid2">
-    <div>
-      <label for="prioridad">Prioridad</label>
-      <select id="prioridad" required></select>
-    </div>
-
-    <div>
-      <label for="tiempo">Tiempo estimado</label>
-      <!--
-        Formato soportado por el backend (Apps Script):
-        1h = 1 hora | 1d = 1 día | 2s = 2 semanas | 1m = 1 mes
-      -->
-      <input id="tiempo" type="text" required placeholder="Ej: 1h, 1d, 2s, 1m" />
-      <div class="hint">Usa: 1h (hora), 1d (día), 2s (semanas), 1m (mes). Ej: 4h, 3d, 2s.</div>
-    </div>
-  </div>
-
-  <label for="labores">Lista de labores</label>
-  <textarea id="labores" required placeholder="Describe la labor..."></textarea>
-  <div class="hint"><span id="chars">0</span></div>
-
-  <label for="observacion">Observación (opcional)</label>
-  <textarea id="observacion" placeholder="Notas, bloqueos, contexto..."></textarea>
-
-  <div class="row-actions">
-    <button class="btn btn-block primary" id="submitBtn" type="submit">Guardar</button>
-    <button class="btn btn-block" id="resetBtn" type="button">Limpiar</button>
-  </div>
-
-  <div class="msg" id="msg"></div>
-</form>
-
+            <div>
+              <label for="tiempo">Tiempo estimado</label>
+              <input id="tiempo" type="text" required placeholder="Ej: 1h, 1d, 2s, 1m" />
+              <div class="hint">Usa: 1h (hora), 1d (día), 2s (semanas), 1m (mes). Ej: 4h, 3d, 2s.</div>
+            </div>
           </div>
-          <div class="footer-note">Front: GitHub Pages • Back: Google Apps Script</div>
-        </div>
-      </main>
 
-        <script src="./assets/config.js?v=20260119-2"></script>
-      <script src="./assets/ui.js?v=20260119-3"></script>
-      <script src="./assets/api.js?v=20260119-2"></script>
-      <script src="./assets/crear.js?v=20260119-2"></script>
-    </body>
-    </html>
+          <label for="labores">Lista de labores</label>
+          <textarea id="labores" required placeholder="Describe la labor..."></textarea>
+          <div class="hint"><span id="chars">0</span></div>
+
+          <label for="observacion">Observación (opcional)</label>
+          <textarea id="observacion" placeholder="Notas, bloqueos, contexto..."></textarea>
+
+          <div class="row-actions">
+            <button class="btn btn-block primary" id="submitBtn" type="submit">Guardar</button>
+            <button class="btn btn-block" id="resetBtn" type="button">Limpiar</button>
+          </div>
+
+          <div class="msg" id="msg"></div>
+        </form>
+      </div>
+      <div class="footer-note">Front: GitHub Pages • Back: Google Apps Script</div>
+    </div>
+  </main>
+
+  <script src="./assets/config.js?v=20260119-2"></script>
+  <script src="./assets/ui.js?v=20260119-3"></script>
+  <script src="./assets/api.js?v=20260119-2"></script>
+  <script src="./assets/crear.js?v=20260119-2"></script>
+</body>
+</html>
