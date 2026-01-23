@@ -2,7 +2,7 @@
  * - All requests go through JSONP to avoid CORS.
  * - For mutating actions, we send payload as base64url JSON via GET (?p=...).
  */
-(function () {
+function () {
   const CFG = window.APP_CONFIG || {};
   const SCRIPT_URL = (CFG.SCRIPT_URL || window.SCRIPT_URL || "").trim();
   const DEFAULT_SID = (CFG.SPREADSHEET_ID || "").trim();
