@@ -1,17 +1,12 @@
 // Página: CREAR (formulario)
-// ui.js ya se encarga de:
-// - Inicializar tema + botón ☀️/🌙
-// - Ocultar el link de navegación de la página actual
-// Por eso aquí solo usamos helpers básicos.
 const { $, toast } = UI;
 
 const form = $("#taskForm");
 const area = $("#area");
 const solicitante = $("#solicitante");
-// NUEVO: campo readonly para mostrar el correo del solicitante (Config -> Email)
 const correo = $("#correo");
 const prioridad = $("#prioridad");
-const proyectado = $("#proyectado"); // ✅ Campo de fecha proyectada
+const proyectado = $("#proyectado");
 const labores = $("#labores");
 const observacion = $("#observacion");
 const msg = $("#msg");
@@ -69,7 +64,8 @@ function resetSolicitante() {
 function onSolicitanteChange() {
   if (!correo) return;
   const name = (solicitante.value || "").trim();
-  const email = (CONFIG && CONFIG.emailByUser && CONFIG.emailByUser[name]) || "";
+  const email = (CONFIG && CONFIG.usersByArea && CONFIG.usersByArea[area.value]) ?
+    (CONFIG.usersByArea[area.value].find(u => u.usuario === name)?.email || "") : "";
   correo.value = email;
 }
 
@@ -93,32 +89,42 @@ function validate() {
 }
 
 function getPayload() {
+  const email = (CONFIG && CONFIG.usersByArea && CONFIG.usersByArea[area.value]) ?
+    (CONFIG.usersByArea[area.value].find(u => u.usuario === solicitante.value)?.email || "") : "";
+
   return {
     area: area.value.trim(),
     solicitante: solicitante.value.trim(),
+    email: email,
     prioridad: prioridad.value.trim(),
     labores: labores.value.trim(),
     estado: "Pendiente",
-    proyectadoDate: proyectado.value, // ✅ En formato YYYY-MM-DD
+    proyectadoDate: proyectado.value,
     observacion: (observacion.value || "").trim()
   };
 }
 
 async function loadConfig() {
   setTopStatus("idle", "Conectando...");
-  const { config } = await API.get("config");
-  CONFIG = config;
+  try {
+    const response = await API.get("config");
+    if (!response.ok) throw new Error(response.error || "Error al cargar configuración");
+    
+    CONFIG = response.config;
 
-  buildSelect(area, config.areas, "Selecciona un área");
-  buildSelect(prioridad, config.prioridades, "Selecciona prioridad");
-  resetSolicitante();
+    buildSelect(area, CONFIG.areas, "Selecciona un área");
+    buildSelect(prioridad, CONFIG.prioridades, "Selecciona prioridad");
+    resetSolicitante();
 
-  // Establecer fecha mínima = mañana (opcional pero recomendado)
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  proyectado.min = tomorrow.toISOString().split('T')[0];
+    // Establecer fecha/hora mínima = ahora + 30 minutos
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 30);
+    proyectado.min = now.toISOString().slice(0, 16); // YYYY-MM-DDTHH:mm
 
-  setTopStatus("ok", "Conectado");
+    setTopStatus("ok", "Conectado");
+  } catch (err) {
+    throw err;
+  }
 }
 
 form.addEventListener("submit", async (e) => {
@@ -138,7 +144,7 @@ form.addEventListener("submit", async (e) => {
     setTopStatus("idle", "Guardando...");
 
     const payload = getPayload();
-    const res = await API.post("create", payload); // 👈 acción explícita
+    const res = await API.post("create", payload);
 
     UI.showPlanningSavedModal({ id: res.id || "", user: payload.solicitante || "" });
     const name = payload.solicitante || "Tu";
@@ -150,6 +156,7 @@ form.addEventListener("submit", async (e) => {
     updateChars();
     setTopStatus("ok", "Guardado");
   } catch (e2) {
+    console.error("Error:", e2);
     setTopStatus("err", "Error");
     toast(e2.message || "Error guardando", "err");
     setMsg(e2.message || "Error guardando");
@@ -173,6 +180,6 @@ labores.addEventListener("input", updateChars);
 updateChars();
 loadConfig().catch((e) => {
   setTopStatus("err", "Sin conexión");
-  UI.toast(e.message || "Error", "err");
+  toast(e.message || "Error", "err");
   setMsg(e.message || "Error");
 });
