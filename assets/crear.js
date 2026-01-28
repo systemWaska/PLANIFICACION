@@ -11,7 +11,7 @@ const solicitante = $("#solicitante");
 // NUEVO: campo readonly para mostrar el correo del solicitante (Config -> Email)
 const correo = $("#correo");
 const prioridad = $("#prioridad");
-const tiempo = $("#tiempo");
+const proyectado = $("#proyectado"); // ✅ Campo de fecha proyectada
 const labores = $("#labores");
 const observacion = $("#observacion");
 const msg = $("#msg");
@@ -63,11 +63,9 @@ function buildSelect(select, items, placeholder) {
 function resetSolicitante() {
   solicitante.disabled = true;
   buildSelect(solicitante, [], "Selecciona primero un área");
-  // Al resetear, también vaciamos el correo
   if (correo) correo.value = "";
 }
 
-// Cuando cambia el solicitante, buscamos su correo (si existe) desde Config.
 function onSolicitanteChange() {
   if (!correo) return;
   const name = (solicitante.value || "").trim();
@@ -82,8 +80,6 @@ function onAreaChange() {
 
   solicitante.disabled = false;
   buildSelect(solicitante, list, "Selecciona solicitante");
-
-  // Cuando cambia el área, limpiamos correo hasta que elijan solicitante
   if (correo) correo.value = "";
 }
 
@@ -91,11 +87,7 @@ function validate() {
   if (!area.value) return "Selecciona un Área.";
   if (!solicitante.value) return "Selecciona un Solicitante.";
   if (!prioridad.value) return "Selecciona una Prioridad.";
-  if (!tiempo.value.trim()) return "Completa el Tiempo estimado.";
-  // Validación de formato (se mantiene el diseño, solo validamos el texto).
-  // Backend acepta: N + (h|d|s|m). Ej: 1h, 2d, 3s, 1m
-  const t = tiempo.value.trim().toLowerCase().replace(/\s+/g, "");
-  if (!/^\d+[hdsm]$/.test(t)) return "Tiempo estimado inválido. Usa 1h, 1d, 2s, 1m.";
+  if (!proyectado.value) return "Selecciona una Fecha proyectada.";
   if (!labores.value.trim() || labores.value.trim().length < 3) return "Describe la labor (mín. 3 caracteres).";
   return "";
 }
@@ -107,8 +99,7 @@ function getPayload() {
     prioridad: prioridad.value.trim(),
     labores: labores.value.trim(),
     estado: "Pendiente",
-    tiempo: tiempo.value.trim(),
-    ejecutado: "",
+    proyectadoDate: proyectado.value, // ✅ En formato YYYY-MM-DD
     observacion: (observacion.value || "").trim()
   };
 }
@@ -122,7 +113,10 @@ async function loadConfig() {
   buildSelect(prioridad, config.prioridades, "Selecciona prioridad");
   resetSolicitante();
 
-
+  // Establecer fecha mínima = mañana (opcional pero recomendado)
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  proyectado.min = tomorrow.toISOString().split('T')[0];
 
   setTopStatus("ok", "Conectado");
 }
@@ -144,20 +138,15 @@ form.addEventListener("submit", async (e) => {
     setTopStatus("idle", "Guardando...");
 
     const payload = getPayload();
-    const res = await API.post(payload);
+    const res = await API.post("create", payload); // 👈 acción explícita
 
-    // Mostrar popup tipo "Evento Registrado" (similar a tu ejemplo)
-    // Incluye el código generado (PLAN-001, etc.) y el usuario.
     UI.showPlanningSavedModal({ id: res.id || "", user: payload.solicitante || "" });
-
-    // Toast ligero (no reemplaza al modal)
     const name = payload.solicitante || "Tu";
     toast(`${name}, tu planificación se guardó con éxito.`, "ok");
     setMsg(`Guardado ✅ (Código: ${res.id || ""})`);
 
     form.reset();
     resetSolicitante();
-
     updateChars();
     setTopStatus("ok", "Guardado");
   } catch (e2) {
@@ -172,7 +161,6 @@ form.addEventListener("submit", async (e) => {
 resetBtn.addEventListener("click", () => {
   form.reset();
   resetSolicitante();
-
   updateChars();
   setMsg("");
   setTopStatus("ok", "Conectado");
