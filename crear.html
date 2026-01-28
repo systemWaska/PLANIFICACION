@@ -60,15 +60,11 @@
       <select id="prioridad" required></select>
     </div>
 
-    <div>
-      <label for="tiempo">Tiempo estimado</label>
-      <!--
-        Formato soportado por el backend (Apps Script):
-        1h = 1 hora | 1d = 1 día | 2s = 2 semanas | 1m = 1 mes
-      -->
-      <input id="tiempo" type="text" required placeholder="Ej: 1h, 1d, 2s, 1m" />
-      <div class="hint">Usa: 1h (hora), 1d (día), 2s (semanas), 1m (mes). Ej: 4h, 3d, 2s.</div>
-    </div>
+ <div>
+  <label for="proyectado">Fecha proyectada</label>
+  <input id="proyectado" type="date" required />
+  <div class="hint">Selecciona la fecha en la que esperas terminar esta planificación.</div>
+</div>
   </div>
 
   <label for="labores">Lista de labores</label>
