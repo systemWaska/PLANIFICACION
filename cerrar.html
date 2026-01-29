@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cerrar planificación</title>
-  <link rel="stylesheet" href="./assets/styles.css?v=20260122-1" />
+  <link rel="stylesheet" href="./assets/styles.css?v=20260129-5" />
 </head>
 <body>
   <div class="bg-glow"></div>
@@ -115,6 +115,36 @@
 
     </section>
   </main>
+
+  <!-- ✅ MODAL DE DETALLE (nuevo) -->
+  <div class="modal-overlay hidden" id="detailModal">
+    <div class="modal" style="width: min(600px, 95vw);">
+      <div class="modal-icon"><span>📋</span></div>
+      <h2 class="modal-title" id="detailTitle">Detalles de la planificación</h2>
+      <div class="modal-body" id="detailContent">
+        <!-- Se llena dinámicamente -->
+      </div>
+      <form id="detailForm">
+        <div class="field">
+          <label for="detailObservacion">Observación (opcional)</label>
+          <textarea id="detailObservacion" rows="3" placeholder="Ej: Se completó según lo planeado."></textarea>
+        </div>
+        <div class="field">
+          <label for="detailEstado">Nuevo estado</label>
+          <select id="detailEstado">
+            <option value="Finalizado">Finalizado</option>
+            <option value="Pausado">Pausado</option>
+            <option value="Anulado">Anulado</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn" id="btnCancelDetail">Cancelar</button>
+          <button type="submit" class="btn primary">Guardar cambios</button>
+        </div>
+      </form>
+      <div class="msg" id="detailMsg"></div>
+    </div>
+  </div>
 
   <footer class="footer">Front: GitHub Pages • Back: Google Apps Script</footer>
 
