@@ -34,20 +34,23 @@
         <p class="lead">Completa el formulario. El registro se guarda en Sheets con fecha de registro automática. El estado se guarda como <b>Pendiente</b> por defecto.</p>
 
         <form id="taskForm" novalidate>
-          <div class="grid2">
-            <div>
-              <label for="area">Área</label>
-              <select id="area" required></select>
-              <div class="hint">El Área controla la lista de Solicitante.</div>
-            </div>
+         <div class="grid2">
+  <div>
+    <label for="area">Área</label>
+    <select id="area" required></select>
+    <div class="hint">El Área controla la lista de Solicitante.</div>
+  </div>
 
-            <div>
-              <label for="solicitante">Solicitante</label>
-              <select id="solicitante" required></select>
-              <label for="correo" style="margin-top:10px;">Correo (auto)</label>
-              <input id="correo" type="email" placeholder="Se completa al elegir solicitante" disabled />
-            </div>
-          </div>
+  <div>
+    <label for="solicitante">Solicitante</label>
+    <select id="solicitante" required></select>
+    <!-- Correo va en un div separado, NO dentro del mismo contenedor -->
+    <div id="correo-container" style="margin-top:10px;">
+      <label>Correo (auto)</label>
+      <input id="correo" type="email" placeholder="Se completa al elegir solicitante" disabled />
+    </div>
+  </div>
+</div>
 
           <div class="grid2">
             <div>
