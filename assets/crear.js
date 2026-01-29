@@ -4,7 +4,8 @@ const { $, toast } = UI;
 const form = $("#taskForm");
 const area = $("#area");
 const solicitante = $("#solicitante");
-const correo = $("#correo");
+const correoContainer = document.querySelector('.field-correo'); // ver HTML abajo
+const correoInput = $("#correo");
 const prioridad = $("#prioridad");
 const proyectado = $("#proyectado");
 const labores = $("#labores");
@@ -15,6 +16,7 @@ const submitBtn = $("#submitBtn");
 const resetBtn = $("#resetBtn");
 
 let CONFIG = null;
+let isConfigLoaded = false;
 
 function setTopStatus(state, text) {
   const dot = $("#statusDot");
@@ -55,30 +57,58 @@ function buildSelect(select, items, placeholder) {
   select.dispatchEvent(new Event("change", { bubbles: true }));
 }
 
-function resetSolicitante() {
-  solicitante.disabled = true;
-  buildSelect(solicitante, [], "Selecciona primero un área");
-  if (correo) correo.value = "";
-}
+// --- Gestión del estado de solicitante y correo ---
+function updateSolicitanteOptions(areaValue) {
+  if (!isConfigLoaded) {
+    solicitante.disabled = true;
+    buildSelect(solicitante, [], "Cargando...");
+    correoInput.value = "";
+    return;
+  }
 
-function onSolicitanteChange() {
-  if (!correo) return;
-  const name = (solicitante.value || "").trim();
-  const email = (CONFIG && CONFIG.usersByArea && CONFIG.usersByArea[area.value]) ?
-    (CONFIG.usersByArea[area.value].find(u => u.usuario === name)?.email || "") : "";
-  correo.value = email;
-}
-
-function onAreaChange() {
-  const a = area.value;
-  const list = (CONFIG && CONFIG.solicitanteByArea && CONFIG.solicitanteByArea[a]) || [];
-  if (!a || !list.length) return resetSolicitante();
+  const list = (CONFIG && CONFIG.solicitanteByArea && CONFIG.solicitanteByArea[areaValue]) || [];
+  
+  if (!areaValue || list.length === 0) {
+    solicitante.disabled = true;
+    buildSelect(solicitante, [], "Selecciona primero un área");
+    hideCorreo();
+    return;
+  }
 
   solicitante.disabled = false;
   buildSelect(solicitante, list, "Selecciona solicitante");
-  if (correo) correo.value = "";
+  showCorreo(); // siempre mostramos el contenedor; luego decidimos si se llena
 }
 
+function updateCorreoFromSolicitante() {
+  if (!isConfigLoaded || !area.value || !solicitante.value) {
+    correoInput.value = "";
+    hideCorreo();
+    return;
+  }
+
+  const areaVal = area.value;
+  const solVal = solicitante.value;
+  const users = CONFIG.solicitanteByArea?.[areaVal] || [];
+  const user = users.find(u => u.usuario === solVal);
+
+  if (user && user.email) {
+    correoInput.value = user.email;
+    showCorreo();
+  } else {
+    correoInput.value = "";
+    hideCorreo(); // ocultar si no hay correo registrado
+  }
+}
+
+function showCorreo() {
+  if (correoContainer) correoContainer.style.display = "block";
+}
+function hideCorreo() {
+  if (correoContainer) correoContainer.style.display = "none";
+}
+
+// --- Validación y payload ---
 function validate() {
   if (!area.value) return "Selecciona un Área.";
   if (!solicitante.value) return "Selecciona un Solicitante.";
@@ -89,9 +119,7 @@ function validate() {
 }
 
 function getPayload() {
-  const email = (CONFIG && CONFIG.usersByArea && CONFIG.usersByArea[area.value]) ?
-    (CONFIG.usersByArea[area.value].find(u => u.usuario === solicitante.value)?.email || "") : "";
-
+  const email = correoInput.value.trim() || "";
   return {
     area: area.value.trim(),
     solicitante: solicitante.value.trim(),
@@ -105,28 +133,34 @@ function getPayload() {
 }
 
 async function loadConfig() {
-  setTopStatus("idle", "Conectando...");
+  setTopStatus("idle", "Cargando configuración...");
   try {
-    const response = await API.get("config");
-    if (!response.ok) throw new Error(response.error || "Error al cargar configuración");
+    const res = await API.get("config");
+    if (!res.ok) throw new Error(res.error || "Error al cargar configuración");
     
-    CONFIG = response.config;
+    CONFIG = res.config;
+    isConfigLoaded = true;
 
     buildSelect(area, CONFIG.areas, "Selecciona un área");
     buildSelect(prioridad, CONFIG.prioridades, "Selecciona prioridad");
-    resetSolicitante();
 
-    // Establecer fecha/hora mínima = ahora + 30 minutos
+    // Inicializar solicitudes (si ya hay área seleccionada)
+    if (area.value) updateSolicitanteOptions(area.value);
+
+    // Establecer fecha mínima = ahora + 30 min
     const now = new Date();
     now.setMinutes(now.getMinutes() + 30);
-    proyectado.min = now.toISOString().slice(0, 16); // YYYY-MM-DDTHH:mm
+    proyectado.min = now.toISOString().slice(0, 16);
 
-    setTopStatus("ok", "Conectado");
+    setTopStatus("ok", "Listo");
   } catch (err) {
-    throw err;
+    setTopStatus("err", "Error");
+    toast(err.message || "No se pudo cargar la configuración", "err");
+    console.error("Config load error:", err);
   }
 }
 
+// --- Eventos ---
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   setMsg("");
@@ -147,19 +181,17 @@ form.addEventListener("submit", async (e) => {
     const res = await API.post("create", payload);
 
     UI.showPlanningSavedModal({ id: res.id || "", user: payload.solicitante || "" });
-    const name = payload.solicitante || "Tu";
-    toast(`${name}, tu planificación se guardó con éxito.`, "ok");
-    setMsg(`Guardado ✅ (Código: ${res.id || ""})`);
+    toast(`${payload.solicitante}, planificación guardada ✅`, "ok");
+    setMsg(`Guardado (ID: ${res.id})`);
 
     form.reset();
-    resetSolicitante();
+    resetForm();
     updateChars();
-    setTopStatus("ok", "Guardado");
+    setTopStatus("ok", "Listo");
   } catch (e2) {
-    console.error("Error:", e2);
     setTopStatus("err", "Error");
-    toast(e2.message || "Error guardando", "err");
-    setMsg(e2.message || "Error guardando");
+    toast(e2.message || "Error al guardar", "err");
+    setMsg(e2.message || "Error");
   } finally {
     submitBtn.disabled = false;
   }
@@ -167,19 +199,47 @@ form.addEventListener("submit", async (e) => {
 
 resetBtn.addEventListener("click", () => {
   form.reset();
-  resetSolicitante();
+  resetForm();
   updateChars();
   setMsg("");
-  setTopStatus("ok", "Conectado");
+  setTopStatus("ok", "Listo");
 });
 
-area.addEventListener("change", onAreaChange);
-solicitante.addEventListener("change", onSolicitanteChange);
+// Manejo dinámico de cambios
+area.addEventListener("change", () => {
+  updateSolicitanteOptions(area.value);
+});
+solicitante.addEventListener("change", updateCorreoFromSolicitante);
 labores.addEventListener("input", updateChars);
 
+function resetForm() {
+  solicitante.disabled = true;
+  buildSelect(solicitante, [], "Selecciona primero un área");
+  correoInput.value = "";
+  hideCorreo();
+}
+
+// Iniciar
 updateChars();
-loadConfig().catch((e) => {
-  setTopStatus("err", "Sin conexión");
-  toast(e.message || "Error", "err");
-  setMsg(e.message || "Error");
-});
+loadConfig();
+
+// --- Soporte para el contenedor de correo ---
+// Si no existe, creamos un contenedor dinámico para controlar visibilidad
+if (correoInput.parentElement.classList.contains("hint")) {
+  const container = document.createElement("div");
+  container.className = "field-correo";
+  container.style.marginTop = "10px";
+  container.innerHTML = `
+    <label>Correo (auto)</label>
+    <input id="correo" type="email" placeholder="Se completa al elegir solicitante" disabled />
+  `;
+  correoInput.replaceWith(container.querySelector("input"));
+  correoInput = container.querySelector("input");
+  correoContainer = container;
+  // Insertar antes del siguiente elemento (ej: antes de .grid2)
+  const parent = area.closest(".grid2");
+  if (parent) {
+    const next = parent.children[1];
+    parent.insertBefore(container, next);
+  }
+}
