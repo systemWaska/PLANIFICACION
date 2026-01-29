@@ -1,28 +1,14 @@
-// crear.js — versión depurada y funcional
+// crear.js — Versión limpia, sin errores de referencia
 const { $, toast } = UI;
 
-const form = $("#taskForm");
-const area = $("#area");
-const solicitante = $("#solicitante");
-const correoInput = $("#correo");
-const prioridad = $("#prioridad");
-const proyectado = $("#proyectado");
-const labores = $("#labores");
-const observacion = $("#observacion");
-const msg = $("#msg");
-const chars = $("#chars");
-const submitBtn = $("#submitBtn");
-const resetBtn = $("#resetBtn");
-
+// === VARIABLES GLOBALES ===
 let CONFIG = null;
 let isConfigLoaded = false;
 
-// --- Debug: mostrar estado ---
-function log(msg) {
-  console.log("[CREAR] ", msg);
-}
+// === ELEMENTOS DEL DOM (se obtienen al final, después de DOMContentLoaded) ===
+let form, area, solicitante, correoInput, prioridad, proyectado, labores, observacion, msg, chars, submitBtn, resetBtn;
 
-// --- Funciones auxiliares ---
+// === FUNCIONES (definidas ANTES de usarse) ===
 function setTopStatus(state, text) {
   const dot = $("#statusDot");
   const label = $("#statusText");
@@ -32,11 +18,22 @@ function setTopStatus(state, text) {
     err: "rgba(239,68,68,.9)",
     idle: "rgba(148,163,184,.7)"
   };
-  dot.style.background = colors[state] || colors.idle;
-  label.textContent = text;
+  if (dot) dot.style.background = colors[state] || colors.idle;
+  if (label) label.textContent = text;
+}
+
+function setMsg(t) {
+  if (msg) msg.textContent = t || "";
+}
+
+function updateChars() {
+  if (labores && chars) {
+    chars.textContent = `${(labores.value || "").length} caracteres`;
+  }
 }
 
 function buildSelect(select, items, placeholder) {
+  if (!select) return;
   select.innerHTML = "";
   const opt0 = document.createElement("option");
   opt0.value = "";
@@ -51,180 +48,182 @@ function buildSelect(select, items, placeholder) {
     o.textContent = v;
     select.appendChild(o);
   });
-  // Forzar actualización visual (para algunos navegadores)
   select.dispatchEvent(new Event("change"));
 }
 
 function resetSolicitante() {
-  solicitante.disabled = true;
-  buildSelect(solicitante, [], "Selecciona primero un área");
+  if (solicitante) {
+    solicitante.disabled = true;
+    buildSelect(solicitante, [], "Selecciona primero un área");
+  }
   if (correoInput) correoInput.value = "";
 }
 
-// --- Actualizar solicitantes según área ---
 function updateSolicitanteOptions(areaValue) {
-  log(`updateSolicitanteOptions(${areaValue}) | configLoaded=${isConfigLoaded}`);
-  
   if (!isConfigLoaded) {
-    solicitante.disabled = true;
-    buildSelect(solicitante, [], "Cargando...");
-    return;
-  }
-
-  if (!areaValue) {
-    resetSolicitante();
+    if (solicitante) {
+      solicitante.disabled = true;
+      buildSelect(solicitante, [], "Cargando...");
+    }
     return;
   }
 
   const users = CONFIG?.usersByArea?.[areaValue] || [];
-  log(`Área "${areaValue}" → ${users.length} solicitantes`);
-
-  if (users.length === 0) {
-    solicitante.disabled = true;
-    buildSelect(solicitante, [], "No hay solicitantes para esta área");
+  if (!areaValue || users.length === 0) {
+    resetSolicitante();
     return;
   }
 
-  solicitante.disabled = false;
-  buildSelect(solicitante, users.map(u => u.usuario), "Selecciona solicitante");
+  if (solicitante) {
+    solicitante.disabled = false;
+    buildSelect(solicitante, users.map(u => u.usuario), "Selecciona solicitante");
+  }
 }
 
-// --- Actualizar correo ---
 function updateCorreo() {
-  if (!isConfigLoaded || !area.value || !solicitante.value) {
-    if (correoInput) correoInput.value = "";
-    return;
-  }
+  if (!isConfigLoaded || !area || !solicitante || !correoInput) return;
 
   const users = CONFIG.usersByArea?.[area.value] || [];
   const user = users.find(u => u.usuario === solicitante.value);
   const email = user?.email || "";
 
-  if (correoInput) {
-    correoInput.value = email;
-    // Ocultar si no hay email
-    const container = correoInput.closest(".field-correo") || correoInput.parentElement;
-    if (container) {
-      container.style.display = email ? "block" : "none";
-    }
+  correoInput.value = email;
+  const container = correoInput.closest(".field-correo") || correoInput.parentElement;
+  if (container) {
+    container.style.display = email ? "block" : "none";
   }
 }
 
-// --- Validación ---
 function validate() {
-  if (!area.value) return "Selecciona un Área.";
-  if (!solicitante.value) return "Selecciona un Solicitante.";
-  if (!prioridad.value) return "Selecciona una Prioridad.";
-  if (!proyectado.value) return "Selecciona una Fecha proyectada.";
-  if (!labores.value.trim() || labores.value.trim().length < 3) return "Describe la labor (mín. 3 caracteres).";
+  if (!area?.value) return "Selecciona un Área.";
+  if (!solicitante?.value) return "Selecciona un Solicitante.";
+  if (!prioridad?.value) return "Selecciona una Prioridad.";
+  if (!proyectado?.value) return "Selecciona una Fecha proyectada.";
+  if (!labores?.value?.trim() || labores.value.trim().length < 3) return "Describe la labor (mín. 3 caracteres).";
   return "";
 }
 
 function getPayload() {
   return {
-    area: area.value.trim(),
-    solicitante: solicitante.value.trim(),
-    email: (correoInput?.value || "").trim(),
-    prioridad: prioridad.value.trim(),
-    labores: labores.value.trim(),
+    area: area?.value?.trim() || "",
+    solicitante: solicitante?.value?.trim() || "",
+    email: (correoInputvalue || "").trim(),
+    prioridad: prioridad?.value?.trim() || "",
+    labores: labores?.value?.trim() || "",
     estado: "Pendiente",
-    proyectadoDate: proyectado.value,
-    observacion: (observacion.value || "").trim()
+    proyectadoDate: proyectado?.value || "",
+    observacion: (observacion?.value || "").trim()
   };
 }
 
-// --- Cargar configuración ---
 async function loadConfig() {
   setTopStatus("idle", "Cargando...");
   try {
-    log("Llamando API.get('config')");
     const res = await API.get("config");
-    log("Respuesta config:", res);
-
-    if (!res.ok) throw new Error(res.error || "Config no válida");
+    if (!res.ok) throw new Error(res.error || "Config inválida");
 
     CONFIG = res.config;
     isConfigLoaded = true;
 
-    // Cargar áreas y prioridades
-    buildSelect(area, CONFIG.areas || [], "Selecciona un área");
-    buildSelect(prioridad, CONFIG.prioridades || [], "Selecciona prioridad");
+    if (area) buildSelect(area, CONFIG.areas || [], "Selecciona un área");
+    if (prioridad) buildSelect(prioridad, CONFIG.prioridades || [], "Selecciona prioridad");
 
-    // Si ya hay área seleccionada, actualizar solicitantes
-    if (area.value) {
-      updateSolicitanteOptions(area.value);
+    if (area?.value) updateSolicitanteOptions(area.value);
+
+    if (proyectado) {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() + 30);
+      proyectado.min = now.toISOString().slice(0, 16);
     }
 
-    // Establecer fecha mínima
-    const now = new Date();
-    now.setMinutes(now.getMinutes() + 30);
-    proyectado.min = now.toISOString().slice(0, 16);
-
     setTopStatus("ok", "Listo");
-    log("✅ Config cargada exitosamente");
   } catch (err) {
     setTopStatus("err", "Error");
     toast("Error al cargar configuración: " + (err.message || "desconocido"), "err");
-    console.error("❌ Error en loadConfig:", err);
-    log("ERROR:", err);
+    console.error("loadConfig error:", err);
   }
 }
 
-// --- Eventos ---
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const err = validate();
-  if (err) {
-    toast(err, "warn");
-    setMsg(err);
-    return;
+// === EVENTOS ===
+function initEvents() {
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const err = validate();
+      if (err) {
+        toast(err, "warn");
+        setMsg(err);
+        return;
+      }
+
+      try {
+        submitBtn.disabled = true;
+        setTopStatus("idle", "Guardando...");
+
+        const payload = getPayload();
+        const res = await API.post("create", payload);
+
+        toast("✅ Guardado", "ok");
+        form.reset();
+        resetSolicitante();
+        updateChars();
+        setTopStatus("ok", "Listo");
+      } catch (e) {
+        toast("❌ Error: " + (e.message || "desconocido"), "err");
+        console.error("Submit error:", e);
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    });
   }
 
-  try {
-    submitBtn.disabled = true;
-    setTopStatus("idle", "Guardando...");
-
-    const payload = getPayload();
-    const res = await API.post("create", payload);
-
-    toast("Guardado ✅", "ok");
-    form.reset();
-    resetSolicitante();
-    updateChars();
-    setTopStatus("ok", "Listo");
-  } catch (e) {
-    console.error("Error submit:", e);
-    toast("Error: " + (e.message || "desconocido"), "err");
-  } finally {
-    submitBtn.disabled = false;
+  if (resetBtn) {
+    resetBtn.addEventListener("click", () => {
+      if (form) form.reset();
+      resetSolicitante();
+      updateChars();
+      setMsg("");
+      setTopStatus("ok", "Listo");
+    });
   }
-});
 
-resetBtn.addEventListener("click", () => {
-  form.reset();
-  resetSolicitante();
+  if (area) {
+    area.addEventListener("change", () => {
+      updateSolicitanteOptions(area.value);
+    });
+  }
+
+  if (solicitante) {
+    solicitante.addEventListener("change", updateCorreo);
+  }
+
+  if (labores && chars) {
+    labores.addEventListener("input", updateChars);
+  }
+}
+
+// === INICIALIZACIÓN (DOM listo) ===
+document.addEventListener("DOMContentLoaded", () => {
+  // Asignar elementos (seguro, con null checks)
+  form = $("#taskForm");
+  area = $("#area");
+  solicitante = $("#solicitante");
+  correoInput = $("#correo");
+  prioridad = $("#prioridad");
+  proyectado = $("#proyectado");
+  labores = $("#labores");
+  observacion = $("#observacion");
+  msg = $("#msg");
+  chars = $("#chars");
+  submitBtn = $("#submitBtn");
+  resetBtn = $("#resetBtn");
+
+  // Inicializar contador
   updateChars();
-  setMsg("");
-  setTopStatus("ok", "Listo");
+
+  // Cargar configuración
+  loadConfig();
+
+  // Vincular eventos
+  initEvents();
 });
-
-// --- Vincular eventos con retraso para asegurar DOM ---
-setTimeout(() => {
-  area.addEventListener("change", () => {
-    log("Área cambiada a:", area.value);
-    updateSolicitanteOptions(area.value);
-  });
-
-  solicitante.addEventListener("change", () => {
-    log("Solicitante cambiado a:", solicitante.value);
-    updateCorreo();
-  });
-
-  labores.addEventListener("input", () => {
-    chars.textContent = labores.value.length;
-  });
-}, 100);
-
-// Iniciar
-updateChars();
-loadConfig();
