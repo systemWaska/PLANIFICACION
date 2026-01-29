@@ -117,3 +117,19 @@ document.addEventListener("DOMContentLoaded", () => {
   updateChars();
   loadConfig();
 });
+function updateCorreo() {
+  if (!isConfigLoaded || !area.value || !solicitante.value) {
+    document.getElementById("correo-container").style.display = "none";
+    return;
+  }
+
+  const users = CONFIG.usersByArea?.[area.value] || [];
+  const user = users.find(u => u.usuario === solicitante.value);
+  const email = user?.email || "";
+
+  const correoInput = document.getElementById("correo");
+  const container = document.getElementById("correo-container");
+
+  correoInput.value = email;
+  container.style.display = email ? "block" : "none";
+}
