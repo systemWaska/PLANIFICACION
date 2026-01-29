@@ -1,4 +1,4 @@
-// crear.js — Versión final, estable y funcional
+// crear.js — Versión final con modal de éxito
 document.addEventListener("DOMContentLoaded", () => {
   // Elementos
   const area = document.getElementById("area");
@@ -47,6 +47,39 @@ document.addEventListener("DOMContentLoaded", () => {
     chars.textContent = (labores.value || "").length;
   }
 
+  // === Modal de éxito ===
+  function showSuccessModal(id, user) {
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.innerHTML = `
+      <div class="modal">
+        <div class="modal-icon"><span>✓</span></div>
+        <h2 class="modal-title">¡Guardado exitosamente!</h2>
+        <div class="modal-sub">Tu planificación está registrada</div>
+        <div class="modal-body">
+          <div class="modal-kv"><span>ID:</span> <b>${id}</b></div>
+          <div class="modal-kv"><span>Usuario:</span> <b>${user}</b></div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn primary" id="modalOk">Aceptar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const btn = overlay.querySelector("#modalOk");
+    btn.addEventListener("click", () => {
+      overlay.remove();
+    });
+
+    setTimeout(() => btn.focus(), 100);
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        overlay.remove();
+      }
+    }, { once: true });
+  }
+
   // === Cargar configuración ===
   async function loadConfig() {
     setTopStatus("idle", "Cargando...");
@@ -56,7 +89,6 @@ document.addEventListener("DOMContentLoaded", () => {
       
       CONFIG = res.config;
       
-      // Cargar áreas y prioridades
       populateSelect("area", CONFIG.areas || [], "Selecciona un área");
       populateSelect("prioridad", CONFIG.prioridades || [], "Selecciona prioridad");
       
@@ -148,7 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
       };
 
       const res = await API.post("create", payload);
-      alert(`✅ Planificación guardada con ID: ${res.id}`);
+      showSuccessModal(res.id, payload.solicitante); // ✅ MODAL DE ÉXITO
       form.reset();
       correoContainer.style.display = "none";
       updateChars();
