@@ -1,4 +1,4 @@
-/* Cerrar planificación (DNI) */
+/* Cerrar planificación (DNI) - Versión completa */
 (() => {
   const $area = document.getElementById("area");
   const $sol = document.getElementById("solicitante");
@@ -15,6 +15,16 @@
   const $updateText = document.getElementById("updateText");
   const $closeMsg = document.getElementById("closeMsg");
   const $btnCancelClose = document.getElementById("btnCancelClose");
+
+  // === NUEVO: elementos del modal de detalle ===
+  const detailModal = document.getElementById("detailModal");
+  const detailTitle = document.getElementById("detailTitle");
+  const detailContent = document.getElementById("detailContent");
+  const detailForm = document.getElementById("detailForm");
+  const detailObservacion = document.getElementById("detailObservacion");
+  const detailEstado = document.getElementById("detailEstado");
+  const detailMsg = document.getElementById("detailMsg");
+  const btnCancelDetail = document.getElementById("btnCancelDetail");
 
   const state = {
     cfg: null,
@@ -37,10 +47,8 @@
   async function loadConfig() {
     setMsg($authMsg, "Cargando configuración...", "warn");
     const res = await API.get("config");
-    // Puede venir como {ok:true, areas/personal/...} o como {ok:true, config:{...}}
     const cfg = (res && res.config) ? res.config : res;
     state.cfg = cfg;
-    // Areas
     $area.innerHTML = '<option value="">Selecciona un área</option>';
     (cfg.areas || []).forEach(a => {
       const opt = document.createElement("option");
@@ -59,7 +67,7 @@
       : '<option value="">Selecciona primero un área</option>';
 
     if (!area || !state.cfg) return;
-    const list = (state.cfg.personal || []).filter(p => (p.area || "") === area);
+    const list = (state.cfg.usersByArea?.[area] || []).map(u => ({ usuario: u.usuario }));
     list.forEach(p => {
       const opt = document.createElement("option");
       opt.value = p.usuario;
@@ -79,16 +87,14 @@
 
     setMsg($authMsg, "Validando...", "warn");
 
-    // Intentar autenticar
     const res = await API.post({
-      action: "auth",
+      action: "listMine",
       area,
-      solicitante: sol,
+      usuario: sol,
       dni
     });
 
-    // Si backend indica que no hay DNI registrado, habilitar registro
-    if (res && res.ok === false && res.code === "NO_DNI") {
+    if (res && res.requireRegisterDni) {
       $dniRegister.classList.remove("hidden");
       setMsg($authMsg, "Este usuario aún no tiene DNI registrado. Ingresa el DNI y confírmalo para registrarlo.", "warn");
       return;
@@ -99,7 +105,6 @@
       return;
     }
 
-    // OK
     $dniRegister.classList.add("hidden");
     state.authed = true;
     state.area = area;
@@ -127,9 +132,9 @@
 
       setMsg($authMsg, "Registrando DNI...", "warn");
       const res = await API.post({
-        action: "setDni",
+        action: "registerDni",
         area,
-        solicitante: sol,
+        usuario: sol,
         dni
       });
 
@@ -146,10 +151,8 @@
 
   async function handleAuthSubmit(e) {
     e.preventDefault();
-    // si está pidiendo registro, registramos primero
     const ok = await registerDniIfNeeded();
     if (!ok) return;
-    // luego, autenticar normal
     await authFlow(e);
   }
 
@@ -159,7 +162,6 @@
 
   function fmtDateOnly(v) {
     if (!v) return "";
-    // backend puede mandar Date ISO, timestamp o YYYY-MM-DD
     if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)) {
       const [y,m,d] = v.split("-").map(Number);
       return new Date(y, m-1, d).toLocaleDateString("es-PE");
@@ -173,9 +175,9 @@
     if (!state.authed) return renderEmpty("Ingresa para ver tus registros.");
 
     const res = await API.post({
-      action: "listByUser",
+      action: "listMine",
       area: state.area,
-      solicitante: state.solicitante,
+      usuario: state.solicitante,
       dni: state.dni
     });
 
@@ -201,52 +203,87 @@
       $tbody.appendChild(tr);
     });
 
-    // botones
     $tbody.querySelectorAll("[data-close]").forEach(btn => {
-      btn.addEventListener("click", () => openClose(btn.getAttribute("data-close")));
+      btn.addEventListener("click", () => openDetailModalFromRow(r)); // 👈 abrir modal de detalle
     });
   }
 
+  // === NUEVO: Abrir modal de detalle ===
+  function openDetailModalFromRow(plan) {
+    // Guardar datos temporales
+    window.TEMP_PLAN = plan;
+    openDetailModal(plan);
+  }
+
+  function openDetailModal(plan) {
+    detailMsg.textContent = "";
+    detailObservacion.value = "";
+    detailEstado.value = "Finalizado";
+
+    detailTitle.textContent = `Planificación ${plan.id}`;
+    const html = `
+      <div class="modal-kv"><span>Área:</span> <b>${plan.area || ""}</b></div>
+      <div class="modal-kv"><span>Solicitante:</span> <b>${plan.solicitante || ""}</b></div>
+      <div class="modal-kv"><span>Prioridad:</span> <b>${plan.prioridad || ""}</b></div>
+      <div class="modal-kv"><span>Proyectado:</span> <b>${fmtDateOnly(plan.proyectado)}</b></div>
+      <div class="modal-kv"><span>Fecha registro:</span> <b>${fmtDateOnly(plan.fecha)}</b></div>
+      <div class="modal-kv"><span>Estado:</span> <b class="badge ${UI?.estadoClass?.(plan.estado) || ""}">${plan.estado || ""}</b></div>
+      <div class="modal-kv" style="margin-top:12px;"><span>Labores:</span></div>
+      <div style="text-align:left; margin:8px 0; padding:8px; background:var(--card2); border-radius:12px;">
+        ${plan.labores || "Sin descripción"}
+      </div>
+    `;
+    detailContent.innerHTML = html;
+    detailForm.dataset.planId = plan.id;
+    detailModal.classList.remove("hidden");
+  }
+
+  function closeDetailModal() {
+    detailModal.classList.add("hidden");
+  }
+
+  // Eventos del modal
+  btnCancelDetail.addEventListener("click", closeDetailModal);
+
+  detailForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const id = detailForm.dataset.planId;
+    const obs = detailObservacion.value.trim();
+    const nuevoEstado = detailEstado.value;
+
+    if (!id) return;
+
+    setMsg(detailMsg, "Actualizando...", "warn");
+    try {
+      const res = await API.post({
+        action: "close",
+        id,
+        area: state.area,
+        usuario: state.solicitante,
+        dni: state.dni,
+        nuevoEstado,
+        note: obs
+      });
+
+      if (!res.ok) throw new Error(res.error || "Error al actualizar");
+
+      setMsg(detailMsg, "✅ Actualizado correctamente.", "ok");
+      setTimeout(() => {
+        closeDetailModal();
+        loadMyPlans();
+      }, 800);
+    } catch (err) {
+      setMsg(detailMsg, err.message || "Error al guardar", "err");
+    }
+  });
+
+  // === Funciones existentes (ajustadas) ===
   function openClose(id) {
-    $closeId.value = id;
-    $updateText.value = "";
-    setMsg($closeMsg, "", "");
-    $closeMeta.textContent = `${state.area} • ${state.solicitante} • ${id}`;
-    $closeCard.classList.remove("hidden");
-    $closeCard.scrollIntoView({ behavior: "smooth", block: "start" });
+    // Ya no se usa; ahora usamos openDetailModal
   }
 
   function closePanel() {
     $closeCard.classList.add("hidden");
-    $closeId.value = "";
-    $updateText.value = "";
-    setMsg($closeMsg, "", "");
-  }
-
-  async function submitClose(e) {
-    e.preventDefault();
-    const id = $closeId.value;
-    if (!id) return;
-
-    setMsg($closeMsg, "Actualizando...", "warn");
-
-    const res = await API.post({
-      action: "closePlan",
-      id,
-      area: state.area,
-      solicitante: state.solicitante,
-      dni: state.dni,
-      update: $updateText.value.trim()
-    });
-
-    if (!res || res.ok !== true) {
-      setMsg($closeMsg, (res && (res.error || res.message)) || "No se pudo actualizar.", "err");
-      return;
-    }
-
-    setMsg($closeMsg, "Listo. Marcado como Finalizado.", "ok");
-    await loadMyPlans();
-    setTimeout(closePanel, 700);
   }
 
   async function reloadAll() {
@@ -276,7 +313,6 @@
 
     $area.addEventListener("change", fillSolicitantes);
     document.getElementById("authForm").addEventListener("submit", handleAuthSubmit);
-    document.getElementById("closeForm").addEventListener("submit", submitClose);
     $btnCancelClose.addEventListener("click", closePanel);
     $btnReload.addEventListener("click", reloadAll);
   });
