@@ -4,7 +4,32 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Crear planificación</title>
-  <link rel="stylesheet" href="./assets/styles.css?v=20260129-3" />
+  <link rel="stylesheet" href="./assets/styles.css?v=20260129-4" />
+  
+  <!-- Flatpickr para Fecha Proyectada -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <style>
+    .flatpickr-calendar {
+      font-family: inherit;
+      border-radius: 16px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.3);
+      overflow: hidden;
+    }
+    .flatpickr-day.selected, .flatpickr-day:hover {
+      background: var(--accent) !important;
+      color: white !important;
+    }
+    .flatpickr-time { border-top: 1px solid var(--border); }
+    .flatpickr-time input {
+      font-size: 16px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      background: var(--field-bg);
+      border: 1px solid var(--field-border);
+      color: var(--text);
+    }
+    .flatpickr-time .numInputWrapper { width: 56px; }
+  </style>
 </head>
 <body>
   <div class="bg-glow"></div>
@@ -34,35 +59,38 @@
         <p class="lead">Completa el formulario. El registro se guarda en Sheets con fecha de registro automática. El estado se guarda como <b>Pendiente</b> por defecto.</p>
 
         <form id="taskForm" novalidate>
-         <div class="grid2">
-  <div>
-    <label for="area">Área</label>
-    <select id="area" required></select>
-    <div class="hint">El Área controla la lista de Solicitante.</div>
-  </div>
+          <div class="grid2">
+            <div>
+              <label for="area">Área</label>
+              <select id="area" required>
+                <option value="" disabled selected>Selecciona un área</option>
+              </select>
+              <div class="hint">El Área controla la lista de Solicitante.</div>
+            </div>
 
-  <div>
-    <label for="solicitante">Solicitante</label>
-    <select id="solicitante" required></select>
-    <!-- Correo va en un div separado, NO dentro del mismo contenedor -->
-    <div id="correo-container" style="margin-top:10px;">
-      <label>Correo (auto)</label>
-      <input id="correo" type="email" placeholder="Se completa al elegir solicitante" disabled />
-    </div>
-  </div>
-</div>
+            <div>
+              <label for="solicitante">Solicitante</label>
+              <select id="solicitante" required>
+                <option value="" disabled selected>Selecciona primero un área</option>
+              </select>
+              <div id="correo-container" style="margin-top:10px; display:none;">
+                <label>Correo (auto)</label>
+                <input id="correo" type="email" placeholder="Se completa al elegir solicitante" disabled />
+              </div>
+            </div>
+          </div>
 
           <div class="grid2">
-           <div>
-  <label for="prioridad">Prioridad</label>
-  <select id="prioridad" required>
-    <option value="">Selecciona prioridad</option>
-  </select>
-</div>
+            <div>
+              <label for="prioridad">Prioridad</label>
+              <select id="prioridad" required>
+                <option value="" disabled selected>Selecciona prioridad</option>
+              </select>
+            </div>
 
             <div>
               <label for="proyectado">Fecha proyectada</label>
-              <input id="proyectado" type="datetime-local" required />
+              <input id="proyectado" type="text" required placeholder="dd/mm/aaaa --:--" />
               <div class="hint">Selecciona la fecha y hora en la que esperas terminar esta planificación.</div>
             </div>
           </div>
@@ -86,9 +114,10 @@
     </div>
   </main>
 
-  <script src="./assets/config.js?v=20260129-3"></script>
-  <script src="./assets/ui.js?v=20260129-3"></script>
-  <script src="./assets/api.js?v=20260129-3"></script>
-  <script src="./assets/crear.js?v=20260129-3"></script>
+  <script src="./assets/config.js?v=20260129-4"></script>
+  <script src="./assets/ui.js?v=20260129-4"></script>
+  <script src="./assets/api.js?v=20260129-4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="./assets/crear.js?v=20260129-4"></script>
 </body>
 </html>
