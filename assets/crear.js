@@ -1,4 +1,4 @@
-// crear.js — Versión final con modal de éxito
+// crear.js — Versión final con modal de éxito y fecha correcta
 document.addEventListener("DOMContentLoaded", () => {
   // Elementos
   const area = document.getElementById("area");
@@ -45,6 +45,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updateChars() {
     chars.textContent = (labores.value || "").length;
+  }
+
+  // === Conversión segura a ISO ===
+  function toIsoDate(str) {
+    if (!str) return "";
+    // Si ya es ISO: "2026-02-11T12:00"
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(str)) return str;
+    
+    // Si es "11/02/2026 12:00"
+    const [datePart, timePart] = str.split(" ");
+    const [d, m, y] = datePart.split("/").map(Number);
+    const h = timePart ? Number(timePart.split(":")[0]) : 10;
+    const i = timePart ? Number(timePart.split(":")[1]) : 0;
+    return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}T${String(h).padStart(2,'0')}:${String(i).padStart(2,'0')}`;
   }
 
   // === Modal de éxito ===
@@ -142,8 +156,8 @@ document.addEventListener("DOMContentLoaded", () => {
       onChange: function(selectedDates, dateStr, instance) {
         if (dateStr) {
           const [datePart, timePart] = dateStr.split(" ");
-          const [d, m, y] = datePart.split("/");
-          const [h, i] = timePart.split(":");
+          const [d, m, y] = datePart.split("/").map(Number);
+          const [h, i] = timePart.split(":").map(Number);
           const iso = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}T${String(h).padStart(2,'0')}:${String(i).padStart(2,'0')}`;
           proyectado.dataset.isoValue = iso;
         }
@@ -158,7 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!area.value) { alert("Selecciona un Área."); return; }
     if (!solicitante.value) { alert("Selecciona un Solicitante."); return; }
     if (!prioridad.value) { alert("Selecciona una Prioridad."); return; }
-    if (!proyectado.dataset.isoValue) { alert("Selecciona una Fecha proyectada."); return; }
+    if (!proyectado.value) { alert("Selecciona una Fecha proyectada."); return; }
     if (!labores.value.trim() || labores.value.trim().length < 3) { 
       alert("Describe la labor (mín. 3 caracteres)."); 
       return; 
@@ -175,12 +189,12 @@ document.addEventListener("DOMContentLoaded", () => {
         prioridad: prioridad.value.trim(),
         labores: labores.value.trim(),
         estado: "Pendiente",
-        proyectadoDate: proyectado.dataset.isoValue,
+        proyectadoDate: toIsoDate(proyectado.dataset.isoValue || proyectado.value),
         observacion: (observacion.value || "").trim()
       };
 
       const res = await API.post("create", payload);
-      showSuccessModal(res.id, payload.solicitante); // ✅ MODAL DE ÉXITO
+      showSuccessModal(res.id, payload.solicitante);
       form.reset();
       correoContainer.style.display = "none";
       updateChars();
