@@ -1,124 +1,131 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Planificación</title>
-  <link rel="stylesheet" href="./assets/styles.css?v=20260129-6" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Planificación 2026</title>
+  <link rel="stylesheet" href="./assets/styles.css?v=3"/>
 </head>
 <body>
-  <div class="bg-glow"></div>
+<div class="bg-mesh"></div>
 
-  <header class="topbar">
-    <div class="brand">
-      <div class="logo" aria-hidden="true"></div>
-      <div>
-        <div class="title">Planificación</div>
-        <div class="sub">Sistema interno • Google Sheets</div>
-      </div>
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-logo">P</div>
+    <div>
+      <div class="brand-name">Planificación</div>
+      <div class="brand-sub">Sistema interno · 2026</div>
     </div>
-    <nav class="nav">
-      <a class="btn" data-nav="inicio" href="./index.html">← Inicio</a>
-      <a class="btn" data-nav="crear" href="./crear.html">Crear →</a>
-      <a class="btn" data-nav="ver" href="./ver.html">Ver →</a>
-      <a class="btn" data-nav="dashboard" href="./dashboard.html">Dashboard →</a>
-      <button class="btn btn-icon" id="themeToggle" type="button" aria-label="Cambiar tema">🌙</button>
-      <span class="pill"><span class="dot" id="statusDot"></span><span id="statusText">Listo</span></span>
-    </nav>
-  </header>
+  </div>
+  <nav class="nav">
+    <a class="nav-link" href="./index.html"><span>Inicio</span></a>
+    <a class="nav-link" href="./crear.html"><span>Crear</span></a>
+    <a class="nav-link" href="./ver.html"><span>Ver</span></a>
+    <a class="nav-link" href="./cerrar.html"><span>Mis tareas</span></a>
+    <a class="nav-link" href="./dashboard.html"><span>Dashboard</span></a>
+    <div class="nav-sep"></div>
+    <button class="nav-btn" id="themeToggle" aria-label="Tema">🌙</button>
+    <div class="status-pill"><div class="status-dot" id="statusDot"></div><span id="statusText">Cargando</span></div>
+  </nav>
+</header>
 
-  <main class="container">
-    <!-- 🔹 Resumen rápido (KPIs) -->
+<main class="page">
+  <div class="hero">
+    <div class="hero-label">📋 Sistema de planificaciones</div>
+    <h1 class="hero-title">Gestiona tu equipo<br><span>con claridad.</span></h1>
+    <p class="hero-sub">Crea, visualiza y cierra planificaciones. Todo sincronizado con Google Sheets y Calendario.</p>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid" id="kpiGrid">
+    <div class="kpi-card kpi-teal loading"><div class="kpi-value" id="kpi-pend">—</div><div class="kpi-label">Pendientes</div></div>
+    <div class="kpi-card kpi-red loading"><div class="kpi-value" id="kpi-venc">—</div><div class="kpi-label">Vencidos</div></div>
+    <div class="kpi-card kpi-amber loading"><div class="kpi-value" id="kpi-prox">—</div><div class="kpi-label">Por vencer (48h)</div></div>
+    <div class="kpi-card kpi-green loading"><div class="kpi-value" id="kpi-fin">—</div><div class="kpi-label">Finalizados</div></div>
+    <div class="kpi-card kpi-blue loading"><div class="kpi-value" id="kpi-tot">—</div><div class="kpi-label">Total</div></div>
+  </div>
+
+  <div class="grid-2" style="gap:20px; margin-top:24px;">
+    <!-- Acciones -->
     <div class="card">
-      <div class="card-pad">
-        <h2>📊 Resumen rápido</h2>
-        <p class="lead">Estado actual de las planificaciones</p>
-
-        <div class="kpi-grid">
-          <div class="kpi-item">
-            <div class="dot dot-good"></div>
-            <div><b id="kpi-pendiente">--</b><br>Pendientes</div>
-          </div>
-          <div class="kpi-item">
-            <div class="dot dot-bad"></div>
-            <div><b id="kpi-vencidos">--</b><br>Vencidos</div>
-          </div>
-          <div class="kpi-item">
-            <div class="dot dot-warn"></div>
-            <div><b id="kpi-porVencer">--</b><br>Por vencer (≤48h)</div>
-          </div>
-          <div class="kpi-item">
-            <div class="dot dot-accent"></div>
-            <div><b id="kpi-total">--</b><br>Total</div>
-          </div>
-          <div class="kpi-item">
-            <div class="dot dot-idle"></div>
-            <div><b id="kpi-finalizado">--</b><br>Finalizados</div>
+      <div class="card-inner">
+        <div class="section-head">
+          <div class="section-icon">⚡</div>
+          <div>
+            <div class="section-title">Acciones rápidas</div>
+            <div class="section-sub">¿Qué quieres hacer hoy?</div>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- 🔹 Planificaciones próximas a vencer -->
-    <div class="card">
-      <div class="card-pad">
-        <h2>⏰ Próximas a vencer</h2>
-        <p class="lead">Planificaciones con fecha proyectada en los próximos 3 días</p>
-        <div id="upcomingList">
-          <div class="msg">Cargando...</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 🔹 Acciones principales -->
-    <div class="card">
-      <div class="card-pad">
-        <h2>¿Qué deseas hacer?</h2>
-        <p class="lead">Crea una planificación o revisa el historial. El dashboard resume pendientes, concluidos y tiempos estimados.</p>
-
-        <div class="cards-list">
+        <div class="menu-grid">
           <a class="menu-card" href="./crear.html">
-            <div class="menu-left">
-              <div class="iconbox">＋</div>
-              <div>
-                <div class="menu-title">Crear planificación</div>
-                <div class="menu-sub">Registro rápido (Estado = Pendiente por defecto).</div>
-              </div>
-            </div>
-            <div>Entrar →</div>
+            <div class="menu-icon">➕</div>
+            <div class="menu-title">Crear planificación</div>
+            <div class="menu-desc">Registra una nueva tarea o labor con fecha proyectada.</div>
+            <div class="menu-arrow">Ir a crear →</div>
           </a>
-
+          <a class="menu-card" href="./cerrar.html">
+            <div class="menu-icon">✅</div>
+            <div class="menu-title">Mis tareas</div>
+            <div class="menu-desc">Ingresa con tu DNI y actualiza el estado de tus planificaciones.</div>
+            <div class="menu-arrow">Ir a mis tareas →</div>
+          </a>
           <a class="menu-card" href="./ver.html">
-            <div class="menu-left">
-              <div class="iconbox">≡</div>
-              <div>
-                <div class="menu-title">Ver planificaciones</div>
-                <div class="menu-sub">Tabla con búsqueda y filtros (incluye Ejecutado y Fecha registro).</div>
-              </div>
-            </div>
-            <div>Entrar →</div>
+            <div class="menu-icon">📊</div>
+            <div class="menu-title">Ver todos</div>
+            <div class="menu-desc">Tabla completa con búsqueda y filtros por área y estado.</div>
+            <div class="menu-arrow">Ver listado →</div>
           </a>
-
           <a class="menu-card" href="./dashboard.html">
-            <div class="menu-left">
-              <div class="iconbox">▦</div>
-              <div>
-                <div class="menu-title">Dashboard</div>
-                <div class="menu-sub">Resumen por estado y tiempos (texto: 1S, 1D, 1M, etc.).</div>
-              </div>
-            </div>
-            <div>Entrar →</div>
+            <div class="menu-icon">📈</div>
+            <div class="menu-title">Dashboard</div>
+            <div class="menu-desc">Estadísticas, alertas y resumen por área y solicitante.</div>
+            <div class="menu-arrow">Ver dashboard →</div>
           </a>
         </div>
       </div>
     </div>
-  </main>
 
-  <footer class="footer-note">Front: GitHub Pages • Back: Google Apps Script</footer>
+    <!-- Próximas a vencer -->
+    <div class="card">
+      <div class="card-inner">
+        <div class="section-head">
+          <div class="section-icon" style="background:var(--amber-dim);color:var(--amber);">⏰</div>
+          <div>
+            <div class="section-title">Próximas a vencer</div>
+            <div class="section-sub">Planificaciones pendientes · próximos 3 días</div>
+          </div>
+        </div>
+        <div id="upcomingList"><div class="text-muted text-sm loading" style="padding:20px 0;text-align:center;">Cargando...</div></div>
+      </div>
+    </div>
+  </div>
 
-  <script src="./assets/config.js?v=20260129-6"></script>
-  <script src="./assets/ui.js?v=20260129-6"></script>
-  <script src="./assets/api.js?v=20260129-6"></script>
-  <script src="./assets/index.js?v=20260129-6"></script>
+  <!-- Últimas registradas -->
+  <div class="card" style="margin-top:20px;">
+    <div class="card-inner">
+      <div class="section-head" style="margin-bottom:14px;">
+        <div class="section-icon" style="background:var(--blue-dim);color:var(--blue);">🕒</div>
+        <div>
+          <div class="section-title">Últimas planificaciones</div>
+          <div class="section-sub">Los registros más recientes del sistema</div>
+        </div>
+        <a class="btn btn-sm" href="./ver.html" style="margin-left:auto;">Ver todas →</a>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Área</th><th>Solicitante</th><th>Estado</th><th>Proyectado</th><th>Registrado</th></tr></thead>
+          <tbody id="recentRows"><tr><td colspan="6" class="text-muted text-sm loading" style="text-align:center;padding:20px;">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">Planificación 2026 · Front: GitHub Pages · Back: Google Apps Script</footer>
+
+<script src="./assets/config.js?v=3"></script>
+<script src="./assets/ui.js?v=3"></script>
+<script src="./assets/api.js?v=3"></script>
+<script src="./assets/index.js?v=3"></script>
 </body>
 </html>

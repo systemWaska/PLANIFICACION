@@ -1,98 +1,128 @@
-    <!doctype html>
-    <html lang="es">
-    <head>
-      <meta charset="utf-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <title>Dashboard</title>
-      <link rel="stylesheet" href="./assets/styles.css?v=20260119-3" />
-    </head>
-    <body>
-      <div class="bg-glow"></div>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Dashboard · Planificación</title>
+  <link rel="stylesheet" href="./assets/styles.css?v=3"/>
+</head>
+<body>
+<div class="bg-mesh"></div>
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-logo">P</div>
+    <div><div class="brand-name">Dashboard</div><div class="brand-sub">Resumen · Alertas</div></div>
+  </div>
+  <nav class="nav">
+    <a class="nav-link" href="./index.html"><span>Inicio</span></a>
+    <a class="nav-link" href="./crear.html"><span>Crear</span></a>
+    <a class="nav-link" href="./ver.html"><span>Ver</span></a>
+    <a class="nav-link" href="./cerrar.html"><span>Mis tareas</span></a>
+    <a class="nav-link" href="./dashboard.html"><span>Dashboard</span></a>
+    <div class="nav-sep"></div>
+    <button class="nav-btn" id="themeToggle">🌙</button>
+    <div class="status-pill"><div class="status-dot" id="statusDot"></div><span id="statusText">Cargando</span></div>
+  </nav>
+</header>
 
-      <header class="topbar">
-        <div class="brand">
-          <div class="logo" aria-hidden="true"></div>
+<main class="page">
+  <div class="hero">
+    <div class="hero-label">📈 Métricas</div>
+    <h1 class="hero-title">Dashboard <span>general</span></h1>
+    <p class="hero-sub">Resumen de estados, alertas de vencimiento y estadísticas por área.</p>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-teal"><div class="kpi-value loading" id="kpi-pend">—</div><div class="kpi-label">Pendientes</div></div>
+    <div class="kpi-card kpi-green"><div class="kpi-value loading" id="kpi-fin">—</div><div class="kpi-label">Finalizados</div></div>
+    <div class="kpi-card kpi-amber"><div class="kpi-value loading" id="kpi-prox">—</div><div class="kpi-label">Por vencer (48h)</div></div>
+    <div class="kpi-card kpi-red"><div class="kpi-value loading" id="kpi-venc">—</div><div class="kpi-label">Vencidos</div></div>
+    <div class="kpi-card kpi-blue"><div class="kpi-value loading" id="kpi-tot">—</div><div class="kpi-label">Total registros</div></div>
+  </div>
+
+  <div class="grid-2" style="margin-top:20px; gap:20px;">
+    <!-- Alertas -->
+    <div class="card">
+      <div class="card-inner">
+        <div class="section-head">
+          <div class="section-icon" style="background:var(--red-dim);color:var(--red);">🚨</div>
           <div>
-            <div class="title">Dashboard</div>
-            <div class="sub">Resumen • Google Sheets</div>
+            <div class="section-title">Alertas activas</div>
+            <div class="section-sub">Vencidos y por vencer en ≤48h</div>
           </div>
         </div>
-        <nav class="nav">
-          <a class="btn" data-nav="inicio" href="./index.html">← Inicio</a>
-          <a class="btn" data-nav="crear" href="./crear.html">Crear →</a>
-          <a class="btn" data-nav="ver" href="./ver.html">Ver →</a>
-          <a class="btn" data-nav="dashboard" href="./dashboard.html">Dashboard →</a>
-          <button class="btn btn-icon" id="themeToggle" type="button" aria-label="Cambiar tema">🌙</button>
-          <span class="pill"><span class="dot" id="statusDot"></span><span id="statusText">Listo</span></span>
-        </nav>
-      </header>
-
-      <main class="container">
-        <div class="card">
-          <div class="card-pad">
-
-<h1>Dashboard</h1>
-<p class="lead">Resumen por estado, tiempos y alertas de vencimiento.</p>
-
-<div class="kpi-grid">
-  <div class="pill"><span class="dot dot-warn" id="kpiDot1"></span><span id="kpi1">Pendientes: —</span></div>
-  <div class="pill"><span class="dot dot-good" id="kpiDot2"></span><span id="kpi2">Concluidos: —</span></div>
-  <div class="pill"><span class="dot dot-warn" id="kpiDot4"></span><span id="kpi4">Por vencer (48h): —</span></div>
-  <div class="pill"><span class="dot dot-bad" id="kpiDot5"></span><span id="kpi5">Vencidos: —</span></div>
-  <div class="pill"><span class="dot" id="kpiDot3"></span><span id="kpi3">Total: —</span></div>
-</div>
-
-<div class="dash-grid" style="margin-top:14px">
-  <div class="card card-soft">
-    <div class="card-pad">
-      <div class="section-title">Top solicitantes</div>
-      <div id="topSolicitantes" class="msg">Cargando...</div>
+        <div id="alertsList"><div class="loading text-sm text-muted" style="padding:16px 0;text-align:center;">Cargando...</div></div>
+      </div>
     </div>
-  </div>
-  <div class="card card-soft">
-    <div class="card-pad">
-      <div class="section-title">Tiempos más frecuentes</div>
-      <div id="topTiempos" class="msg">Cargando...</div>
-    </div>
-  </div>
-  <div class="card card-soft">
-    <div class="card-pad">
-      <div class="section-title">Alertas</div>
-      <div class="msg" style="margin-bottom:8px">Por vencer (≤ 48h) y vencidos (no concluidos).</div>
-      <div id="alertsList" class="alerts-list">Cargando...</div>
-      <div style="margin-top:10px">
-        <a class="btn" href="./ver.html">Ver en tabla →</a>
+
+    <!-- Top solicitantes -->
+    <div class="card">
+      <div class="card-inner">
+        <div class="section-head">
+          <div class="section-icon" style="background:var(--violet-dim);color:var(--violet);">👥</div>
+          <div>
+            <div class="section-title">Top solicitantes</div>
+            <div class="section-sub">Por volumen de planificaciones</div>
+          </div>
+        </div>
+        <div id="topSolicitantes"><div class="loading text-sm text-muted" style="padding:16px 0;text-align:center;">Cargando...</div></div>
       </div>
     </div>
   </div>
-</div>
-<div class="table-wrap scroll-x" style="margin-top:14px">
-  <table>
-    <thead>
-      <tr>
-        <th>Área</th>
-        <th>Solicitante</th>
-        <th>Prioridad</th>
-        <th>Estado</th>
-        <th>Tiempo</th>
-        <th>Fecha registro</th>
-        <th>Fecha proyectada</th>
-      </tr>
-    </thead>
-    <tbody id="dashRows">
-      <tr><td colspan="7">Cargando...</td></tr>
-    </tbody>
-  </table>
-</div>
 
+  <!-- Estado por área + últimas -->
+  <div class="grid-2" style="margin-top:20px; gap:20px;">
+    <div class="card">
+      <div class="card-inner">
+        <div class="section-head">
+          <div class="section-icon" style="background:var(--amber-dim);color:var(--amber);">🏢</div>
+          <div>
+            <div class="section-title">Planificaciones por área</div>
           </div>
-          <div class="footer-note">Front: GitHub Pages • Back: Google Apps Script</div>
         </div>
-      </main>
+        <div id="topAreas"><div class="loading text-sm text-muted" style="text-align:center;padding:12px 0;">Cargando...</div></div>
+      </div>
+    </div>
 
-      <script src="./assets/config.js?v=20260119-2"></script>
-      <script src="./assets/ui.js?v=20260119-3"></script>
-      <script src="./assets/api.js?v=20260119-2"></script>
-      <script src="./assets/dashboard.js?v=20260119-2"></script>
-    </body>
-    </html>
+    <div class="card">
+      <div class="card-inner">
+        <div class="section-head">
+          <div class="section-icon" style="background:var(--blue-dim);color:var(--blue);">📊</div>
+          <div><div class="section-title">Por estado</div></div>
+        </div>
+        <div id="byEstado"><div class="loading text-sm text-muted" style="text-align:center;padding:12px 0;">Cargando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla últimas -->
+  <div class="card" style="margin-top:20px;">
+    <div class="card-inner">
+      <div class="section-head" style="margin-bottom:14px;">
+        <div class="section-icon">🕒</div>
+        <div><div class="section-title">Últimos registros</div><div class="section-sub">Los más recientes del sistema</div></div>
+        <a class="btn btn-sm" href="./ver.html" style="margin-left:auto;">Ver todos →</a>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Área</th><th>Solicitante</th><th>Estado</th><th>Prioridad</th><th>Proyectado</th><th>Registrado</th></tr>
+          </thead>
+          <tbody id="dashRows">
+            <tr><td colspan="7" class="loading text-sm text-muted" style="text-align:center;padding:20px;">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">Planificación 2026 · Front: GitHub Pages · Back: Google Apps Script</footer>
+
+<script src="./assets/config.js?v=3"></script>
+<script src="./assets/ui.js?v=3"></script>
+<script src="./assets/api.js?v=3"></script>
+<script src="./assets/dashboard.js?v=3"></script>
+</body>
+</html>

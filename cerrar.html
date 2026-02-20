@@ -1,212 +1,200 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Cerrar / Actualizar planificación</title>
-  <link rel="stylesheet" href="./assets/styles.css?v=20260220-1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Mis tareas · Planificación</title>
+  <link rel="stylesheet" href="./assets/styles.css?v=3"/>
   <style>
-    .filter-bar { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
-    .filter-bar label { font-size:13px; color:var(--muted); white-space:nowrap; }
-    .filter-bar select { flex:1; max-width:200px; }
-    .badge-ok   { background:rgba(34,197,94,.18);  color:#4ade80; border-color:rgba(34,197,94,.3); }
-    .badge-warn { background:rgba(250,204,21,.18); color:#facc15; border-color:rgba(250,204,21,.3); }
-    .badge-info { background:rgba(99,102,241,.18); color:#818cf8; border-color:rgba(99,102,241,.3); }
-    .badge-bad  { background:rgba(239,68,68,.18);  color:#f87171; border-color:rgba(239,68,68,.3); }
-    .obs-box {
-      background:var(--card2); border:1px solid var(--border); border-radius:12px;
-      padding:10px 14px; font-size:13px; line-height:1.6; white-space:pre-wrap;
-      word-break:break-word; max-height:160px; overflow-y:auto;
+    .auth-card {
+      max-width: 420px;
     }
-    .obs-history { font-size:12px; color:var(--muted); }
-    .modal-section-label { font-size:12px; color:var(--muted2); margin:12px 0 4px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
-    .modal-kv { display:flex; gap:8px; margin-bottom:6px; font-size:14px; align-items:center; }
-    .modal-kv span { color:var(--muted); min-width:100px; }
-    td.truncate { max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .btn.small { padding:6px 12px; font-size:13px; }
-    .hint-box {
-      background:rgba(99,102,241,.10); border:1px solid rgba(99,102,241,.25);
-      border-radius:12px; padding:10px 14px; font-size:13px; color:var(--muted); margin-bottom:14px;
+    .tasks-section { margin-top: 24px; }
+    .task-card {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 18px;
+      display: flex; align-items: flex-start; gap: 14px;
+      margin-bottom: 10px; transition: border-color var(--transition), box-shadow var(--transition);
+      cursor: pointer;
     }
-    .readonly-note {
-      text-align:center; color:var(--muted); font-size:13px;
-      padding:14px; background:var(--card2); border-radius:10px; border:1px solid var(--border); margin-top:12px;
-    }
+    .task-card:hover { border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-dim); }
+    .task-card.done  { opacity: .6; cursor: default; }
+    .task-card.done:hover { border-color: var(--border); box-shadow: none; }
+    .task-id   { font-family: var(--mono); font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+    .task-labor{ font-size: 13px; color: var(--text); font-weight: 500; line-height: 1.4; }
+    .task-meta { font-size: 11px; color: var(--text3); margin-top: 5px; }
+    .task-right { margin-left: auto; text-align: right; flex-shrink: 0; }
+    .task-date  { font-size: 11px; color: var(--text2); margin-top: 4px; }
+    .filter-tabs { display:flex; gap:6px; margin-bottom:16px; }
+    .filter-tab  { padding:6px 14px; border-radius:99px; font-size:12px; font-weight:500; cursor:pointer; border:1px solid var(--border); background:var(--surface2); color:var(--text2); transition:all var(--transition); }
+    .filter-tab.active { background:var(--teal-dim); border-color:rgba(45,212,191,.35); color:var(--teal); }
+    .user-header { display:flex; align-items:center; gap:12px; padding:14px 18px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:16px; }
+    .user-avatar { width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--blue));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#000;flex-shrink:0; }
+    .user-name  { font-size:14px;font-weight:600;color:var(--text); }
+    .user-area  { font-size:11px;color:var(--text3); }
   </style>
 </head>
 <body>
-  <div class="bg-glow"></div>
-  <header class="topbar">
-    <div class="brand">
-      <div class="logo" aria-hidden="true"></div>
-      <div>
-        <div class="title">Planificación</div>
-        <div class="subtitle">Cerrar · Actualizar estado</div>
-      </div>
-    </div>
-    <nav class="nav">
-      <a class="btn" href="./index.html">Inicio</a>
-      <a class="btn" href="./crear.html">Crear →</a>
-      <a class="btn" href="./ver.html">Ver →</a>
-      <a class="btn" href="./cerrar.html">Cerrar →</a>
-      <a class="btn" href="./dashboard.html">Dashboard →</a>
-      <button class="icon-btn" id="themeToggle" title="Tema" aria-label="Cambiar tema">☀️</button>
-    </nav>
-  </header>
+<div class="bg-mesh"></div>
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-logo">P</div>
+    <div><div class="brand-name">Planificación</div><div class="brand-sub">Mis tareas</div></div>
+  </div>
+  <nav class="nav">
+    <a class="nav-link" href="./index.html"><span>Inicio</span></a>
+    <a class="nav-link" href="./crear.html"><span>Crear</span></a>
+    <a class="nav-link" href="./ver.html"><span>Ver</span></a>
+    <a class="nav-link" href="./cerrar.html"><span>Mis tareas</span></a>
+    <a class="nav-link" href="./dashboard.html"><span>Dashboard</span></a>
+    <div class="nav-sep"></div>
+    <button class="nav-btn" id="themeToggle">🌙</button>
+  </nav>
+</header>
 
-  <main class="shell">
-    <section class="hero">
-      <h1>Mis planificaciones</h1>
-      <p>Elige tu área y nombre, ingresa tu DNI como contraseña y gestiona tus registros.</p>
-    </section>
+<main class="page">
+  <div class="hero">
+    <div class="hero-label">✅ Gestión personal</div>
+    <h1 class="hero-title">Mis <span>planificaciones</span></h1>
+    <p class="hero-sub">Ingresa con tu DNI (contraseña de 8 dígitos) para ver y actualizar tus tareas.</p>
+  </div>
 
-    <section class="card-pad">
-      <div class="grid2">
-        <div class="card" style="padding:24px;">
-          <h3>🔐 Ingreso</h3>
-          <div class="hint-box">
-            Tu <b>contraseña</b> es tu DNI de 8 dígitos.<br>
-            Si es tu primer ingreso, deberás registrarlo ingresándolo dos veces.
-          </div>
-          <form id="authForm" class="form">
-            <div class="field">
-              <label for="area">Área</label>
-              <select id="area" required>
-                <option value="">Selecciona un área</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="solicitante">Usuario</label>
-              <select id="solicitante" required disabled>
-                <option value="">Selecciona primero un área</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="dni">Contraseña (DNI 8 dígitos)</label>
-              <input id="dni" type="password" inputmode="numeric" maxlength="8" placeholder="••••••••" required autocomplete="off" />
-            </div>
-            <div id="dniRegister" class="hidden">
-              <div class="field">
-                <label for="dni2">Confirmar DNI (solo primer ingreso)</label>
-                <input id="dni2" type="password" inputmode="numeric" maxlength="8" placeholder="••••••••" autocomplete="off" />
-              </div>
-            </div>
-            <div class="actions">
-              <button class="btn primary" type="submit" id="btnAuth">Ingresar</button>
-              <button class="btn" type="button" id="btnReload">↺ Recargar</button>
-            </div>
-            <div class="msg" id="authMsg" role="status" aria-live="polite"></div>
-          </form>
+  <!-- Grid: Auth | Tasks -->
+  <div class="grid-2" style="align-items:start;">
+
+    <!-- Panel de ingreso -->
+    <div class="card auth-card">
+      <div class="card-inner">
+        <div class="section-head" style="margin-bottom:16px;">
+          <div class="section-icon">🔐</div>
+          <div><div class="section-title">Ingreso</div><div class="section-sub">DNI = contraseña de acceso</div></div>
         </div>
 
-        <div class="card" style="padding:24px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-            <h3 style="margin:0;">📋 Mis registros</h3>
-          </div>
-          <div class="filter-bar">
-            <label>Filtrar:</label>
-            <select id="filterEstado">
-              <option value="active">Activas (Pendiente / Pausado)</option>
-              <option value="done">Finalizadas / Anuladas</option>
-              <option value="all">Todas</option>
-            </select>
-          </div>
-          <div class="table-wrap">
-            <table class="table" id="tbl">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Labores</th>
-                  <th>Estado</th>
-                  <th>Prioridad</th>
-                  <th>Proyectado</th>
-                  <th style="width:130px;">Acción</th>
-                </tr>
-              </thead>
-              <tbody id="tbody">
-                <tr><td colspan="6" class="muted">Ingresa para ver tus registros.</td></tr>
-              </tbody>
-            </table>
-          </div>
+        <div class="auth-hint">
+          Tu <b>contraseña</b> es tu DNI de 8 dígitos.<br>
+          Si es tu primer ingreso, regístrala ingresándola dos veces.
         </div>
-      </div>
-    </section>
-  </main>
 
-  <!-- MODAL: Detalle / Actualizar -->
-  <div class="modal-overlay hidden" id="detailModal">
-    <div class="modal" style="width:min(640px,95vw); max-height:90vh; overflow-y:auto;">
-      <div class="modal-icon"><span>📋</span></div>
-      <h2 class="modal-title" id="detailTitle">Detalles</h2>
-      <div class="modal-body" id="detailContent"></div>
-      <div id="detailFormSection">
-        <h4 id="detailFormTitle" style="margin:16px 0 8px; font-size:15px; color:var(--muted);">Actualizar estado</h4>
-        <form id="detailForm">
-          <div class="field">
-            <label for="detailObservacion">Nota / Actualización <span style="color:var(--bad)">*</span></label>
-            <textarea id="detailObservacion" rows="3" placeholder="Ej: Se completó la tarea. Queda pendiente validar accesos."></textarea>
-          </div>
-          <div class="field">
-            <label for="detailEstado">Nuevo estado</label>
-            <select id="detailEstado">
-              <option value="Finalizado">✅ Finalizado</option>
-              <option value="Pausado">⏸ Pausado</option>
-              <option value="Anulado">❌ Anulado</option>
-              <option value="Pendiente">🕐 Pendiente</option>
+        <form id="authForm">
+          <div class="form-group">
+            <label class="form-label">Área</label>
+            <select class="form-select" id="area" required>
+              <option value="">Selecciona un área</option>
             </select>
           </div>
-          <div class="modal-actions">
-            <button type="button" class="btn" id="btnCancelDetail">Cancelar</button>
-            <button type="submit" class="btn primary">Guardar cambios</button>
+          <div class="form-group">
+            <label class="form-label">Usuario</label>
+            <select class="form-select" id="solicitante" required disabled>
+              <option value="">Selecciona primero un área</option>
+            </select>
           </div>
+          <div class="form-group">
+            <label class="form-label">Contraseña (DNI 8 dígitos)</label>
+            <input class="form-input" id="dni" type="password" inputmode="numeric" maxlength="8" placeholder="••••••••" autocomplete="off" required/>
+          </div>
+
+          <!-- Solo primer ingreso -->
+          <div id="dniRegister" class="hidden">
+            <div class="form-group">
+              <label class="form-label">Confirmar DNI <span class="text-muted" style="font-weight:400;text-transform:none;">(solo primer ingreso)</span></label>
+              <input class="form-input" id="dni2" type="password" inputmode="numeric" maxlength="8" placeholder="••••••••" autocomplete="off"/>
+            </div>
+          </div>
+
+          <div class="flex gap-10">
+            <button class="btn btn-primary btn-full" type="submit" id="btnAuth">Ingresar</button>
+            <button class="btn" type="button" id="btnReload">↺</button>
+          </div>
+          <div class="msg" id="authMsg"></div>
         </form>
       </div>
-      <div id="detailReadonlyNote" class="readonly-note" style="display:none;">
-        Este registro ya fue cerrado. Solo lectura.
-        <br><br>
-        <button type="button" class="btn" id="btnCancelDetail2">Cerrar</button>
+    </div>
+
+    <!-- Panel de tareas -->
+    <div id="tasksPanel">
+      <div class="card">
+        <div class="card-inner" style="text-align:center; color:var(--text3); padding:40px 16px;">
+          <div style="font-size:40px; margin-bottom:12px;">🔒</div>
+          <div class="section-title" style="color:var(--text3);">Ingresa para ver tus tareas</div>
+          <div class="text-sm text-muted mt-8">Selecciona tu área, usuario e ingresa tu contraseña.</div>
+        </div>
       </div>
-      <div class="msg" id="detailMsg"></div>
     </div>
-  </div>
 
-  <!-- MODAL: Registrar correo -->
-  <div class="modal-overlay hidden" id="emailModal">
-    <div class="modal" style="width:min(480px,95vw);">
-      <div class="modal-icon">📧</div>
-      <h2 class="modal-title">Registra tu correo</h2>
-      <p class="modal-sub">
-        No tienes correo registrado. Al registrarlo serás añadido al grupo de Google Calendario
-        de tu área y recibirás notificaciones de las planificaciones.
-      </p>
-      <form id="emailForm" class="form">
-        <div class="field">
-          <label for="emailInput">Correo electrónico</label>
-          <input id="emailInput" type="email" placeholder="tu@correo.com" autocomplete="email" />
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn" id="btnSkipEmail">Omitir por ahora</button>
-          <button type="submit" class="btn primary">Registrar correo</button>
-        </div>
-      </form>
-      <div class="msg" id="emailMsg"></div>
+  </div>
+</main>
+
+<!-- MODAL: Detalle / Actualizar -->
+<div class="modal-overlay hidden" id="detailModal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <div class="modal-icon" id="detailIcon">📋</div>
+      <div><div class="modal-title" id="detailTitle">Detalle</div><div class="modal-sub" id="detailSub"></div></div>
     </div>
+    <div id="detailContent" class="modal-body"></div>
+
+    <!-- Formulario actualización (solo si activo) -->
+    <div id="detailFormWrap">
+      <div class="card-divider"></div>
+      <div class="form-group">
+        <label class="form-label">Nota / Actualización <span class="text-red">*</span></label>
+        <textarea class="form-textarea" id="detailObs" rows="3" placeholder="Describe el avance o motivo del cambio..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nuevo estado</label>
+        <select class="form-select" id="detailEstado">
+          <option value="Finalizado">✅ Finalizado</option>
+          <option value="Pausado">⏸ Pausado</option>
+          <option value="Pendiente">🕐 Pendiente</option>
+          <option value="Anulado">❌ Anulado</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="btnCancelDetail">Cancelar</button>
+        <button class="btn btn-primary" id="btnSaveDetail">Guardar cambios</button>
+      </div>
+    </div>
+
+    <!-- Solo lectura -->
+    <div id="detailReadonly" class="readonly-box hidden">
+      Este registro ya fue cerrado.<br>
+      <button class="btn btn-sm" style="margin-top:12px;" id="btnCancelDetail2">Cerrar</button>
+    </div>
+
+    <div class="msg" id="detailMsg"></div>
   </div>
+</div>
 
-  <footer class="footer">Front: GitHub Pages · Back: Google Apps Script</footer>
+<!-- MODAL: Registro de correo -->
+<div class="modal-overlay hidden" id="emailModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-icon warn-icon">📧</div>
+      <div>
+        <div class="modal-title">Registra tu correo</div>
+        <div class="modal-sub">Para unirte al calendario del área y recibir notificaciones</div>
+      </div>
+    </div>
+    <p class="text-muted text-sm" style="margin-bottom:16px;">No tienes correo registrado. Al registrarlo serás añadido automáticamente al grupo de Google Calendario de tu área.</p>
+    <form id="emailForm">
+      <div class="form-group">
+        <label class="form-label">Correo electrónico</label>
+        <input class="form-input" id="emailInput" type="email" placeholder="tu@correo.com" autocomplete="email"/>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" id="btnSkipEmail">Omitir por ahora</button>
+        <button type="submit" class="btn btn-primary">Registrar correo</button>
+      </div>
+    </form>
+    <div class="msg" id="emailMsg"></div>
+  </div>
+</div>
 
-  <script src="assets/config.js"></script>
-  <script src="assets/ui.js"></script>
-  <script src="assets/api.js"></script>
-  <script src="assets/cerrar.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const btn2 = document.getElementById("btnCancelDetail2");
-      if (btn2) btn2.addEventListener("click", () => {
-        document.getElementById("detailModal").classList.add("hidden");
-        document.body.style.overflow = "";
-      });
-    });
-  </script>
+<footer class="footer">Planificación 2026 · Front: GitHub Pages · Back: Google Apps Script</footer>
+
+<script src="./assets/config.js?v=3"></script>
+<script src="./assets/ui.js?v=3"></script>
+<script src="./assets/api.js?v=3"></script>
+<script src="./assets/cerrar.js?v=3"></script>
 </body>
 </html>

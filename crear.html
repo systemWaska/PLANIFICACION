@@ -1,123 +1,118 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Crear planificación</title>
-  <link rel="stylesheet" href="./assets/styles.css?v=20260129-4" />
-  
-  <!-- Flatpickr para Fecha Proyectada -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="./assets/styles.css?v=3"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"/>
   <style>
-    .flatpickr-calendar {
-      font-family: inherit;
-      border-radius: 16px;
-      box-shadow: 0 12px 30px rgba(0,0,0,.3);
-      overflow: hidden;
-    }
-    .flatpickr-day.selected, .flatpickr-day:hover {
-      background: var(--accent) !important;
-      color: white !important;
-    }
-    .flatpickr-time { border-top: 1px solid var(--border); }
-    .flatpickr-time input {
-      font-size: 16px;
-      padding: 6px 8px;
-      border-radius: 8px;
-      background: var(--field-bg);
-      border: 1px solid var(--field-border);
-      color: var(--text);
-    }
-    .flatpickr-time .numInputWrapper { width: 56px; }
+    .fp-wrap input { cursor: pointer; }
+    .flatpickr-calendar { font-family: inherit; border-radius: 14px; border: 1px solid var(--border2) !important; box-shadow: var(--shadow-lg) !important; background: var(--surface) !important; color: var(--text) !important; }
+    .flatpickr-day.selected { background: var(--teal) !important; border-color: var(--teal) !important; color: #000 !important; }
+    .flatpickr-day:hover { background: var(--teal-dim) !important; }
+    .flatpickr-months, .flatpickr-weekdays { background: var(--surface2) !important; }
+    .flatpickr-current-month, .flatpickr-weekday, .flatpickr-day { color: var(--text) !important; }
+    .flatpickr-time { border-top: 1px solid var(--border) !important; }
+    .numInput, .flatpickr-time input { background: var(--surface2) !important; color: var(--text) !important; border: 1px solid var(--border2) !important; border-radius: 8px !important; }
+    :root[data-theme="light"] .flatpickr-calendar { background: #fff !important; }
+    :root[data-theme="light"] .flatpickr-months, :root[data-theme="light"] .flatpickr-weekdays { background: #f8fafc !important; }
+
+    .char-count { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+    .email-new-badge { display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:99px;background:var(--amber-dim);border:1px solid rgba(245,158,11,.3);color:var(--amber);font-size:11px;font-weight:600;margin-left:8px; }
   </style>
 </head>
 <body>
-  <div class="bg-glow"></div>
+<div class="bg-mesh"></div>
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-logo">P</div>
+    <div><div class="brand-name">Planificación</div><div class="brand-sub">Registro · Google Sheets</div></div>
+  </div>
+  <nav class="nav">
+    <a class="nav-link" href="./index.html"><span>Inicio</span></a>
+    <a class="nav-link" href="./crear.html"><span>Crear</span></a>
+    <a class="nav-link" href="./ver.html"><span>Ver</span></a>
+    <a class="nav-link" href="./cerrar.html"><span>Mis tareas</span></a>
+    <a class="nav-link" href="./dashboard.html"><span>Dashboard</span></a>
+    <div class="nav-sep"></div>
+    <button class="nav-btn" id="themeToggle" aria-label="Tema">🌙</button>
+    <div class="status-pill"><div class="status-dot" id="statusDot"></div><span id="statusText">Listo</span></div>
+  </nav>
+</header>
 
-  <header class="topbar">
-    <div class="brand">
-      <div class="logo" aria-hidden="true"></div>
-      <div>
-        <div class="title">Crear planificación</div>
-        <div class="sub">Registro • Google Sheets</div>
-      </div>
+<main class="page page-sm">
+  <div class="hero">
+    <div class="hero-label">➕ Nuevo registro</div>
+    <h1 class="hero-title">Crear <span>planificación</span></h1>
+    <p class="hero-sub">Completa el formulario. El estado inicial será <b>Pendiente</b> y se registrará automáticamente en el calendario del área.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-inner-lg">
+      <form id="taskForm" novalidate>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Área *</label>
+            <select class="form-select" id="area" required>
+              <option value="" disabled selected>Selecciona un área</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Solicitante *</label>
+            <select class="form-select" id="solicitante" required disabled>
+              <option value="" disabled selected>Selecciona primero un área</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Correo (aparece si no tiene email registrado) -->
+        <div class="form-group" id="emailGroup" style="display:none;">
+          <label class="form-label">Correo <span class="email-new-badge">⚠ Sin email registrado</span></label>
+          <input class="form-input form-input warn" id="correo" type="email" placeholder="tu@correo.com — Ingresa para unirte al calendario del área"/>
+          <div class="form-hint">Tu correo se guardará y serás añadido al calendario del área automáticamente.</div>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Prioridad *</label>
+            <select class="form-select" id="prioridad" required>
+              <option value="" disabled selected>Selecciona prioridad</option>
+            </select>
+          </div>
+          <div class="form-group fp-wrap">
+            <label class="form-label">Fecha proyectada *</label>
+            <input class="form-input" id="proyectado" type="text" placeholder="dd/mm/aaaa hh:mm" required readonly/>
+            <div class="form-hint">Fecha y hora en que esperas finalizar.</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Lista de labores * <span class="char-count" id="charCount">0 car.</span></label>
+          <textarea class="form-textarea" id="labores" rows="4" required placeholder="Describe detalladamente las labores a realizar..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Observación <span class="text-muted" style="font-weight:400;text-transform:none;">(opcional)</span></label>
+          <textarea class="form-textarea" id="observacion" rows="2" placeholder="Notas adicionales, bloqueos, contexto..."></textarea>
+        </div>
+
+        <div class="flex gap-10">
+          <button class="btn btn-primary btn-lg" id="submitBtn" type="submit">Guardar planificación</button>
+          <button class="btn btn-lg" id="resetBtn" type="button">Limpiar</button>
+        </div>
+        <div class="msg" id="msg"></div>
+      </form>
     </div>
-    <nav class="nav">
-      <a class="btn" data-nav="inicio" href="./index.html">← Inicio</a>
-      <a class="btn" data-nav="crear" href="./crear.html">Crear →</a>
-      <a class="btn" data-nav="ver" href="./ver.html">Ver →</a>
-      <a class="btn" data-nav="dashboard" href="./dashboard.html">Dashboard →</a>
-      <button class="btn btn-icon" id="themeToggle" type="button" aria-label="Cambiar tema">🌙</button>
-      <span class="pill"><span class="dot" id="statusDot"></span><span id="statusText">Listo</span></span>
-    </nav>
-  </header>
+  </div>
+</main>
 
-  <main class="container">
-    <div class="card">
-      <div class="card-pad">
-        <h1>Crear planificación</h1>
-        <p class="lead">Completa el formulario. El registro se guarda en Sheets con fecha de registro automática. El estado se guarda como <b>Pendiente</b> por defecto.</p>
+<footer class="footer">Planificación 2026 · Front: GitHub Pages · Back: Google Apps Script</footer>
 
-        <form id="taskForm" novalidate>
-          <div class="grid2">
-            <div>
-              <label for="area">Área</label>
-              <select id="area" required>
-                <option value="" disabled selected>Selecciona un área</option>
-              </select>
-              <div class="hint">El Área controla la lista de Solicitante.</div>
-            </div>
-
-            <div>
-              <label for="solicitante">Solicitante</label>
-              <select id="solicitante" required>
-                <option value="" disabled selected>Selecciona primero un área</option>
-              </select>
-              <div id="correo-container" style="margin-top:10px; display:none;">
-                <label>Correo (auto)</label>
-                <input id="correo" type="email" placeholder="Se completa al elegir solicitante" disabled />
-              </div>
-            </div>
-          </div>
-
-          <div class="grid2">
-            <div>
-              <label for="prioridad">Prioridad</label>
-              <select id="prioridad" required>
-                <option value="" disabled selected>Selecciona prioridad</option>
-              </select>
-            </div>
-
-            <div>
-              <label for="proyectado">Fecha proyectada</label>
-              <input id="proyectado" type="text" required placeholder="dd/mm/aaaa --:--" />
-              <div class="hint">Selecciona la fecha y hora en la que esperas terminar esta planificación.</div>
-            </div>
-          </div>
-
-          <label for="labores">Lista de labores</label>
-          <textarea id="labores" required placeholder="Describe la labor..."></textarea>
-          <div class="hint"><span id="chars">0</span></div>
-
-          <label for="observacion">Observación (opcional)</label>
-          <textarea id="observacion" placeholder="Notas, bloqueos, contexto..."></textarea>
-
-          <div class="row-actions">
-            <button class="btn btn-block primary" id="submitBtn" type="submit">Guardar</button>
-            <button class="btn btn-block" id="resetBtn" type="button">Limpiar</button>
-          </div>
-
-          <div class="msg" id="msg"></div>
-        </form>
-      </div>
-      <div class="footer-note">Front: GitHub Pages • Back: Google Apps Script</div>
-    </div>
-  </main>
-
-  <script src="./assets/config.js?v=20260129-4"></script>
-  <script src="./assets/ui.js?v=20260129-4"></script>
-  <script src="./assets/api.js?v=20260129-4"></script>
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <script src="./assets/crear.js?v=20260129-4"></script>
+<script src="./assets/config.js?v=3"></script>
+<script src="./assets/ui.js?v=3"></script>
+<script src="./assets/api.js?v=3"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="./assets/crear.js?v=3"></script>
 </body>
 </html>
