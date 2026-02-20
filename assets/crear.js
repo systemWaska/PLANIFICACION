@@ -128,10 +128,23 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!CONFIG || !area.value) return;
     const users = CONFIG.usersByArea?.[area.value] || [];
     const user = users.find(u => u.usuario === solicitante.value);
-    const email = user?.email || "";
-    
+    const email = user ? (user.email || "") : "";
+    const hasEmail = user ? !!user.hasEmail : false;
+
     correo.value = email;
-    correoContainer.style.display = email ? "block" : "none";
+    correoContainer.style.display = "block";
+
+    if (!hasEmail) {
+      correo.removeAttribute("disabled");
+      correo.placeholder = "Ingresa tu correo (opcional, para el calendario)";
+      correo.style.border = "1px solid rgba(250,204,21,.5)";
+      correo.title = "No tienes correo registrado. Al guardarlo, se registrará automáticamente.";
+    } else {
+      correo.setAttribute("disabled", "disabled");
+      correo.placeholder = "Se completa al elegir solicitante";
+      correo.style.border = "";
+      correo.title = "";
+    }
   });
 
   labores.addEventListener("input", updateChars);
