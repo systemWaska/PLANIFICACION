@@ -1,69 +1,76 @@
-// index.js — Carga resumen y próximas planificaciones
+/* index.js v3 */
 document.addEventListener("DOMContentLoaded", async () => {
-  const statusDot = document.getElementById("statusDot");
-  const statusText = document.getElementById("statusText");
+  UI.setStatus("idle", "Cargando...");
+  const { escapeHtml: esc, estadoClass, parseDateSafe, formatDateTime, fmtDate } = UI;
 
-  function setTopStatus(state, text) {
-    const colors = {
-      ok: "rgba(34,197,94,.9)",
-      warn: "rgba(250,204,21,.9)",
-      err: "rgba(239,68,68,.9)",
-      idle: "rgba(148,163,184,.7)"
-    };
-    statusDot.style.background = colors[state] || colors.idle;
-    statusText.textContent = text;
+  function fmtD(v) {
+    if (!v) return "—";
+    if (/^\d{2}\/\d{2}\/\d{4}/.test(String(v))) return String(v).substring(0, 10);
+    const d = new Date(v); return isNaN(d) ? String(v) : d.toLocaleDateString("es-PE");
   }
 
-  setTopStatus("idle", "Cargando resumen...");
-
   try {
-    // Cargar resumen
-    const summaryRes = await API.get("summary");
-    if (!summaryRes.ok) throw new Error("Error al cargar resumen");
+    const [sumRes, listRes] = await Promise.all([
+      API.get("summary"),
+      API.get("list", { limit: 50 })
+    ]);
 
-    const s = summaryRes.summary;
-    document.getElementById("kpi-pendiente").textContent = s.pendiente || 0;
-    document.getElementById("kpi-finalizado").textContent = s.finalizado || 0;
-    document.getElementById("kpi-vencidos").textContent = s.vencidos || 0;
-    document.getElementById("kpi-porVencer").textContent = s.porVencer48 || 0;
-    document.getElementById("kpi-total").textContent = s.total || 0;
-
-    // Cargar próximas a vencer (filtrar por proyectado <= +3 días)
-    const listRes = await API.post("list", { limit: 5 });
-    if (!listRes.ok) throw new Error("Error al cargar lista");
-
-    const now = new Date();
-    const threeDays = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
-    const upcoming = (listRes.rows || [])
-      .filter(r => r.proyectado && new Date(r.proyectado) <= threeDays && r.estado === "Pendiente")
-      .slice(0, 5);
-
-    const container = document.getElementById("upcomingList");
-    if (upcoming.length === 0) {
-      container.innerHTML = `<div class="msg">No hay planificaciones próximas a vencer.</div>`;
-      return;
+    /* KPIs */
+    if (sumRes.ok) {
+      const s = sumRes.summary;
+      document.getElementById("kpi-pend").textContent = s.pendiente || 0;
+      document.getElementById("kpi-venc").textContent = s.vencidos  || 0;
+      document.getElementById("kpi-prox").textContent = s.porVencer48 || 0;
+      document.getElementById("kpi-fin").textContent  = s.finalizado || 0;
+      document.getElementById("kpi-tot").textContent  = s.total || 0;
+      document.querySelectorAll(".kpi-card").forEach(c => c.classList.remove("loading"));
     }
 
-    let html = `<div class="table-wrap scroll-x"><table><thead><tr><th>ID</th><th>Área</th><th>Solicitante</th><th>Proyectado</th><th>Labores</th></tr></thead><tbody>`;
-    upcoming.forEach(r => {
-      html += `
-        <tr>
-          <td><b>${r.id}</b></td>
-          <td>${r.area || ""}</td>
-          <td>${r.solicitante || ""}</td>
-          <td>${r.proyectado || ""}</td>
-          <td>${(r.labores || "").substring(0, 40)}${r.labores?.length > 40 ? "..." : ""}</td>
-        </tr>
-      `;
-    });
-    html += `</tbody></table></div>`;
-    container.innerHTML = html;
+    /* Próximas */
+    const rows = listRes.rows || [];
+    const now  = new Date(), t3d = new Date(now.getTime() + 3*86400000);
+    const upcoming = rows.filter(r => {
+      if (!/pendiente/i.test(r.estado)) return false;
+      const d = parseDateSafe(r.proyectado);
+      return d && d >= now && d <= t3d;
+    }).slice(0, 7);
 
-    setTopStatus("ok", "Listo");
+    const upEl = document.getElementById("upcomingList");
+    if (!upcoming.length) {
+      upEl.innerHTML = `<div class="text-muted text-sm" style="padding:16px 0;text-align:center;">Sin planificaciones próximas a vencer 🎉</div>`;
+    } else {
+      upEl.innerHTML = upcoming.map(r => {
+        const d = parseDateSafe(r.proyectado);
+        const diffH = d ? Math.round((d - now) / 3600000) : null;
+        const urgency = diffH !== null && diffH < 24 ? "text-red" : "text-muted";
+        return `
+          <div class="upcoming-item">
+            <div class="upcoming-id">${esc(r.id)}</div>
+            <div class="upcoming-who">
+              ${esc(r.area)} · ${esc(r.solicitante)}
+              <span>${esc((r.labores||"").substring(0,50))}</span>
+            </div>
+            <div class="upcoming-date ${urgency}">${fmtD(r.proyectado)}${diffH!==null?`<br><span style="font-size:10px;">${diffH}h</span>`:""}</div>
+          </div>`;
+      }).join("");
+    }
+
+    /* Últimas filas */
+    const last6 = rows.slice(-6).reverse();
+    const tbody = document.getElementById("recentRows");
+    tbody.innerHTML = last6.length ? last6.map(r => `
+      <tr class="${UI.dueClass(r.proyectado, r.estado)}">
+        <td class="td-id">${esc(r.id)}</td>
+        <td>${esc(r.area)}</td>
+        <td class="td-title truncate">${esc(r.solicitante)}</td>
+        <td><span class="badge ${estadoClass(r.estado)}">${esc(r.estado)}</span></td>
+        <td>${esc(fmtD(r.proyectado))}</td>
+        <td>${esc(fmtD(r.fecha))}</td>
+      </tr>`).join("") : `<tr><td colspan="6" class="text-muted text-sm" style="text-align:center;">Sin registros.</td></tr>`;
+
+    UI.setStatus("ok", "Listo");
   } catch (err) {
-    console.error("Error en index:", err);
-    setTopStatus("err", "Error");
-    document.getElementById("upcomingList").innerHTML = 
-      `<div class="msg">No se pudo cargar el resumen: ${err.message || "desconocido"}</div>`;
+    UI.setStatus("err", "Error");
+    console.error(err);
   }
 });

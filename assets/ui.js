@@ -1,312 +1,161 @@
-// UI helpers: toast, safe text, debounce, date formatting, navbar helpers, theme
-// -----------------------------------------------------------------------------
-// Este archivo se carga en TODAS las páginas (index/crear/ver/dashboard).
-// Objetivo:
-//   1) Tener una sola fuente de helpers (fechas, clases CSS, etc.).
-//   2) Evitar repetir lógica en cada página.
-//   3) Que el botón de tema (🌙/☀️) funcione de forma consistente.
-// -----------------------------------------------------------------------------
+/* ui.js — helpers globales v3 */
 const UI = (() => {
-  const $ = (s, root = document) => root.querySelector(s);
-  const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
   function escapeHtml(str) {
     return String(str ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;").replace(/'/g,"&#039;");
   }
 
-  function debounce(fn, wait = 250) {
-    let t = null;
-    return (...args) => {
-      clearTimeout(t);
-      t = setTimeout(() => fn(...args), wait);
-    };
+  function debounce(fn, ms = 250) {
+    let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
   }
 
-  // -------------------------
-  // Toast
-  // -------------------------
+  /* ── Toast ── */
   function toast(message, type = "ok") {
-    const host = $("#toastHost") || (() => {
-      const h = document.createElement("div");
-      h.id = "toastHost";
-      h.className = "toast-host";
-      document.body.appendChild(h);
-      return h;
-    })();
-
+    let host = $("#toastHost");
+    if (!host) { host = document.createElement("div"); host.id = "toastHost"; host.className = "toast-host"; document.body.appendChild(host); }
     const el = document.createElement("div");
     el.className = `toast toast-${type}`;
-    el.innerHTML = `<div class="toast-dot"></div><div class="toast-msg">${escapeHtml(message)}</div>`;
+    el.innerHTML = `<div class="toast-dot"></div><div>${escapeHtml(message)}</div>`;
     host.appendChild(el);
-
     requestAnimationFrame(() => el.classList.add("show"));
-    const remove = () => {
-      el.classList.remove("show");
-      setTimeout(() => el.remove(), 250);
-    };
-    setTimeout(remove, 3500);
-    el.addEventListener("click", remove);
+    const rm = () => { el.classList.remove("show"); setTimeout(() => el.remove(), 250); };
+    setTimeout(rm, 3500);
+    el.addEventListener("click", rm);
   }
 
-  // -------------------------
-  // Modal (popup) – reusable
-  // -------------------------
-  // Se usa para confirmaciones y para el "Planificación registrada" al crear.
-  // Se crea dinámicamente para no duplicar HTML en cada página.
-  function showModal({
-    title = "",
-    subtitle = "",
-    bodyHtml = "",
-    okText = "Aceptar",
-    tone = "ok" // ok | warn | err
-  } = {}) {
-    // Cierra cualquier modal anterior
-    const existing = document.querySelector(".modal-overlay");
-    if (existing) existing.remove();
-
+  /* ── Modal ── */
+  function showModal({ title="", subtitle="", bodyHtml="", okText="Aceptar", tone="ok" } = {}) {
+    document.querySelector(".modal-overlay:not([id])")?.remove();
     const overlay = document.createElement("div");
     overlay.className = "modal-overlay";
-
-    const dialog = document.createElement("div");
-    dialog.className = "modal";
-    dialog.setAttribute("role", "dialog");
-    dialog.setAttribute("aria-modal", "true");
-
-    const icon = tone === "ok" ? "✓" : tone === "warn" ? "!" : "×";
-    dialog.innerHTML = `
-      <div class="modal-icon modal-${escapeHtml(tone)}">${escapeHtml(icon)}</div>
-      <div class="modal-title">${escapeHtml(title)}</div>
-      ${subtitle ? `<div class="modal-sub">${escapeHtml(subtitle)}</div>` : ""}
-      ${bodyHtml ? `<div class="modal-body">${bodyHtml}</div>` : ""}
-      <div class="modal-actions">
-        <button class="btn btn-primary" id="modalOk">${escapeHtml(okText)}</button>
-      </div>
-    `;
-
-    overlay.appendChild(dialog);
+    const iconChar = tone === "ok" ? "✓" : tone === "warn" ? "!" : "×";
+    const iconCls  = tone === "ok" ? "ok-icon" : tone === "warn" ? "warn-icon" : "";
+    overlay.innerHTML = `
+      <div class="modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <div class="modal-icon ${iconCls}">${iconChar}</div>
+          <div><div class="modal-title">${escapeHtml(title)}</div>${subtitle?`<div class="modal-sub">${escapeHtml(subtitle)}</div>`:""}</div>
+        </div>
+        ${bodyHtml ? `<div class="modal-body">${bodyHtml}</div>` : ""}
+        <div class="modal-footer"><button class="btn btn-primary" id="__modalOk">${escapeHtml(okText)}</button></div>
+      </div>`;
     document.body.appendChild(overlay);
-
-    // Bloquea scroll de fondo
-    const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-
-    function close() {
-      document.body.style.overflow = prevOverflow;
-      overlay.remove();
-    }
-
-    // Cerrar con click fuera
-    overlay.addEventListener("click", (e) => {
-      if (e.target === overlay) close();
-    });
-
-    // Cerrar con ESC
-    document.addEventListener("keydown", function onKey(ev) {
-      if (ev.key === "Escape") {
-        document.removeEventListener("keydown", onKey);
-        close();
-      }
-    });
-
-    // Botón OK
-    const okBtn = dialog.querySelector("#modalOk");
-    if (okBtn) okBtn.addEventListener("click", close);
-
-    // Foco al botón
-    setTimeout(() => okBtn && okBtn.focus(), 0);
-
+    const close = () => { document.body.style.overflow = ""; overlay.remove(); };
+    overlay.addEventListener("click", e => { if (e.target === overlay) close(); });
+    document.addEventListener("keydown", function esc(ev) { if (ev.key === "Escape") { document.removeEventListener("keydown", esc); close(); } });
+    overlay.querySelector("#__modalOk").addEventListener("click", close);
+    setTimeout(() => overlay.querySelector("#__modalOk")?.focus(), 0);
     return { close };
   }
 
-  // Modal de éxito específico para el registro de planificación.
-  function showPlanningSavedModal({ id = "", user = "" } = {}) {
-    const body = `
-      <div class="modal-kv"><span>Código generado:</span> <b>${escapeHtml(id)}</b></div>
-      ${user ? `<div class="modal-kv"><span>Usuario:</span> <b>${escapeHtml(user)}</b></div>` : ""}
-    `;
+  function showPlanningSavedModal({ id="", user="" } = {}) {
     return showModal({
       title: "¡Planificación registrada!",
-      subtitle: "El registro se guardó correctamente.",
-      bodyHtml: body,
-      okText: "Aceptar",
-      tone: "ok"
+      subtitle: "Se guardó correctamente en Google Sheets.",
+      bodyHtml: `<div class="modal-kv"><span class="modal-kv-label">ID</span><b class="modal-kv-val font-mono">${escapeHtml(id)}</b></div>${user?`<div class="modal-kv"><span class="modal-kv-label">Usuario</span><span class="modal-kv-val">${escapeHtml(user)}</span></div>`:""}`,
+      okText: "Aceptar", tone: "ok"
     });
   }
 
-  // -------------------------
-  // Date formatting
-  // -------------------------
-  // Turns a value (Date | string) into dd/mm/yyyy.
-  function formatDateShort(value, locale = "es-PE") {
-    if (!value) return "";
-    const d = (value instanceof Date) ? value : new Date(value);
-    if (Number.isNaN(d.getTime())) return String(value);
-    return new Intl.DateTimeFormat(locale, {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit"
-    }).format(d);
+  /* ── Dates ── */
+  function fmtDate(v) {
+    if (!v) return "";
+    // Soporta "dd/mm/yyyy HH:mm" del backend
+    if (/^\d{2}\/\d{2}\/\d{4}/.test(String(v))) return String(v).substring(0, 10);
+    const d = v instanceof Date ? v : new Date(v);
+    if (isNaN(d.getTime())) return String(v);
+    return d.toLocaleDateString("es-PE", { day:"2-digit", month:"2-digit", year:"numeric" });
   }
 
-  // Turns a value (Date | string) into dd/mm/yyyy HH:MM.
-  function formatDateTime(value, locale = "es-PE") {
-    if (!value) return "";
-    const d = (value instanceof Date) ? value : new Date(value);
-    if (Number.isNaN(d.getTime())) return String(value);
-    return new Intl.DateTimeFormat(locale, {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit"
-    }).format(d);
+  function fmtDateTime(v) {
+    if (!v) return "";
+    if (/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/.test(String(v))) return String(v);
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(String(v))) return String(v);
+    const d = v instanceof Date ? v : new Date(v);
+    if (isNaN(d.getTime())) return String(v);
+    return d.toLocaleDateString("es-PE", { day:"2-digit", month:"2-digit", year:"numeric" }) +
+      " " + d.toLocaleTimeString("es-PE", { hour:"2-digit", minute:"2-digit", hour12:false });
   }
 
-  function parseDateSafe(value) {
-    if (!value) return null;
-    const d = (value instanceof Date) ? value : new Date(value);
-    if (Number.isNaN(d.getTime())) return null;
-    return d;
+  function parseDateSafe(v) {
+    if (!v) return null;
+    // "dd/mm/yyyy" o "dd/mm/yyyy HH:mm"
+    const m = String(v).match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s(\d{2}):(\d{2}))?/);
+    if (m) return new Date(+m[3], +m[2]-1, +m[1], m[4]?+m[4]:0, m[5]?+m[5]:0);
+    const d = v instanceof Date ? v : new Date(v);
+    return isNaN(d.getTime()) ? null : d;
   }
 
-  // -------------------------
-  // Theme (dark / light)
-  // -------------------------
-  function getPreferredTheme_() {
-    // 1) Usuario guardó preferencia
-    const saved = localStorage.getItem("theme");
-    if (saved === "light" || saved === "dark") return saved;
-
-    // 2) Preferencia del sistema
-    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) return "light";
-    return "dark";
+  /* ── Estado classes ── */
+  function estadoClass(e) {
+    const s = String(e||"").toLowerCase();
+    if (/finaliz|conclu/.test(s)) return "badge-fin";
+    if (/pend/.test(s))           return "badge-pend";
+    if (/paus|suspend/.test(s))   return "badge-paus";
+    if (/anul|cancel/.test(s))    return "badge-bad";
+    return "badge-gray";
   }
+  const stateClass = estadoClass;
 
-  function applyTheme_(theme) {
-    document.documentElement.dataset.theme = theme;
-    localStorage.setItem("theme", theme);
-
-    // Actualiza icono si existe botón
-    const btn = $("#themeToggle");
-    if (btn) {
-      // Si estás en dark, muestra sol para pasar a light. Si estás en light, muestra luna.
-      btn.textContent = theme === "dark" ? "☀️" : "🌙";
-      btn.setAttribute("aria-label", theme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro");
-    }
-  }
-
-  function initTheme() {
-    // Aplica el tema guardado o el preferido por el sistema
-    const theme = getPreferredTheme_();
-    applyTheme_(theme);
-
-    // Listener robusto por delegacion:
-    // - Funciona aunque el boton se renderice antes/despues del script.
-    // - Evita dobles listeners entre paginas.
-    if (window.__themeToggleBound) return;
-    window.__themeToggleBound = true;
-
-    document.addEventListener("click", (e) => {
-      const btn = e.target.closest("#themeToggle");
-      if (!btn) return;
-      e.preventDefault();
-      const current = document.documentElement.dataset.theme || "dark";
-      applyTheme_(current === "dark" ? "light" : "dark");
-    });
-  }
-
-  // -------------------------
-  // Navbar helper
-  // -------------------------
-  // Hides the link that points to the current page.
-  function hideCurrentNav() {
-    const current = (location.pathname.split("/").pop() || "index.html").toLowerCase();
-    $$(".nav a").forEach((a) => {
-      const href = (a.getAttribute("href") || "").split("?")[0];
-      const file = (href.split("/").pop() || "").toLowerCase();
-      if (!file) return;
-      if (file === current) a.style.display = "none";
-    });
-  }
-
-  // -------------------------
-  // UI semantics helpers
-  // -------------------------
-  function estadoClass(estado) {
-    const s = String(estado || "").toLowerCase();
-    if (s.includes("concl") || s.includes("final")) return "state-good";
-    if (s.includes("pend")) return "state-warn";
-    if (s.includes("paus") || s.includes("suspend")) return "state-info";
-    if (s.includes("anul") || s.includes("cancel")) return "state-bad";
-    return "state-neutral";
-  }
-
-  // -------------------------------------------------
-  // Backwards-compatible aliases
-  // Some pages call these helpers using English names.
-  // -------------------------------------------------
-  // stateClass(estado) -> css class for the estado badge
-  function stateClass(estado) {
-    return estadoClass(estado);
-  }
-
-  // Due status based on proyectado date.
-  // - overdue: now > due
-  // - dueSoon: due - now <= thresholdHours (default 48h)
-  function dueStatus(proyectado, estado, thresholdHours = 48) {
-    const done = ["concluido", "finalizado", "anulado"].some(k => String(estado||"").toLowerCase().includes(k));
-    if (done) return { kind: "done", cls: "" };
-
+  function dueClass(proyectado, estado, h = 48) {
+    const done = /finaliz|conclu|anul/i.test(String(estado||""));
+    if (done) return "";
     const d = parseDateSafe(proyectado);
-    if (!d) return { kind: "none", cls: "" };
-
-    const now = new Date();
-    const diffMs = d.getTime() - now.getTime();
-
-    if (diffMs < 0) return { kind: "overdue", cls: "row-bad" };
-
-    const thresholdMs = thresholdHours * 60 * 60 * 1000;
-    if (diffMs <= thresholdMs) return { kind: "dueSoon", cls: "row-warn" };
-
-    return { kind: "ok", cls: "" };
+    if (!d) return "";
+    const diff = d.getTime() - Date.now();
+    if (diff < 0) return "row-venc";
+    if (diff <= h * 3600000) return "row-warn";
+    return "";
   }
 
-  // dueClass(proyectado, estado) -> row css class ("row-warn" / "row-bad" / "")
-  function dueClass(proyectado, estado, thresholdHours = 48) {
-    return dueStatus(proyectado, estado, thresholdHours).cls;
+  /* ── Theme ── */
+  function applyTheme(t) {
+    document.documentElement.dataset.theme = t;
+    localStorage.setItem("theme", t);
+    const btn = $("#themeToggle");
+    if (btn) btn.textContent = t === "dark" ? "☀️" : "🌙";
+  }
+  function initTheme() {
+    const saved = localStorage.getItem("theme");
+    const pref  = window.matchMedia?.("(prefers-color-scheme: light)").matches ? "light" : "dark";
+    applyTheme(saved || pref);
+    if (window.__themeBound) return;
+    window.__themeBound = true;
+    document.addEventListener("click", e => {
+      if (e.target.closest("#themeToggle")) {
+        e.preventDefault();
+        const cur = document.documentElement.dataset.theme || "dark";
+        applyTheme(cur === "dark" ? "light" : "dark");
+      }
+    });
   }
 
-  // Init theme + hide current nav on every page automatically
-  // (Esto evita repetir la llamada en cada página y corrige el menú)
-  // Ejecuta automáticamente en todas las páginas.
-  document.addEventListener("DOMContentLoaded", () => {
-    initTheme();      // Activa tema (y botón)
-    hideCurrentNav(); // Oculta el botón del menú de la página actual
-  });
+  /* ── Nav active ── */
+  function initNav() {
+    const cur = (location.pathname.split("/").pop() || "index.html").toLowerCase();
+    $$(".nav-link").forEach(a => {
+      const href = (a.getAttribute("href") || "").split("?")[0];
+      const file = href.split("/").pop().toLowerCase();
+      if (file === cur) a.classList.add("active");
+    });
+  }
 
-  return {
-    $,
-    $$,
-    toast,
-    escapeHtml,
-    debounce,
-    formatDateShort,
-    formatDateTime,
-    parseDateSafe,
-    initTheme,
-    hideCurrentNav,
-    // Estado / due helpers
-    estadoClass,
-    stateClass,
-    dueStatus,
-    dueClass,
-    // Modals
-    showModal,
-    showPlanningSavedModal
-  };
+  /* ── Status dot ── */
+  function setStatus(state, text) {
+    const dot  = $("#statusDot"),  lbl = $("#statusText");
+    const cols = { ok:"var(--green)", warn:"var(--amber)", err:"var(--red)", idle:"var(--text3)" };
+    if (dot) dot.style.background = cols[state] || cols.idle;
+    if (lbl) lbl.textContent = text || "";
+  }
+
+  document.addEventListener("DOMContentLoaded", () => { initTheme(); initNav(); });
+
+  return { $, $$, escapeHtml, debounce, toast, showModal, showPlanningSavedModal,
+           formatDateShort: fmtDate, formatDateTime: fmtDateTime, parseDateSafe,
+           estadoClass, stateClass, dueClass, setStatus, initTheme, initNav };
 })();

@@ -1,312 +1,274 @@
-/* ============================================================
-   cerrar.js — Actualizar / Cerrar planificaciones  v2
-   ============================================================ */
+/* cerrar.js v3 — auth DNI + tareas + email modal */
 (() => {
-  /* ── Elementos DOM ── */
-  const $area        = document.getElementById("area");
-  const $sol         = document.getElementById("solicitante");
-  const $dni         = document.getElementById("dni");
-  const $dni2        = document.getElementById("dni2");
-  const $dniRegister = document.getElementById("dniRegister");
-  const $authMsg     = document.getElementById("authMsg");
-  const $btnReload   = document.getElementById("btnReload");
-  const $tbody       = document.getElementById("tbody");
-  const $filterEstado= document.getElementById("filterEstado");
-  const $btnCancelClose = document.getElementById("btnCancelClose");
-
-  /* Modal de detalle */
-  const detailModal      = document.getElementById("detailModal");
-  const detailTitle      = document.getElementById("detailTitle");
-  const detailContent    = document.getElementById("detailContent");
-  const detailForm       = document.getElementById("detailForm");
-  const detailObservacion= document.getElementById("detailObservacion");
-  const detailEstado     = document.getElementById("detailEstado");
-  const detailMsg        = document.getElementById("detailMsg");
-  const btnCancelDetail  = document.getElementById("btnCancelDetail");
-
-  /* Modal de registro de email */
-  const emailModal   = document.getElementById("emailModal");
-  const $emailInput  = document.getElementById("emailInput");
-  const emailForm    = document.getElementById("emailForm");
-  const emailMsg     = document.getElementById("emailMsg");
-  const btnSkipEmail = document.getElementById("btnSkipEmail");
-
-  /* Estado global */
-  const state = {
-    cfg: null, authed: false,
-    area: "", solicitante: "", dni: "",
-    allRows: [],
-    hasEmail: false
-  };
-
-  /* ── Helpers ── */
-  function setMsg(el, text, type) {
-    if (!el) return;
-    el.textContent = text || "";
-    el.classList.remove("ok", "warn", "err");
-    if (type) el.classList.add(type);
+  const $ = id => document.getElementById(id);
+  function esc(s) { return UI.escapeHtml(s); }
+  function setMsg(el, t, type) { if (!el) return; el.textContent = t||""; el.className = "msg" + (type?" "+type:""); }
+  function isValidDni(v) { return /^\d{8}$/.test(String(v||"").trim()); }
+  function fmtD(v) {
+    if (!v) return "—";
+    if (/^\d{2}\/\d{2}\/\d{4}/.test(String(v))) return String(v).substring(0,10);
+    const d = new Date(v); return isNaN(d) ? String(v) : d.toLocaleDateString("es-PE");
   }
+  function isPending(e) { return /pendiente|pausado/i.test(e||""); }
 
-  function isValidDni(v) { return /^\d{8}$/.test(String(v || "").trim()); }
+  const STATE = { cfg:null, authed:false, area:"", sol:"", dni:"", rows:[], hasEmail:false, currentFilter:"active" };
 
-  function fmtDateOnly(v) {
-    if (!v) return "";
-    if (/^\d{2}\/\d{2}\/\d{4}/.test(v)) return v.substring(0, 10);
-    const dt = new Date(v);
-    if (isNaN(dt.getTime())) return String(v);
-    return dt.toLocaleDateString("es-PE");
-  }
-
-  function estadoClass(estado) {
-    const s = String(estado || "").toLowerCase();
-    if (/finaliz|conclu/.test(s)) return "badge-ok";
-    if (/pendiente/.test(s))      return "badge-warn";
-    if (/paus|suspend/.test(s))   return "badge-info";
-    if (/anul|cancel/.test(s))    return "badge-bad";
-    return "";
-  }
-
-  function isPending(estado) { return /pendiente|pausado/i.test(estado); }
-
-  /* ── Config ── */
+  /* ──────────── Config ──────────── */
   async function loadConfig() {
-    setMsg($authMsg, "Cargando configuración...", "warn");
+    setMsg($("authMsg"), "Cargando...", "warn");
     const res = await API.get("config");
-    const cfg = res && res.config ? res.config : res;
-    state.cfg = cfg;
-    $area.innerHTML = '<option value="">Selecciona un área</option>';
-    (cfg.areas || []).forEach(a => {
-      const opt = document.createElement("option");
-      opt.value = a; opt.textContent = a;
-      $area.appendChild(opt);
-    });
-    setMsg($authMsg, "", "");
+    STATE.cfg = res.config || res;
+    const areaEl = $("area");
+    areaEl.innerHTML = '<option value="">Selecciona un área</option>';
+    (STATE.cfg.areas || []).forEach(a => { const o = document.createElement("option"); o.value = o.textContent = a; areaEl.appendChild(o); });
+    setMsg($("authMsg"), "", "");
   }
 
-  function fillSolicitantes() {
-    const area = $area.value;
-    $sol.disabled = !area;
-    $sol.innerHTML = area
-      ? '<option value="">Selecciona un usuario</option>'
-      : '<option value="">Selecciona primero un área</option>';
-    if (!area || !state.cfg) return;
-    (state.cfg.usersByArea && state.cfg.usersByArea[area] || []).forEach(u => {
-      const opt = document.createElement("option");
-      opt.value = u.usuario; opt.textContent = u.usuario;
-      $sol.appendChild(opt);
+  function fillSols() {
+    const solEl = $("solicitante"), area = $("area").value;
+    solEl.disabled = !area;
+    solEl.innerHTML = area ? '<option value="">Selecciona un usuario</option>' : '<option value="">Selecciona primero un área</option>';
+    if (!area || !STATE.cfg) return;
+    (STATE.cfg.usersByArea?.[area] || []).forEach(u => {
+      const o = document.createElement("option"); o.value = o.textContent = u.usuario; solEl.appendChild(o);
     });
   }
 
-  /* ── Auth flow ── */
-  async function handleAuthSubmit(e) {
+  /* ──────────── Auth ──────────── */
+  async function handleAuth(e) {
     e.preventDefault();
-    const area = $area.value, sol = $sol.value, dni = $dni.value.trim();
-    if (!area || !sol) return setMsg($authMsg, "Selecciona Área y Usuario.", "err");
-    if (!isValidDni(dni)) return setMsg($authMsg, "La contraseña (DNI) debe tener 8 dígitos.", "err");
+    const area = $("area").value, sol = $("solicitante").value, dni = $("dni").value.trim();
+    if (!area || !sol) return setMsg($("authMsg"), "Selecciona Área y Usuario.", "err");
+    if (!isValidDni(dni)) return setMsg($("authMsg"), "La contraseña (DNI) debe tener 8 dígitos.", "err");
 
-    if (!$dniRegister.classList.contains("hidden")) {
-      const ok = await doRegisterDni(area, sol, dni);
-      if (!ok) return;
+    /* Si registro visible, validar y guardar DNI primero */
+    if (!$("dniRegister").classList.contains("hidden")) {
+      const ok = await doRegister(area, sol, dni); if (!ok) return;
     }
 
-    setMsg($authMsg, "Validando...", "warn");
+    setMsg($("authMsg"), "Validando...", "warn");
     let res;
     try { res = await API.get("listMine", { area, usuario: sol, dni }); }
-    catch (_) { return setMsg($authMsg, "Error de conexión.", "err"); }
+    catch { return setMsg($("authMsg"), "Error de conexión.", "err"); }
 
-    if (res && res.requireRegisterDni) {
-      $dniRegister.classList.remove("hidden");
-      return setMsg($authMsg,
-        "⚠️ Este usuario no tiene contraseña registrada. Ingresa tu DNI (8 dígitos) dos veces para registrarlo.",
-        "warn");
+    if (res?.requireRegisterDni) {
+      $("dniRegister").classList.remove("hidden");
+      return setMsg($("authMsg"), "⚠️ Primer ingreso: registra tu DNI ingresándolo dos veces.", "warn");
     }
-    if (!res || res.ok !== true) {
-      return setMsg($authMsg, (res && (res.error || res.message)) || "No se pudo validar.", "err");
-    }
+    if (!res?.ok) return setMsg($("authMsg"), res?.error || "Contraseña incorrecta.", "err");
 
-    $dniRegister.classList.add("hidden");
-    state.authed = true; state.area = area; state.solicitante = sol; state.dni = dni;
-    state.hasEmail = res.hasEmail || false;
-    setMsg($authMsg, "✅ Acceso correcto.", "ok");
-    state.allRows = res.rows || [];
-    renderTable();
-    if (!state.hasEmail) showEmailModal();
+    /* Autenticado */
+    $("dniRegister").classList.add("hidden");
+    Object.assign(STATE, { authed:true, area, sol, dni, rows: res.rows||[], hasEmail: res.hasEmail||false });
+    setMsg($("authMsg"), "✅ Ingreso correcto.", "ok");
+    renderTasksPanel();
+    if (!STATE.hasEmail) showEmailModal();
   }
 
-  async function doRegisterDni(area, sol, dni) {
-    const dni2 = ($dni2 && $dni2.value || "").trim();
-    if (!isValidDni(dni) || !isValidDni(dni2)) {
-      setMsg($authMsg, "Ambos campos deben tener 8 dígitos.", "err"); return false;
-    }
-    if (dni !== dni2) { setMsg($authMsg, "Los DNI no coinciden.", "err"); return false; }
-    setMsg($authMsg, "Registrando contraseña...", "warn");
+  async function doRegister(area, sol, dni) {
+    const dni2 = ($("dni2")?.value||"").trim();
+    if (!isValidDni(dni2)) { setMsg($("authMsg"), "Confirma el DNI con 8 dígitos.", "err"); return false; }
+    if (dni !== dni2)       { setMsg($("authMsg"), "Los DNI no coinciden.", "err"); return false; }
+    setMsg($("authMsg"), "Registrando contraseña...", "warn");
     try {
-      const res = await API.get("registerDni", { area, usuario: sol, dni });
-      if (!res || res.ok !== true) { setMsg($authMsg, (res && res.error) || "No se pudo registrar.", "err"); return false; }
-      $dniRegister.classList.add("hidden");
+      const r = await API.get("registerDni", { area, usuario: sol, dni });
+      if (!r?.ok) { setMsg($("authMsg"), r?.error||"Error al registrar.", "err"); return false; }
+      $("dniRegister").classList.add("hidden");
       return true;
-    } catch (_) { setMsg($authMsg, "Error al registrar.", "err"); return false; }
+    } catch { setMsg($("authMsg"), "Error al registrar.", "err"); return false; }
   }
 
-  /* ── Tabla ── */
-  function renderTable() {
-    const filter = ($filterEstado && $filterEstado.value) || "active";
-    let rows = state.allRows;
-    if (filter === "active") rows = rows.filter(r => isPending(r.estado));
-    else if (filter === "done") rows = rows.filter(r => !isPending(r.estado));
+  /* ──────────── Render tasks panel ──────────── */
+  function renderTasksPanel() {
+    const panel = $("tasksPanel");
+    const initials = STATE.sol.split(" ").slice(0,2).map(w=>w[0]).join("");
+
+    panel.innerHTML = `
+      <div class="user-header">
+        <div class="user-avatar">${esc(initials)}</div>
+        <div>
+          <div class="user-name">${esc(STATE.sol)}</div>
+          <div class="user-area">${esc(STATE.area)}</div>
+        </div>
+        <button class="btn btn-sm" style="margin-left:auto;" id="btnLogout">Salir</button>
+      </div>
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-f="active">Activas</button>
+        <button class="filter-tab" data-f="done">Cerradas</button>
+        <button class="filter-tab" data-f="all">Todas</button>
+      </div>
+      <div id="taskList"></div>
+    `;
+
+    $("btnLogout")?.addEventListener("click", logout);
+    panel.querySelectorAll(".filter-tab").forEach(btn => {
+      btn.addEventListener("click", () => {
+        panel.querySelectorAll(".filter-tab").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        STATE.currentFilter = btn.dataset.f;
+        renderTaskList();
+      });
+    });
+    renderTaskList();
+  }
+
+  function renderTaskList() {
+    const list = $("taskList"); if (!list) return;
+    let rows = STATE.rows;
+    if (STATE.currentFilter === "active") rows = rows.filter(r => isPending(r.estado));
+    else if (STATE.currentFilter === "done") rows = rows.filter(r => !isPending(r.estado));
 
     if (!rows.length) {
-      const msg = filter === "active"
-        ? "No tienes planificaciones activas. 🎉"
-        : "Sin registros en este filtro.";
-      $tbody.innerHTML = `<tr><td colspan="6" class="muted">${msg}</td></tr>`;
+      list.innerHTML = `<div class="card"><div class="card-inner" style="text-align:center;color:var(--text3);padding:30px 16px;">
+        <div style="font-size:32px;margin-bottom:10px;">${STATE.currentFilter==='active'?'🎉':'📂'}</div>
+        <div class="text-sm">${STATE.currentFilter==='active'?'Sin tareas activas.':'Sin registros cerrados.'}</div>
+      </div></div>`;
       return;
     }
 
-    $tbody.innerHTML = "";
-    rows.forEach(r => {
-      const isPend = isPending(r.estado);
-      const labShort = (r.labores || "").length > 45
-        ? (r.labores || "").substring(0, 45) + "…" : (r.labores || "");
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td><b>${esc(r.id)}</b></td>
-        <td class="truncate" title="${esc(r.labores)}">${esc(labShort)}</td>
-        <td><span class="badge ${estadoClass(r.estado)}">${esc(r.estado)}</span></td>
-        <td>${esc(r.prioridad)}</td>
-        <td>${esc(fmtDateOnly(r.proyectado))}</td>
-        <td><button class="btn small${isPend?' primary':''}" data-id="${esc(r.id)}" data-action="detail">
-          ${isPend ? "✏️ Actualizar" : "👁 Ver"}
-        </button></td>
-      `;
-      $tbody.appendChild(tr);
-    });
-    $tbody.querySelectorAll("[data-action='detail']").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const plan = state.allRows.find(r => r.id === btn.dataset.id);
-        if (plan) openDetailModal(plan);
+    list.innerHTML = rows.map(r => {
+      const pend = isPending(r.estado);
+      return `
+        <div class="task-card${pend?'':' done'}" data-id="${esc(r.id)}" role="button" tabindex="0">
+          <div style="flex:1;min-width:0;">
+            <div class="task-id">${esc(r.id)}</div>
+            <div class="task-labor truncate">${esc(r.labores||"")}</div>
+            <div class="task-meta">📅 Proyectado: ${esc(fmtD(r.proyectado))} · ⭐ ${esc(r.prioridad)}</div>
+          </div>
+          <div class="task-right">
+            <span class="badge ${UI.estadoClass(r.estado)}">${esc(r.estado)}</span>
+            ${pend ? '<div class="task-date text-teal" style="margin-top:6px;font-size:11px;">Toca para actualizar</div>' : ""}
+          </div>
+        </div>`;
+    }).join("");
+
+    list.querySelectorAll(".task-card").forEach(card => {
+      card.addEventListener("click", () => {
+        const r = STATE.rows.find(x => x.id === card.dataset.id);
+        if (r) openDetail(r);
       });
     });
   }
 
-  function esc(s) { return UI ? UI.escapeHtml(s || "") : String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  /* ──────────── Modal detalle ──────────── */
+  function openDetail(plan) {
+    const pend = isPending(plan.estado);
+    $("detailTitle").textContent = plan.id;
+    $("detailSub").textContent   = plan.area + " · " + plan.solicitante;
+    $("detailIcon").textContent  = pend ? "✏️" : "👁";
+    if ($("detailEstado")) $("detailEstado").value = "Finalizado";
+    if ($("detailObs"))    $("detailObs").value    = "";
+    setMsg($("detailMsg"), "", "");
 
-  /* ── Modal detalle ── */
-  function openDetailModal(plan) {
-    setMsg(detailMsg, "", "");
-    if (detailObservacion) detailObservacion.value = "";
-    if (detailEstado) detailEstado.value = "Finalizado";
-
-    const isPend = isPending(plan.estado);
-    detailTitle.textContent = `Planificación ${plan.id}`;
-
-    detailContent.innerHTML = `
-      <div class="modal-kv"><span>Área:</span> <b>${esc(plan.area)}</b></div>
-      <div class="modal-kv"><span>Prioridad:</span> <b>${esc(plan.prioridad)}</b></div>
-      <div class="modal-kv"><span>Estado:</span> <b class="badge ${estadoClass(plan.estado)}">${esc(plan.estado)}</b></div>
-      <div class="modal-kv"><span>Proyectado:</span> <b>${esc(fmtDateOnly(plan.proyectado))}</b></div>
-      ${plan.ejecutado ? `<div class="modal-kv"><span>Ejecutado:</span> <b>${esc(fmtDateOnly(plan.ejecutado))}</b></div>` : ""}
-      <div class="modal-kv"><span>Registrado:</span> <b>${esc(plan.fecha)}</b></div>
-      <div class="modal-section-label">📋 Labores</div>
-      <div class="obs-box">${esc(plan.labores || "Sin descripción")}</div>
-      ${plan.observacion ? `
-        <div class="modal-section-label">📝 Historial de observaciones</div>
-        <div class="obs-box obs-history">${esc(plan.observacion)}</div>` : ""}
+    $("detailContent").innerHTML = `
+      <div class="modal-kv"><span class="modal-kv-label">Estado</span><span class="modal-kv-val"><span class="badge ${UI.estadoClass(plan.estado)}">${esc(plan.estado)}</span></span></div>
+      <div class="modal-kv"><span class="modal-kv-label">Prioridad</span><span class="modal-kv-val">${esc(plan.prioridad)}</span></div>
+      <div class="modal-kv"><span class="modal-kv-label">Proyectado</span><span class="modal-kv-val">${esc(fmtD(plan.proyectado))}</span></div>
+      ${plan.ejecutado ? `<div class="modal-kv"><span class="modal-kv-label">Ejecutado</span><span class="modal-kv-val">${esc(fmtD(plan.ejecutado))}</span></div>` : ""}
+      <div class="modal-kv"><span class="modal-kv-label">Registrado</span><span class="modal-kv-val">${esc(fmtD(plan.fecha))}</span></div>
+      <div class="modal-section">📋 Labores</div>
+      <div class="obs-box">${esc(plan.labores||"")}</div>
+      ${plan.observacion ? `<div class="modal-section">📝 Historial</div><div class="obs-box obs-hist">${esc(plan.observacion)}</div>` : ""}
     `;
 
-    const formSection = document.getElementById("detailFormSection");
-    const readonlyNote= document.getElementById("detailReadonlyNote");
-    if (formSection) formSection.style.display = isPend ? "" : "none";
-    if (readonlyNote) readonlyNote.style.display = isPend ? "none" : "";
-    if (detailForm) detailForm.dataset.planId = plan.id;
-    detailModal.classList.remove("hidden");
+    $("detailFormWrap").style.display = pend ? "" : "none";
+    $("detailReadonly").style.display  = pend ? "none" : "";
+
+    $("detailForm")?.dataset && ($("detailModal").dataset.planId = plan.id);
+    $("detailModal").classList.remove("hidden");
     document.body.style.overflow = "hidden";
   }
 
-  function closeDetailModal() {
-    detailModal.classList.add("hidden");
-    document.body.style.overflow = "";
-  }
+  function closeDetail() { $("detailModal").classList.add("hidden"); document.body.style.overflow = ""; }
 
-  btnCancelDetail && btnCancelDetail.addEventListener("click", closeDetailModal);
-  detailModal && detailModal.addEventListener("click", e => { if (e.target === detailModal) closeDetailModal(); });
-
-  detailForm && detailForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const id  = detailForm.dataset.planId;
-    const obs = detailObservacion && detailObservacion.value.trim();
-    const nuevoEstado = detailEstado && detailEstado.value;
-    if (!obs) return setMsg(detailMsg, "La nota/actualización es obligatoria.", "err");
-    setMsg(detailMsg, "Guardando...", "warn");
+  async function saveDetail() {
+    const id  = $("detailModal").dataset.planId;
+    const obs = $("detailObs")?.value.trim();
+    const ne  = $("detailEstado")?.value;
+    if (!obs) return setMsg($("detailMsg"), "La nota es obligatoria.", "err");
+    setMsg($("detailMsg"), "Guardando...", "warn");
+    $("btnSaveDetail").disabled = true;
     try {
-      const res = await API.get("close", { id, area: state.area, usuario: state.solicitante, dni: state.dni, nuevoEstado, note: obs });
-      if (!res || !res.ok) throw new Error((res && res.error) || "Error al actualizar");
-      setMsg(detailMsg, "✅ Actualizado correctamente.", "ok");
-      const idx = state.allRows.findIndex(r => r.id === id);
+      const r = await API.get("close", { id, area:STATE.area, usuario:STATE.sol, dni:STATE.dni, nuevoEstado:ne, note:obs });
+      if (!r?.ok) throw new Error(r?.error||"Error");
+      setMsg($("detailMsg"), "✅ Guardado correctamente.", "ok");
+      const idx = STATE.rows.findIndex(x => x.id === id);
       if (idx >= 0) {
-        state.allRows[idx].estado = nuevoEstado;
+        STATE.rows[idx].estado = ne;
         const today = new Date().toLocaleDateString("es-PE");
-        const line  = "[" + today + "] " + state.solicitante + ": " + obs;
-        state.allRows[idx].observacion = state.allRows[idx].observacion
-          ? state.allRows[idx].observacion + "\n" + line : line;
+        STATE.rows[idx].observacion = (STATE.rows[idx].observacion
+          ? STATE.rows[idx].observacion + "\n" : "") + `[${today}] ${STATE.sol}: ${obs}`;
       }
-      setTimeout(() => { closeDetailModal(); renderTable(); }, 700);
-    } catch (err) { setMsg(detailMsg, err.message || "Error al guardar", "err"); }
-  });
+      setTimeout(() => { closeDetail(); renderTaskList(); }, 700);
+    } catch (err) { setMsg($("detailMsg"), err.message||"Error", "err"); }
+    finally { $("btnSaveDetail").disabled = false; }
+  }
 
-  /* ── Modal email ── */
+  /* ──────────── Modal email ──────────── */
   function showEmailModal() {
-    if (!emailModal) return;
-    if ($emailInput) $emailInput.value = "";
-    setMsg(emailMsg, "", "");
-    emailModal.classList.remove("hidden");
+    if ($("emailInput")) $("emailInput").value = "";
+    setMsg($("emailMsg"), "", "");
+    $("emailModal").classList.remove("hidden");
     document.body.style.overflow = "hidden";
   }
+  function closeEmailModal() { $("emailModal").classList.add("hidden"); document.body.style.overflow = ""; }
 
-  function closeEmailModal() {
-    if (!emailModal) return;
-    emailModal.classList.add("hidden");
-    document.body.style.overflow = "";
-  }
-
-  btnSkipEmail && btnSkipEmail.addEventListener("click", closeEmailModal);
-  emailModal   && emailModal.addEventListener("click", e => { if (e.target === emailModal) closeEmailModal(); });
-
-  emailForm && emailForm.addEventListener("submit", async (e) => {
+  async function saveEmail(e) {
     e.preventDefault();
-    const email = $emailInput && $emailInput.value.trim();
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-      return setMsg(emailMsg, "Ingresa un correo válido.", "err");
-    setMsg(emailMsg, "Registrando correo...", "warn");
+    const email = $("emailInput")?.value.trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setMsg($("emailMsg"), "Ingresa un correo válido.", "err");
+    setMsg($("emailMsg"), "Registrando...", "warn");
     try {
-      const res = await API.get("registerEmail", { area: state.area, usuario: state.solicitante, email });
-      if (!res || !res.ok) throw new Error((res && res.error) || "Error");
-      setMsg(emailMsg, "✅ Correo registrado. Serás agregado al calendario del área.", "ok");
-      state.hasEmail = true;
+      const r = await API.get("registerEmail", { area:STATE.area, usuario:STATE.sol, email });
+      if (!r?.ok) throw new Error(r?.error||"Error");
+      setMsg($("emailMsg"), "✅ Correo registrado. Serás añadido al calendario del área.", "ok");
+      STATE.hasEmail = true;
       setTimeout(closeEmailModal, 2000);
-    } catch (err) { setMsg(emailMsg, err.message || "Error", "err"); }
-  });
-
-  /* ── Reload ── */
-  async function reloadAll() {
-    Object.assign(state, { authed: false, area: "", solicitante: "", dni: "", allRows: [], hasEmail: false });
-    $dni.value = "";
-    if ($dni2) $dni2.value = "";
-    $dniRegister.classList.add("hidden");
-    $area.value = ""; fillSolicitantes();
-    $tbody.innerHTML = `<tr><td colspan="6" class="muted">Ingresa para ver tus registros.</td></tr>`;
-    setMsg($authMsg, "", "");
-    await loadConfig();
+    } catch (err) { setMsg($("emailMsg"), err.message||"Error", "err"); }
   }
 
-  /* ── Init ── */
+  /* ──────────── Logout ──────────── */
+  function logout() {
+    Object.assign(STATE, { authed:false, area:"", sol:"", dni:"", rows:[], hasEmail:false });
+    $("dni").value = "";
+    if ($("dni2")) $("dni2").value = "";
+    $("dniRegister").classList.add("hidden");
+    $("area").value = ""; fillSols();
+    setMsg($("authMsg"), "", "");
+    $("tasksPanel").innerHTML = `
+      <div class="card">
+        <div class="card-inner" style="text-align:center;color:var(--text3);padding:40px 16px;">
+          <div style="font-size:40px;margin-bottom:12px;">🔒</div>
+          <div class="section-title" style="color:var(--text3);">Ingresa para ver tus tareas</div>
+          <div class="text-sm text-muted mt-8">Selecciona tu área, usuario e ingresa tu contraseña.</div>
+        </div>
+      </div>`;
+  }
+
+  /* ──────────── Init ──────────── */
   document.addEventListener("DOMContentLoaded", async () => {
-    try { await loadConfig(); } catch (_) { setMsg($authMsg, "Error cargando configuración.", "err"); }
-    fillSolicitantes();
-    $tbody.innerHTML = `<tr><td colspan="6" class="muted">Ingresa para ver tus registros.</td></tr>`;
-    $area.addEventListener("change", fillSolicitantes);
-    document.getElementById("authForm") && document.getElementById("authForm").addEventListener("submit", handleAuthSubmit);
-    $btnReload && $btnReload.addEventListener("click", reloadAll);
-    $filterEstado && $filterEstado.addEventListener("change", renderTable);
+    await loadConfig();
+    $("area")?.addEventListener("change", fillSols);
+    $("authForm")?.addEventListener("submit", handleAuth);
+    $("btnReload")?.addEventListener("click", async () => { logout(); await loadConfig(); });
+
+    /* Detail modal events */
+    $("btnCancelDetail")?.addEventListener("click", closeDetail);
+    $("btnCancelDetail2")?.addEventListener("click", closeDetail);
+    $("btnSaveDetail")?.addEventListener("click", saveDetail);
+    $("detailModal")?.addEventListener("click", e => { if (e.target === $("detailModal")) closeDetail(); });
+
+    /* Email modal events */
+    $("btnSkipEmail")?.addEventListener("click", closeEmailModal);
+    $("emailForm")?.addEventListener("submit", saveEmail);
+    $("emailModal")?.addEventListener("click", e => { if (e.target === $("emailModal")) closeEmailModal(); });
+
+    /* ESC para cerrar modales */
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") {
+        if (!$("detailModal").classList.contains("hidden")) closeDetail();
+        if (!$("emailModal").classList.contains("hidden")) closeEmailModal();
+      }
+    });
   });
 })();

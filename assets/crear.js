@@ -1,221 +1,134 @@
-// crear.js — Versión final con modal de éxito y fecha correcta
+/* crear.js v3 — fix fechas + email sin registro */
 document.addEventListener("DOMContentLoaded", () => {
-  // Elementos
-  const area = document.getElementById("area");
-  const solicitante = document.getElementById("solicitante");
-  const correo = document.getElementById("correo");
-  const correoContainer = document.getElementById("correo-container");
-  const prioridad = document.getElementById("prioridad");
-  const proyectado = document.getElementById("proyectado");
-  const labores = document.getElementById("labores");
-  const observacion = document.getElementById("observacion");
-  const chars = document.getElementById("chars");
-  const form = document.getElementById("taskForm");
-  const submitBtn = document.getElementById("submitBtn");
-  const resetBtn = document.getElementById("resetBtn");
-  const msg = document.getElementById("msg");
-  const statusDot = document.getElementById("statusDot");
-  const statusText = document.getElementById("statusText");
+  const areaEl     = document.getElementById("area");
+  const solEl      = document.getElementById("solicitante");
+  const correoEl   = document.getElementById("correo");
+  const emailGroup = document.getElementById("emailGroup");
+  const priorEl    = document.getElementById("prioridad");
+  const proyEl     = document.getElementById("proyectado");
+  const labEl      = document.getElementById("labores");
+  const obsEl      = document.getElementById("observacion");
+  const charCount  = document.getElementById("charCount");
+  const form       = document.getElementById("taskForm");
+  const submitBtn  = document.getElementById("submitBtn");
+  const resetBtn   = document.getElementById("resetBtn");
+  const msgEl      = document.getElementById("msg");
 
   let CONFIG = null;
 
-  // === Helpers ===
-  function setTopStatus(state, text) {
-    const colors = {
-      ok: "rgba(34,197,94,.9)",
-      warn: "rgba(250,204,21,.9)",
-      err: "rgba(239,68,68,.9)",
-      idle: "rgba(148,163,184,.7)"
-    };
-    statusDot.style.background = colors[state] || colors.idle;
-    statusText.textContent = text;
+  function setMsg(t, type) {
+    msgEl.textContent = t || "";
+    msgEl.className = "msg" + (type ? " " + type : "");
   }
 
-  function populateSelect(selectId, items, placeholder = "Selecciona...") {
-    const sel = document.getElementById(selectId);
-    if (!sel) return;
-    sel.innerHTML = `<option value="" disabled selected>${placeholder}</option>`;
-    items.forEach(item => {
-      const opt = document.createElement("option");
-      opt.value = item;
-      opt.textContent = item;
-      sel.appendChild(opt);
-    });
-  }
+  /* ── Flatpickr ── */
+  const fp = flatpickr(proyEl, {
+    enableTime: true, dateFormat: "d/m/Y H:i", time_24hr: true,
+    locale: {
+      firstDayOfWeek: 1,
+      weekdays: { shorthand:["DO","LU","MA","MI","JU","VI","SA"], longhand:["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"] },
+      months: { shorthand:["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Set","Oct","Nov","Dic"], longhand:["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"] }
+    }
+  });
 
-  function updateChars() {
-    chars.textContent = (labores.value || "").length;
-  }
-
-  // === Conversión segura a ISO ===
-  function toIsoDate(str) {
+  /* Convierte "dd/mm/yyyy HH:mm" → ISO "yyyy-mm-ddTHH:mm" */
+  function toIso(str) {
     if (!str) return "";
-    // Si ya es ISO: "2026-02-11T12:00"
-    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(str)) return str;
-    
-    // Si es "11/02/2026 12:00"
-    const [datePart, timePart] = str.split(" ");
-    const [d, m, y] = datePart.split("/").map(Number);
-    const h = timePart ? Number(timePart.split(":")[0]) : 10;
-    const i = timePart ? Number(timePart.split(":")[1]) : 0;
-    return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}T${String(h).padStart(2,'0')}:${String(i).padStart(2,'0')}`;
+    const m = str.match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})$/);
+    if (m) return `${m[3]}-${m[2]}-${m[1]}T${m[4]}:${m[5]}`;
+    return str;
   }
 
-  // === Modal de éxito ===
-  function showSuccessModal(id, user) {
-    const overlay = document.createElement("div");
-    overlay.className = "modal-overlay";
-    overlay.innerHTML = `
-      <div class="modal">
-        <div class="modal-icon"><span>✓</span></div>
-        <h2 class="modal-title">¡Guardado exitosamente!</h2>
-        <div class="modal-sub">Tu planificación está registrada</div>
-        <div class="modal-body">
-          <div class="modal-kv"><span>ID:</span> <b>${id}</b></div>
-          <div class="modal-kv"><span>Usuario:</span> <b>${user}</b></div>
-        </div>
-        <div class="modal-actions">
-          <button class="btn primary" id="modalOk">Aceptar</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-
-    const btn = overlay.querySelector("#modalOk");
-    btn.addEventListener("click", () => {
-      overlay.remove();
-    });
-
-    setTimeout(() => btn.focus(), 100);
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") {
-        overlay.remove();
-      }
-    }, { once: true });
-  }
-
-  // === Cargar configuración ===
+  /* ── Load config ── */
   async function loadConfig() {
-    setTopStatus("idle", "Cargando...");
+    UI.setStatus("idle", "Cargando...");
     try {
       const res = await API.get("config");
-      if (!res.ok) throw new Error(res.error || "Error al cargar configuración");
-      
+      if (!res.ok) throw new Error(res.error || "Error config");
       CONFIG = res.config;
-      
-      populateSelect("area", CONFIG.areas || [], "Selecciona un área");
-      populateSelect("prioridad", CONFIG.prioridades || [], "Selecciona prioridad");
-      
-      setTopStatus("ok", "Listo");
+      /* Áreas */
+      areaEl.innerHTML = '<option value="" disabled selected>Selecciona un área</option>';
+      (CONFIG.areas || []).forEach(a => { const o = document.createElement("option"); o.value = o.textContent = a; areaEl.appendChild(o); });
+      /* Prioridades */
+      priorEl.innerHTML = '<option value="" disabled selected>Selecciona prioridad</option>';
+      (CONFIG.prioridades || []).forEach(p => { const o = document.createElement("option"); o.value = o.textContent = p; priorEl.appendChild(o); });
+      UI.setStatus("ok", "Listo");
     } catch (err) {
-      setTopStatus("err", "Error");
-      console.error("loadConfig error:", err);
-      alert("Error al cargar configuración: " + err.message);
+      UI.setStatus("err", "Error"); alert("Error al cargar configuración: " + err.message);
     }
   }
 
-  // === Eventos ===
-  area.addEventListener("change", () => {
-    if (!CONFIG) return;
-    const users = CONFIG.usersByArea?.[area.value] || [];
-    populateSelect("solicitante", users.map(u => u.usuario), "Selecciona solicitante");
-    solicitante.disabled = users.length === 0;
-    correoContainer.style.display = "none";
-    correo.value = "";
+  /* ── Area change ── */
+  areaEl.addEventListener("change", () => {
+    const users = CONFIG?.usersByArea?.[areaEl.value] || [];
+    solEl.innerHTML = '<option value="" disabled selected>Selecciona un solicitante</option>';
+    users.forEach(u => { const o = document.createElement("option"); o.value = o.textContent = u.usuario; solEl.appendChild(o); });
+    solEl.disabled = !users.length;
+    emailGroup.style.display = "none";
+    if (correoEl) correoEl.value = "";
   });
 
-  solicitante.addEventListener("change", () => {
-    if (!CONFIG || !area.value) return;
-    const users = CONFIG.usersByArea?.[area.value] || [];
-    const user = users.find(u => u.usuario === solicitante.value);
-    const email = user ? (user.email || "") : "";
-    const hasEmail = user ? !!user.hasEmail : false;
-
-    correo.value = email;
-    correoContainer.style.display = "block";
-
-    if (!hasEmail) {
-      correo.removeAttribute("disabled");
-      correo.placeholder = "Ingresa tu correo (opcional, para el calendario)";
-      correo.style.border = "1px solid rgba(250,204,21,.5)";
-      correo.title = "No tienes correo registrado. Al guardarlo, se registrará automáticamente.";
+  /* ── Solicitante change ── */
+  solEl.addEventListener("change", () => {
+    if (!CONFIG || !areaEl.value) return;
+    const users = CONFIG.usersByArea?.[areaEl.value] || [];
+    const user  = users.find(u => u.usuario === solEl.value);
+    /* Si no tiene email registrado → mostrar campo */
+    if (user && !user.hasEmail) {
+      emailGroup.style.display = "block";
+      if (correoEl) { correoEl.value = ""; correoEl.removeAttribute("disabled"); }
+    } else if (user && user.email) {
+      /* Tiene email, mostrarlo readonly */
+      emailGroup.style.display = "block";
+      if (correoEl) { correoEl.value = user.email; correoEl.setAttribute("disabled", "disabled"); }
+      const badge = emailGroup.querySelector(".email-new-badge");
+      if (badge) { badge.textContent = "✓ Registrado"; badge.style.background = "var(--green-dim)"; badge.style.color = "var(--green)"; badge.style.borderColor = "rgba(74,222,128,.3)"; }
     } else {
-      correo.setAttribute("disabled", "disabled");
-      correo.placeholder = "Se completa al elegir solicitante";
-      correo.style.border = "";
-      correo.title = "";
+      emailGroup.style.display = "none";
     }
   });
 
-  labores.addEventListener("input", updateChars);
+  labEl.addEventListener("input", () => { charCount.textContent = labEl.value.length + " car."; });
 
-  // Inicializar flatpickr
-  if (proyectado) {
-    flatpickr(proyectado, {
-      enableTime: true,
-      dateFormat: "d/m/Y H:i",
-      time_24hr: true,
-      locale: {
-        firstDayOfWeek: 1,
-        weekdays: {
-          shorthand: ["DO", "LU", "MA", "MI", "JU", "VI", "SA"],
-          longhand: ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"]
-        },
-        months: {
-          shorthand: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Set", "Oct", "Nov", "Dic"],
-          longhand: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
-        }
-      },
-      onChange: function(selectedDates, dateStr, instance) {
-        if (dateStr) {
-          const [datePart, timePart] = dateStr.split(" ");
-          const [d, m, y] = datePart.split("/").map(Number);
-          const [h, i] = timePart.split(":").map(Number);
-          const iso = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}T${String(h).padStart(2,'0')}:${String(i).padStart(2,'0')}`;
-          proyectado.dataset.isoValue = iso;
-        }
-      }
-    });
-  }
-
-  // Validación y envío
-  form.addEventListener("submit", async (e) => {
+  /* ── Submit ── */
+  form.addEventListener("submit", async e => {
     e.preventDefault();
-    
-    if (!area.value) { alert("Selecciona un Área."); return; }
-    if (!solicitante.value) { alert("Selecciona un Solicitante."); return; }
-    if (!prioridad.value) { alert("Selecciona una Prioridad."); return; }
-    if (!proyectado.value) { alert("Selecciona una Fecha proyectada."); return; }
-    if (!labores.value.trim() || labores.value.trim().length < 3) { 
-      alert("Describe la labor (mín. 3 caracteres)."); 
-      return; 
-    }
+    if (!areaEl.value)    { setMsg("Selecciona un Área.", "err"); return; }
+    if (!solEl.value)     { setMsg("Selecciona un Solicitante.", "err"); return; }
+    if (!priorEl.value)   { setMsg("Selecciona una Prioridad.", "err"); return; }
+    if (!proyEl.value)    { setMsg("Selecciona una Fecha proyectada.", "err"); return; }
+    if (!labEl.value.trim() || labEl.value.trim().length < 3) { setMsg("Describe la labor (mín. 3 caracteres).", "err"); return; }
+
+    submitBtn.disabled = true;
+    UI.setStatus("idle", "Guardando...");
+    setMsg("Guardando...", "warn");
+
+    const isoFecha = toIso(proyEl.value);
+
+    const payload = {
+      area:          areaEl.value.trim(),
+      solicitante:   solEl.value.trim(),
+      email:         (correoEl && !correoEl.disabled ? correoEl.value.trim() : ""),
+      prioridad:     priorEl.value.trim(),
+      labores:       labEl.value.trim(),
+      proyectadoDate:isoFecha,
+      observacion:   (obsEl.value || "").trim()
+    };
 
     try {
-      submitBtn.disabled = true;
-      setTopStatus("idle", "Guardando...");
-
-      const payload = {
-        area: area.value.trim(),
-        solicitante: solicitante.value.trim(),
-        email: correo.value.trim(),
-        prioridad: prioridad.value.trim(),
-        labores: labores.value.trim(),
-        estado: "Pendiente",
-        proyectadoDate: toIsoDate(proyectado.dataset.isoValue || proyectado.value),
-        observacion: (observacion.value || "").trim()
-      };
-
       const res = await API.post("create", payload);
-      showSuccessModal(res.id, payload.solicitante);
+      if (!res.ok) throw new Error(res.error || "Error al guardar");
+      UI.showPlanningSavedModal({ id: res.id, user: payload.solicitante });
       form.reset();
-      correoContainer.style.display = "none";
-      updateChars();
-      setTopStatus("ok", "Listo");
-    } catch (e) {
-      alert("❌ Error: " + (e.message || "desconocido"));
-      console.error(e);
-      setTopStatus("err", "Error");
+      emailGroup.style.display = "none";
+      charCount.textContent = "0 car.";
+      solEl.disabled = true;
+      solEl.innerHTML = '<option value="" disabled selected>Selecciona primero un área</option>';
+      setMsg("", "");
+      UI.setStatus("ok", "Guardado");
+    } catch (err) {
+      setMsg("❌ " + (err.message || "Error desconocido"), "err");
+      UI.setStatus("err", "Error");
     } finally {
       submitBtn.disabled = false;
     }
@@ -223,13 +136,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   resetBtn.addEventListener("click", () => {
     form.reset();
-    correoContainer.style.display = "none";
-    updateChars();
-    msg.textContent = "";
-    setTopStatus("ok", "Listo");
+    emailGroup.style.display = "none";
+    charCount.textContent = "0 car.";
+    setMsg("", "");
+    UI.setStatus("ok", "Listo");
   });
 
-  // Iniciar
-  updateChars();
   loadConfig();
 });

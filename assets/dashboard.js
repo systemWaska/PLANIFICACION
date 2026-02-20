@@ -1,154 +1,107 @@
-// Página: DASHBOARD
-// ------------------------------------------------------------
-// Aquí se resumen métricas y alertas (por vencer / vencidos).
-// Nota: initTheme() y hideCurrentNav() no se llaman aquí
-// porque ui.js ya los ejecuta automáticamente.
-const { $, toast, escapeHtml, formatDateTime, stateClass, dueClass } = UI;
+/* dashboard.js v3 */
+const { $, escapeHtml: esc, estadoClass, dueClass, parseDateSafe } = UI;
 
-const kpiPendientes = $("#kpi1");
-const kpiConcluidos = $("#kpi2");
-const kpiTotal = $("#kpi3");
-const kpiPorVencer = $("#kpi4");
-const kpiVencidos = $("#kpi5");
-
-const topSolicitantes = $("#topSolicitantes");
-const topTiempos = $("#topTiempos");
-const alertsList = $("#alertsList");
-const dashRows = $("#dashRows");
-
-function setTopStatus(state, text) {
-  const dot = $("#statusDot");
-  const label = $("#statusText");
-  const colors = {
-    ok: "rgba(34,197,94,.9)",
-    warn: "rgba(250,204,21,.9)",
-    err: "rgba(239,68,68,.9)",
-    idle: "rgba(148,163,184,.7)"
-  };
-  dot.style.background = colors[state] || colors.idle;
-  label.textContent = text;
+function fmtD(v) {
+  if (!v) return "—";
+  if (/^\d{2}\/\d{2}\/\d{4}/.test(String(v))) return String(v).substring(0,10);
+  const d = new Date(v); return isNaN(d) ? String(v) : d.toLocaleDateString("es-PE");
 }
 
 function countBy(list, key) {
   const m = new Map();
-  list.forEach((r) => {
-    const v = String(r[key] || "").trim() || "—";
-    m.set(v, (m.get(v) || 0) + 1);
-  });
-  return [...m.entries()].sort((a, b) => b[1] - a[1]);
+  list.forEach(r => { const v = String(r[key]||"").trim()||"—"; m.set(v,(m.get(v)||0)+1); });
+  return [...m.entries()].sort((a,b) => b[1]-a[1]);
 }
 
-function parseDate(value) {
-  if (!value) return null;
-  const d = (value instanceof Date) ? value : new Date(value);
-  if (Number.isNaN(d.getTime())) return null;
-  return d;
+function renderBars(el, entries, max, color) {
+  el.innerHTML = entries.slice(0,8).map(([k,v]) => `
+    <div class="bar-item">
+      <div class="bar-label" title="${esc(k)}">${esc(k)}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/max*100)}%;background:${color||'var(--teal)'};"></div></div>
+      <div class="bar-count">${v}</div>
+    </div>`).join("") || `<div class="text-muted text-sm">Sin datos.</div>`;
 }
 
 async function load() {
-  setTopStatus("idle", "Cargando...");
-  // 7 columnas: +1 por "Fecha proyectada"
-  dashRows.innerHTML = `<tr><td colspan="7">Cargando...</td></tr>`;
-  alertsList.innerHTML = `<div class="msg">Cargando...</div>`;
+  UI.setStatus("idle", "Cargando...");
+  try {
+    const res = await API.get("list", { limit: 500 });
+    const rows = res.rows || [];
+    const now  = new Date();
+    const DONE = new Set(["Concluido","Finalizado","Anulado"]);
+    const W48  = 48 * 3600000;
 
-  const res = await API.get("list");
-  const rows = res.rows || [];
+    /* KPIs */
+    const pend = rows.filter(r => /pendiente/i.test(r.estado)).length;
+    const fin  = rows.filter(r => /finaliz|conclu/i.test(r.estado)).length;
+    let prox = 0, venc = 0;
+    const alertRows = [];
 
-  // --- KPIs ---
-  const total = rows.length;
-  const pendientes = rows.filter(r => r.estado === "Pendiente").length;
-  const concluidos = rows.filter(r => r.estado === "Concluido" || r.estado === "Finalizado").length;
+    rows.forEach(r => {
+      if (DONE.has(r.estado)) return;
+      const d = parseDateSafe(r.proyectado); if (!d) return;
+      const diff = d - now;
+      if (diff < 0)     { venc++; alertRows.push({...r, _d:d, _kind:"bad"}); }
+      else if (diff<=W48){ prox++; alertRows.push({...r, _d:d, _kind:"warn"}); }
+    });
 
-  // Alertas (UI): por vencer en 48h y vencidos
-  const now = new Date();
-  const DONE = new Set(["Concluido", "Finalizado", "Anulado"]);
-  const windowMs = 48 * 60 * 60 * 1000; // 48 horas
+    $("#kpi-pend").textContent = pend; $("#kpi-pend").classList.remove("loading");
+    $("#kpi-fin").textContent  = fin;  $("#kpi-fin").classList.remove("loading");
+    $("#kpi-prox").textContent = prox; $("#kpi-prox").classList.remove("loading");
+    $("#kpi-venc").textContent = venc; $("#kpi-venc").classList.remove("loading");
+    $("#kpi-tot").textContent  = rows.length; $("#kpi-tot").classList.remove("loading");
 
-  let porVencer = 0;
-  let vencidos = 0;
-
-  const alertRows = [];
-
-  rows.forEach(r => {
-    if (DONE.has(String(r.estado || ""))) return;
-    const due = parseDate(r.proyectado);
-    if (!due) return;
-
-    const diff = due.getTime() - now.getTime();
-    if (diff < 0) {
-      vencidos += 1;
-      alertRows.push({ ...r, _diff: diff, _due: due, _kind: "bad" });
-    } else if (diff <= windowMs) {
-      porVencer += 1;
-      alertRows.push({ ...r, _diff: diff, _due: due, _kind: "warn" });
-    }
-  });
-
-  kpiPendientes.textContent = `Pendientes: ${pendientes}`;
-  kpiConcluidos.textContent = `Concluidos: ${concluidos}`;
-  kpiTotal.textContent = `Total: ${total}`;
-  kpiPorVencer.textContent = `Por vencer (48h): ${porVencer}`;
-  kpiVencidos.textContent = `Vencidos: ${vencidos}`;
-
-  // --- Top solicitantes / tiempos ---
-  const topS = countBy(rows, "solicitante").slice(0, 8);
-  topSolicitantes.innerHTML = topS.length
-    ? topS.map(([k, v]) => `<div class="msg">• ${escapeHtml(k)}: ${v}</div>`).join("")
-    : "—";
-
-  const topT = countBy(rows, "tiempo").slice(0, 8);
-  topTiempos.innerHTML = topT.length
-    ? topT.map(([k, v]) => `<div class="msg">• ${escapeHtml(k)}: ${v}</div>`).join("")
-    : "—";
-
-  // --- Alertas list ---
-  alertRows.sort((a, b) => a._due.getTime() - b._due.getTime());
-  const topAlerts = alertRows.slice(0, 8);
-
-  alertsList.innerHTML = topAlerts.length
-    ? topAlerts.map(r => {
-        const kindClass = r._kind === "bad" ? "alert-bad" : "alert-warn";
-        return `
-          <div class="alert-item ${kindClass}">
-            <div class="alert-main">
-              <div class="alert-title">${escapeHtml(r.id || "")}</div>
-              <div class="alert-sub">${escapeHtml(r.area)} • ${escapeHtml(r.solicitante)}</div>
-            </div>
-            <div class="alert-side">
-              <div class="badge ${escapeHtml(stateClass(r.estado))}">${escapeHtml(r.estado)}</div>
-              <div class="alert-date">Vence: ${escapeHtml(formatDateTime(r.proyectado))}</div>
-            </div>
+    /* Alertas */
+    alertRows.sort((a,b) => a._d - b._d);
+    const alertEl = $("#alertsList");
+    alertEl.innerHTML = alertRows.slice(0,8).map(r => {
+      const isBad = r._kind === "bad";
+      const diffH = Math.abs(Math.round((r._d - now) / 3600000));
+      return `
+        <div class="alert-item ${isBad?'a-bad':'a-warn'}">
+          <div>
+            <div class="alert-id">${esc(r.id)}</div>
+            <div class="alert-who">${esc(r.area)} · ${esc(r.solicitante)}</div>
+            <div class="alert-meta">${esc((r.labores||"").substring(0,50))}</div>
           </div>
-        `;
-      }).join("")
-    : `<div class="msg">No hay alertas por ahora.</div>`;
+          <div style="text-align:right;flex-shrink:0;">
+            <span class="badge ${estadoClass(r.estado)}">${esc(r.estado)}</span>
+            <div class="alert-date" style="margin-top:4px;">${isBad?'Venció':'Vence'}: ${esc(fmtD(r.proyectado))}<br><span style="font-size:10px;">${diffH}h ${isBad?"atrás":"restantes"}</span></div>
+          </div>
+        </div>`;
+    }).join("") || `<div class="text-muted text-sm" style="padding:12px 0;">✅ Sin alertas activas.</div>`;
 
-  // --- Últimos registros (tabla) ---
-  // La API ya devuelve "últimos primero" (rows.reverse() en Apps Script)
-  const last = rows.slice(0, 12);
-  dashRows.innerHTML = last.length ? last.map((r) => {
-    const dueCls = dueClass(r.proyectado, r.estado);
-    return `
-      <tr class="${escapeHtml(dueCls)}">
-        <td>${escapeHtml(r.area)}</td>
-        <td>${escapeHtml(r.solicitante)}</td>
-        <td><span class="badge">${escapeHtml(r.prioridad)}</span></td>
-        <td><span class="badge ${escapeHtml(stateClass(r.estado))}">${escapeHtml(r.estado)}</span></td>
-        <td><span class="badge badge-time">${escapeHtml(r.tiempo)}</span></td>
-        <!-- Primero: fecha de registro (cuando se creó) -->
-        <td>${escapeHtml(formatDateTime((r.fechaRegistro || r.fecha)))}</td>
-        <!-- Segundo: fecha proyectada (registro + tiempo_estimado) -->
-        <td>${escapeHtml(formatDateTime(r.proyectado))}</td>
-      </tr>
-    `;
-  }).join("") : `<tr><td colspan="7">No hay registros.</td></tr>`;
+    /* Tops */
+    const topS = countBy(rows, "solicitante");
+    const topA = countBy(rows, "area");
+    const topE = countBy(rows, "estado");
+    const maxS = topS[0]?.[1] || 1;
+    const maxA = topA[0]?.[1] || 1;
+    const maxE = topE[0]?.[1] || 1;
 
-  setTopStatus("ok", "Conectado");
+    renderBars($("#topSolicitantes"), topS, maxS, "var(--violet)");
+    renderBars($("#topAreas"),        topA, maxA, "var(--amber)");
+    renderBars($("#byEstado"),        topE, maxE, "var(--teal)");
+
+    /* Tabla últimas */
+    const last = rows.slice(-10).reverse();
+    $("#dashRows").innerHTML = last.length ? last.map(r => `
+      <tr class="${dueClass(r.proyectado, r.estado)}">
+        <td class="td-id nowrap">${esc(r.id)}</td>
+        <td class="text-sm">${esc(r.area)}</td>
+        <td class="truncate td-title">${esc(r.solicitante)}</td>
+        <td><span class="badge ${estadoClass(r.estado)}">${esc(r.estado)}</span></td>
+        <td class="text-sm"><span class="badge badge-gray">${esc(r.prioridad)}</span></td>
+        <td class="nowrap text-sm">${esc(fmtD(r.proyectado))}</td>
+        <td class="nowrap text-sm">${esc(fmtD(r.fecha))}</td>
+      </tr>`).join("") : `<tr><td colspan="7" class="text-muted text-sm" style="text-align:center;padding:20px;">Sin registros.</td></tr>`;
+
+    UI.setStatus("ok", "Listo · " + rows.length + " registros");
+  } catch (err) {
+    UI.setStatus("err", "Error");
+    UI.toast(err.message || "Error al cargar", "err");
+    console.error(err);
+  }
 }
 
-load().catch((e) => {
-  setTopStatus("err", "Error");
-  toast(e.message || "Error", "err");
-  dashRows.innerHTML = `<tr><td colspan="7">Error cargando.</td></tr>`;
-  alertsList.innerHTML = `<div class="msg">Error cargando alertas.</div>`;
-});
+document.addEventListener("DOMContentLoaded", load);
