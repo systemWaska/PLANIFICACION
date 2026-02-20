@@ -3,40 +3,71 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Cerrar planificación</title>
-  <link rel="stylesheet" href="./assets/styles.css?v=20260129-5" />
+  <title>Cerrar / Actualizar planificación</title>
+  <link rel="stylesheet" href="./assets/styles.css?v=20260220-1" />
+  <style>
+    .filter-bar { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+    .filter-bar label { font-size:13px; color:var(--muted); white-space:nowrap; }
+    .filter-bar select { flex:1; max-width:200px; }
+    .badge-ok   { background:rgba(34,197,94,.18);  color:#4ade80; border-color:rgba(34,197,94,.3); }
+    .badge-warn { background:rgba(250,204,21,.18); color:#facc15; border-color:rgba(250,204,21,.3); }
+    .badge-info { background:rgba(99,102,241,.18); color:#818cf8; border-color:rgba(99,102,241,.3); }
+    .badge-bad  { background:rgba(239,68,68,.18);  color:#f87171; border-color:rgba(239,68,68,.3); }
+    .obs-box {
+      background:var(--card2); border:1px solid var(--border); border-radius:12px;
+      padding:10px 14px; font-size:13px; line-height:1.6; white-space:pre-wrap;
+      word-break:break-word; max-height:160px; overflow-y:auto;
+    }
+    .obs-history { font-size:12px; color:var(--muted); }
+    .modal-section-label { font-size:12px; color:var(--muted2); margin:12px 0 4px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+    .modal-kv { display:flex; gap:8px; margin-bottom:6px; font-size:14px; align-items:center; }
+    .modal-kv span { color:var(--muted); min-width:100px; }
+    td.truncate { max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .btn.small { padding:6px 12px; font-size:13px; }
+    .hint-box {
+      background:rgba(99,102,241,.10); border:1px solid rgba(99,102,241,.25);
+      border-radius:12px; padding:10px 14px; font-size:13px; color:var(--muted); margin-bottom:14px;
+    }
+    .readonly-note {
+      text-align:center; color:var(--muted); font-size:13px;
+      padding:14px; background:var(--card2); border-radius:10px; border:1px solid var(--border); margin-top:12px;
+    }
+  </style>
 </head>
 <body>
   <div class="bg-glow"></div>
-
   <header class="topbar">
     <div class="brand">
       <div class="logo" aria-hidden="true"></div>
       <div>
         <div class="title">Planificación</div>
-        <div class="subtitle">Cerrar • Actualizar estado</div>
+        <div class="subtitle">Cerrar · Actualizar estado</div>
       </div>
     </div>
     <nav class="nav">
-      <a class="btn" data-nav="home" href="./index.html">Inicio</a>
-      <a class="btn" data-nav="crear" href="./crear.html">Crear →</a>
-      <a class="btn" data-nav="ver" href="./ver.html">Ver →</a>
-      <a class="btn" data-nav="cerrar" href="./cerrar.html">Cerrar →</a>
-      <a class="btn" data-nav="dashboard" href="./dashboard.html">Dashboard →</a>
+      <a class="btn" href="./index.html">Inicio</a>
+      <a class="btn" href="./crear.html">Crear →</a>
+      <a class="btn" href="./ver.html">Ver →</a>
+      <a class="btn" href="./cerrar.html">Cerrar →</a>
+      <a class="btn" href="./dashboard.html">Dashboard →</a>
       <button class="icon-btn" id="themeToggle" title="Tema" aria-label="Cambiar tema">☀️</button>
     </nav>
   </header>
 
   <main class="shell">
     <section class="hero">
-      <h1>Cerrar planificación</h1>
-      <p>Elige tu área, tu nombre y valida con DNI. Luego podrás marcar como <b>Finalizado</b> y dejar una actualización.</p>
+      <h1>Mis planificaciones</h1>
+      <p>Elige tu área y nombre, ingresa tu DNI como contraseña y gestiona tus registros.</p>
     </section>
 
     <section class="card-pad">
       <div class="grid2">
-        <div class="card">
-          <h3>Ingreso</h3>
+        <div class="card" style="padding:24px;">
+          <h3>🔐 Ingreso</h3>
+          <div class="hint-box">
+            Tu <b>contraseña</b> es tu DNI de 8 dígitos.<br>
+            Si es tu primer ingreso, deberás registrarlo ingresándolo dos veces.
+          </div>
           <form id="authForm" class="form">
             <div class="field">
               <label for="area">Área</label>
@@ -44,113 +75,138 @@
                 <option value="">Selecciona un área</option>
               </select>
             </div>
-
             <div class="field">
               <label for="solicitante">Usuario</label>
               <select id="solicitante" required disabled>
                 <option value="">Selecciona primero un área</option>
               </select>
             </div>
-
             <div class="field">
-              <label for="dni">DNI (8 dígitos)</label>
-              <input id="dni" type="password" inputmode="numeric" maxlength="8" placeholder="••••••••" required />
-              <div class="hint" id="dniHint">Si el usuario no tiene DNI registrado, podrás registrarlo.</div>
+              <label for="dni">Contraseña (DNI 8 dígitos)</label>
+              <input id="dni" type="password" inputmode="numeric" maxlength="8" placeholder="••••••••" required autocomplete="off" />
             </div>
-
             <div id="dniRegister" class="hidden">
               <div class="field">
-                <label for="dni2">Confirmar DNI</label>
-                <input id="dni2" type="password" inputmode="numeric" maxlength="8" placeholder="••••••••" />
+                <label for="dni2">Confirmar DNI (solo primer ingreso)</label>
+                <input id="dni2" type="password" inputmode="numeric" maxlength="8" placeholder="••••••••" autocomplete="off" />
               </div>
             </div>
-
             <div class="actions">
               <button class="btn primary" type="submit" id="btnAuth">Ingresar</button>
-              <button class="btn" type="button" id="btnReload">Recargar</button>
+              <button class="btn" type="button" id="btnReload">↺ Recargar</button>
             </div>
-
             <div class="msg" id="authMsg" role="status" aria-live="polite"></div>
           </form>
         </div>
 
-        <div class="card">
-          <h3>Mis planificaciones</h3>
-          <div class="hint">Mostramos solo <b>Pendiente</b> y <b>Pausado</b>. Para cerrar, presiona “Finalizar”.</div>
+        <div class="card" style="padding:24px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <h3 style="margin:0;">📋 Mis registros</h3>
+          </div>
+          <div class="filter-bar">
+            <label>Filtrar:</label>
+            <select id="filterEstado">
+              <option value="active">Activas (Pendiente / Pausado)</option>
+              <option value="done">Finalizadas / Anuladas</option>
+              <option value="all">Todas</option>
+            </select>
+          </div>
           <div class="table-wrap">
             <table class="table" id="tbl">
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Prioridad</th>
+                  <th>Labores</th>
                   <th>Estado</th>
+                  <th>Prioridad</th>
                   <th>Proyectado</th>
-                  <th style="width:140px;">Acción</th>
+                  <th style="width:130px;">Acción</th>
                 </tr>
               </thead>
               <tbody id="tbody">
-                <tr><td colspan="5" class="muted">Ingresa para ver tus registros.</td></tr>
+                <tr><td colspan="6" class="muted">Ingresa para ver tus registros.</td></tr>
               </tbody>
             </table>
           </div>
         </div>
       </div>
-
-      <div class="card hidden" id="closeCard">
-        <h3>Finalizar planificación</h3>
-        <div class="muted" id="closeMeta"></div>
-        <form id="closeForm" class="form">
-          <input type="hidden" id="closeId" />
-          <div class="field">
-            <label for="updateText">Actualización (opcional)</label>
-            <textarea id="updateText" rows="4" placeholder="Ej: Se completó la migración. Queda pendiente validar accesos."></textarea>
-          </div>
-          <div class="actions">
-            <button class="btn primary" type="submit">Marcar como Finalizado</button>
-            <button class="btn" type="button" id="btnCancelClose">Cancelar</button>
-          </div>
-          <div class="msg" id="closeMsg" role="status" aria-live="polite"></div>
-        </form>
-      </div>
-
     </section>
   </main>
 
-  <!-- ✅ MODAL DE DETALLE (nuevo) -->
+  <!-- MODAL: Detalle / Actualizar -->
   <div class="modal-overlay hidden" id="detailModal">
-    <div class="modal" style="width: min(600px, 95vw);">
+    <div class="modal" style="width:min(640px,95vw); max-height:90vh; overflow-y:auto;">
       <div class="modal-icon"><span>📋</span></div>
-      <h2 class="modal-title" id="detailTitle">Detalles de la planificación</h2>
-      <div class="modal-body" id="detailContent">
-        <!-- Se llena dinámicamente -->
+      <h2 class="modal-title" id="detailTitle">Detalles</h2>
+      <div class="modal-body" id="detailContent"></div>
+      <div id="detailFormSection">
+        <h4 id="detailFormTitle" style="margin:16px 0 8px; font-size:15px; color:var(--muted);">Actualizar estado</h4>
+        <form id="detailForm">
+          <div class="field">
+            <label for="detailObservacion">Nota / Actualización <span style="color:var(--bad)">*</span></label>
+            <textarea id="detailObservacion" rows="3" placeholder="Ej: Se completó la tarea. Queda pendiente validar accesos."></textarea>
+          </div>
+          <div class="field">
+            <label for="detailEstado">Nuevo estado</label>
+            <select id="detailEstado">
+              <option value="Finalizado">✅ Finalizado</option>
+              <option value="Pausado">⏸ Pausado</option>
+              <option value="Anulado">❌ Anulado</option>
+              <option value="Pendiente">🕐 Pendiente</option>
+            </select>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn" id="btnCancelDetail">Cancelar</button>
+            <button type="submit" class="btn primary">Guardar cambios</button>
+          </div>
+        </form>
       </div>
-      <form id="detailForm">
-        <div class="field">
-          <label for="detailObservacion">Observación (opcional)</label>
-          <textarea id="detailObservacion" rows="3" placeholder="Ej: Se completó según lo planeado."></textarea>
-        </div>
-        <div class="field">
-          <label for="detailEstado">Nuevo estado</label>
-          <select id="detailEstado">
-            <option value="Finalizado">Finalizado</option>
-            <option value="Pausado">Pausado</option>
-            <option value="Anulado">Anulado</option>
-          </select>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn" id="btnCancelDetail">Cancelar</button>
-          <button type="submit" class="btn primary">Guardar cambios</button>
-        </div>
-      </form>
+      <div id="detailReadonlyNote" class="readonly-note" style="display:none;">
+        Este registro ya fue cerrado. Solo lectura.
+        <br><br>
+        <button type="button" class="btn" id="btnCancelDetail2">Cerrar</button>
+      </div>
       <div class="msg" id="detailMsg"></div>
     </div>
   </div>
 
-  <footer class="footer">Front: GitHub Pages • Back: Google Apps Script</footer>
+  <!-- MODAL: Registrar correo -->
+  <div class="modal-overlay hidden" id="emailModal">
+    <div class="modal" style="width:min(480px,95vw);">
+      <div class="modal-icon">📧</div>
+      <h2 class="modal-title">Registra tu correo</h2>
+      <p class="modal-sub">
+        No tienes correo registrado. Al registrarlo serás añadido al grupo de Google Calendario
+        de tu área y recibirás notificaciones de las planificaciones.
+      </p>
+      <form id="emailForm" class="form">
+        <div class="field">
+          <label for="emailInput">Correo electrónico</label>
+          <input id="emailInput" type="email" placeholder="tu@correo.com" autocomplete="email" />
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn" id="btnSkipEmail">Omitir por ahora</button>
+          <button type="submit" class="btn primary">Registrar correo</button>
+        </div>
+      </form>
+      <div class="msg" id="emailMsg"></div>
+    </div>
+  </div>
 
-<script src="assets/config.js" defer></script>
-<script src="assets/ui.js" defer></script>
-<script src="assets/api.js" defer></script>
-<script src="assets/cerrar.js" defer></script>
+  <footer class="footer">Front: GitHub Pages · Back: Google Apps Script</footer>
+
+  <script src="assets/config.js"></script>
+  <script src="assets/ui.js"></script>
+  <script src="assets/api.js"></script>
+  <script src="assets/cerrar.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const btn2 = document.getElementById("btnCancelDetail2");
+      if (btn2) btn2.addEventListener("click", () => {
+        document.getElementById("detailModal").classList.add("hidden");
+        document.body.style.overflow = "";
+      });
+    });
+  </script>
 </body>
 </html>
